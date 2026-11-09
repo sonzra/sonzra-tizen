@@ -12,9 +12,21 @@ export class SonzraApiClient {
     this.config = config;
   }
 
+  private resolveUrl(url?: string): string | undefined {
+    if (!url) return undefined;
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+      return url;
+    }
+    const base = this.config.serverUrl.replace(/\/$/, '');
+    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   getAudioUrl(track: Track): string {
-    if (this.config.demoMode || !this.config.serverUrl || track.audioUrl) {
+    if (this.config.demoMode || !this.config.serverUrl) {
       return track.audioUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+    }
+    if (track.audioUrl) {
+      return this.resolveUrl(track.audioUrl)!;
     }
     const base = this.config.serverUrl.replace(/\/$/, '');
     return `${base}/server_connections/${this.config.serverConnectionId}/audio/${track.id}`;
@@ -24,6 +36,9 @@ export class SonzraApiClient {
     if (this.config.demoMode || !this.config.serverUrl) {
       return fallback || './sonzra-mark.svg';
     }
+    if (fallback && (fallback.startsWith('http') || fallback.startsWith('/'))) {
+      return this.resolveUrl(fallback)!;
+    }
     const base = this.config.serverUrl.replace(/\/$/, '');
     return `${base}/server_connections/${this.config.serverConnectionId}/artwork/${itemId}`;
   }
@@ -32,7 +47,6 @@ export class SonzraApiClient {
     const start = Date.now();
     try {
       const cleanUrl = url.replace(/\/$/, '');
-      // Try Sonzra health check or root
       const response = await fetch(`${cleanUrl}/up`, { method: 'GET', mode: 'cors' });
       const latency = Date.now() - start;
       if (response.ok) {
@@ -40,7 +54,6 @@ export class SonzraApiClient {
       }
       return { success: false, message: `Server returned HTTP ${response.status}` };
     } catch (err: any) {
-      // In TV/local dev environments without CORS headers, report informative message
       return {
         success: false,
         message: err.message?.includes('Failed to fetch')
@@ -51,20 +64,31 @@ export class SonzraApiClient {
   }
 
   async fetchAlbums(): Promise<Album[]> {
-    if (this.config.demoMode) {
+    if (this.config.demoMode || !this.config.serverUrl) {
       return MOCK_ALBUMS;
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
-      const response = await fetch(`${cleanUrl}/library/albums`, {
+      const response = await fetch(`${cleanUrl}/api/v1/library/albums`, {
         headers: {
           Accept: 'application/json',
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
         },
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      return data.albums || MOCK_ALBUMS;
+      const raw = await response.json();
+      const items = Array.isArray(raw) ? raw : (raw.albums || []);
+
+      return items.map((item: any) => ({
+        id: String(item.id),
+        title: item.name || item.title || 'Unknown Album',
+        artist: item.artist || 'Unknown Artist',
+        year: item.year ? Number(item.year) : undefined,
+        genre: item.genre,
+        artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl) || './sonzra-mark.svg',
+        trackCount: item.track_count || item.tracks?.length || 0,
+        tracks: item.tracks?.map((t: any) => this.mapTrack(t)),
+      }));
     } catch (err) {
       console.warn('Falling back to mock albums:', err);
       return MOCK_ALBUMS;
@@ -72,28 +96,34 @@ export class SonzraApiClient {
   }
 
   async fetchAlbum(albumId: string): Promise<Album | null> {
-    const albums = await this.fetchAlbums();
-    const found = albums.find((a) => a.id === albumId);
-    if (found) return found;
-
-    if (this.config.demoMode) {
+    if (this.config.demoMode || !this.config.serverUrl) {
       return MOCK_ALBUMS.find((a) => a.id === albumId) || null;
     }
 
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
-      const response = await fetch(
-        `${cleanUrl}/server_connections/${this.config.serverConnectionId}/library_items/${albumId}`,
-        {
-          headers: {
-            Accept: 'application/json',
-            ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
-          },
-        }
-      );
+      const response = await fetch(`${cleanUrl}/api/v1/library/items/${albumId}`, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
       if (response.ok) {
         const item = await response.json();
-        return item;
+        const tracks = (item.tracks || []).map((t: any) => this.mapTrack(t, item));
+        const totalDuration = tracks.reduce((acc: number, t: Track) => acc + (t.duration || 0), 0);
+
+        return {
+          id: String(item.id),
+          title: item.name || item.title || 'Unknown Album',
+          artist: item.artist || 'Unknown Artist',
+          year: item.year ? Number(item.year) : undefined,
+          genre: item.genre,
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl) || './sonzra-mark.svg',
+          trackCount: tracks.length,
+          duration: totalDuration,
+          tracks,
+        };
       }
     } catch (e) {
       console.warn(`Failed to fetch album ${albumId}:`, e);
@@ -102,20 +132,28 @@ export class SonzraApiClient {
   }
 
   async fetchArtists(): Promise<Artist[]> {
-    if (this.config.demoMode) {
+    if (this.config.demoMode || !this.config.serverUrl) {
       return MOCK_ARTISTS;
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
-      const response = await fetch(`${cleanUrl}/library/artists`, {
+      const response = await fetch(`${cleanUrl}/api/v1/library/artists`, {
         headers: {
           Accept: 'application/json',
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
         },
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      return data.artists || MOCK_ARTISTS;
+      const raw = await response.json();
+      const items = Array.isArray(raw) ? raw : (raw.artists || []);
+
+      return items.map((item: any) => ({
+        id: String(item.id),
+        name: item.name || 'Unknown Artist',
+        genre: item.genre,
+        artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl) || './sonzra-mark.svg',
+        albumCount: item.album_count || item.albums?.length || 0,
+      }));
     } catch (err) {
       console.warn('Falling back to mock artists:', err);
       return MOCK_ARTISTS;
@@ -123,9 +161,93 @@ export class SonzraApiClient {
   }
 
   async fetchArtist(artistId: string): Promise<Artist | null> {
-    const artists = await this.fetchArtists();
-    const found = artists.find((a) => a.id === artistId);
-    if (found) return found;
+    if (this.config.demoMode || !this.config.serverUrl) {
+      return MOCK_ARTISTS.find((a) => a.id === artistId) || null;
+    }
+
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const response = await fetch(`${cleanUrl}/api/v1/library/items/${artistId}`, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
+      if (response.ok) {
+        const item = await response.json();
+        const topTracks = (item.tracks || []).map((t: any) => this.mapTrack(t));
+        const albums = (item.discography || item.albums || []).map((alb: any) => ({
+          id: String(alb.id),
+          title: alb.name || alb.title,
+          artist: alb.artist || item.name,
+          year: alb.year ? Number(alb.year) : undefined,
+          artworkUrl: this.resolveUrl(alb.artwork_url || alb.artworkUrl) || './sonzra-mark.svg',
+          trackCount: alb.track_count || 0,
+        }));
+
+        return {
+          id: String(item.id),
+          name: item.name || 'Unknown Artist',
+          genre: item.genre,
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl) || './sonzra-mark.svg',
+          albumCount: albums.length,
+          bio: item.overview || item.bio,
+          topTracks,
+          albums,
+        };
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch artist ${artistId}:`, e);
+    }
     return MOCK_ARTISTS.find((a) => a.id === artistId) || null;
+  }
+
+  async reportPlayback(report: {
+    event: 'started' | 'progress' | 'stopped' | 'completed' | 'paused';
+    itemId: string;
+    positionSeconds?: number;
+    durationSeconds?: number;
+    paused?: boolean;
+  }): Promise<void> {
+    if (this.config.demoMode || !this.config.serverUrl) return;
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      await fetch(`${cleanUrl}/api/v1/playback_reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+        body: JSON.stringify({
+          event: report.event,
+          item_id: report.itemId,
+          position_seconds: report.positionSeconds,
+          duration_seconds: report.durationSeconds,
+          paused: report.paused,
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to send playback report:', err);
+    }
+  }
+
+  private mapTrack(track: any, parentAlbum?: any): Track {
+    return {
+      id: String(track.id),
+      title: track.title || track.name || 'Unknown Track',
+      artist: track.artist || parentAlbum?.artist || 'Unknown Artist',
+      artistId: track.artist_id || track.artistId,
+      album: track.album || parentAlbum?.name || parentAlbum?.title || 'Unknown Album',
+      albumId: track.album_id || parentAlbum?.id,
+      duration: track.duration_seconds || (track.duration_ticks ? Math.round(track.duration_ticks / 10000000) : 180),
+      trackNumber: track.track_number || track.trackNumber,
+      discNumber: track.disc_number || track.discNumber,
+      year: track.year || parentAlbum?.year,
+      artworkUrl: this.resolveUrl(track.artwork_url || track.artworkUrl) || (parentAlbum ? this.resolveUrl(parentAlbum.artwork_url) : undefined),
+      audioUrl: this.resolveUrl(track.stream_url || track.audio_url || track.audioUrl),
+      codec: track.codec,
+      bitrate: track.bitrate,
+    };
   }
 }

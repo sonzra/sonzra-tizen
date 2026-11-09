@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" 
-        xmlns:tizen="http://tizen.org/ns/tizen" 
-        id="https://sonzra.org/tizen" 
-        version="1.0.0" 
-        viewmodes="maximized">
-    <tizen:application id="org.sonzra.tizen" exec="index.html" package="org.sonzra.tizen" required_version="6.0"/>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="https://sonzra.org/tizen" version="1.0.0" viewmodes="fullscreen">
+    <access origin="*" subdomains="true"></access>
+    <tizen:application id="Sonzra0001.SonzraTV" package="Sonzra0001" required_version="2.3"/>
+    <author href="https://sonzra.org" email="support@sonzra.org">Sonzra</author>
     <content src="index.html"/>
+    <description>Sonzra Samsung Smart TV Client</description>
     <feature name="http://tizen.org/feature/screen.size.all"/>
     <feature name="http://tizen.org/feature/network.internet"/>
     <icon src="icon.png"/>
-    <name>Sonzra TV</name>
-    <tizen:profile name="tv-samsung"/>
+    <tizen:metadata key="http://tizen.org/metadata/app_ui_type/base_screen_resolution" value="fullscreen"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/use.realsize" value="true"/>
+    <name>Sonzra</name>
+    <tizen:privilege name="http://developer.samsung.com/privilege/productinfo"/>
     <tizen:privilege name="http://tizen.org/privilege/internet"/>
     <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
-    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
-    <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto"/>
-    <tizen:metadata key="http://samsung.com/tv/metadata/use.realsize" value="true"/>
+    <tizen:profile name="tv"/>
+    <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
 </widget>
