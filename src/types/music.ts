@@ -13,6 +13,9 @@ export interface Track {
   audioUrl?: string;
   codec?: string;
   bitrate?: string;
+  sampleRate?: string;
+  bitDepth?: string;
+  fidelity?: string; // e.g. "96kHz / 24-bit" or "FLAC 24b/96k"
   isFavorite?: boolean;
 }
 
@@ -27,6 +30,14 @@ export interface Album {
   trackCount: number;
   duration?: number; // total in seconds
   tracks?: Track[];
+  codecBadge?: string; // e.g. "FLAC 96kHz / 24-bit" or "DSD64 2.8MHz" or "24-BIT"
+  masterBadge?: string; // e.g. "MASTER MQA" or "MQA MASTER"
+  fileSize?: string; // e.g. "1.42 GB"
+  isNew?: boolean;
+  progressPercent?: number; // e.g. 68
+  remainingTime?: string; // e.g. "38:12 remaining"
+  currentTrackIndex?: number; // e.g. 8
+  currentTrackTitle?: string; // e.g. "Celestial Reverie"
 }
 
 export interface Artist {

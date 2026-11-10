@@ -12,9 +12,12 @@ export interface FocusableNode {
 }
 
 export type ActiveView = 
+  | 'home'
+  | 'library'
   | 'albums'
   | 'album-detail'
   | 'artists'
   | 'artist-detail'
   | 'now-playing'
-  | 'settings';
+  | 'settings'
+  | 'search';

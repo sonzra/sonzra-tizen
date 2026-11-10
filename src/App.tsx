@@ -3,8 +3,10 @@ import { SpatialNavigationProvider, useSpatialNav } from './navigation/SpatialNa
 import { ServerProvider } from './context/ServerContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { Sidebar } from './components/Sidebar';
-import { MiniPlayer } from './components/MiniPlayer';
-import { AlbumsView } from './views/AlbumsView';
+import { TopHeader } from './components/TopHeader';
+import { BottomDock } from './components/BottomDock';
+import { HomeView } from './views/HomeView';
+import { LibraryView } from './views/LibraryView';
 import { AlbumDetailView } from './views/AlbumDetailView';
 import { ArtistsView } from './views/ArtistsView';
 import { ArtistDetailView } from './views/ArtistDetailView';
@@ -16,8 +18,12 @@ const MainLayout: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeView) {
+      case 'home':
+        return <HomeView />;
+      case 'library':
       case 'albums':
-        return <AlbumsView />;
+      case 'search':
+        return <LibraryView />;
       case 'album-detail':
         return <AlbumDetailView />;
       case 'artists':
@@ -29,24 +35,40 @@ const MainLayout: React.FC = () => {
       case 'settings':
         return <SettingsView />;
       default:
-        return <AlbumsView />;
+        return <HomeView />;
     }
   };
 
-  const isFullscreenNowPlaying = activeView === 'now-playing';
+  const isNowPlaying = activeView === 'now-playing';
 
   return (
-    <div className={`tv-app-root ${isFullscreenNowPlaying ? 'tv-app-fullscreen' : ''}`}>
-      {/* Sidebar navigation is hidden in fullscreen now playing */}
-      {!isFullscreenNowPlaying && <Sidebar />}
+    <div className="relative w-screen h-screen overflow-hidden bg-background text-on-surface antialiased select-none">
+      {/* Atmospheric TV Ambient Glow Backdrops */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_15%_20%,rgba(122,90,248,0.18)_0%,transparent_50%),radial-gradient(circle_at_85%_75%,rgba(73,220,202,0.12)_0%,transparent_45%)]"></div>
 
-      {/* Main content display area */}
-      <main className="tv-main-viewport">
-        {renderActiveView()}
-      </main>
+      {/* Persistent Left Navigation Rail (Hidden only in full cinema mode) */}
+      {!isNowPlaying && <Sidebar />}
 
-      {/* Persistent Mini Player */}
-      {!isFullscreenNowPlaying && <MiniPlayer />}
+      {/* Persistent Top Header (Hidden in full cinema mode) */}
+      {!isNowPlaying && (
+        <TopHeader
+          zoneName="Living Room"
+          subhead="TIZEN MASTER HUB • 10FT MODE"
+          showBitPerfect={false}
+        />
+      )}
+
+      {/* Main Viewport Container */}
+      <div
+        className={`relative z-10 w-full h-full overflow-y-auto ${
+          isNowPlaying ? 'p-8 xl:p-12' : 'pl-24 pt-20 px-10'
+        }`}
+      >
+        <main className="w-full h-full min-h-full">{renderActiveView()}</main>
+      </div>
+
+      {/* Persistent Bottom Player Dock */}
+      {!isNowPlaying && <BottomDock />}
     </div>
   );
 };

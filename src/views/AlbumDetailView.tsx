@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useServer } from '../context/ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { usePlayer } from '../context/PlayerContext';
-import { Album } from '../types/music';
+import { Album, Track } from '../types/music';
 import { Focusable } from '../navigation/Focusable';
-import { FocusableButton } from '../components/FocusableButton';
-import { Play, Shuffle, Plus, ArrowLeft, Clock } from 'lucide-react';
-import { EqualizerBars } from '../components/EqualizerBars';
+import { getMockAlbumById, MOCK_ALBUMS } from '../services/mockData';
 
 function formatDuration(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -16,24 +14,35 @@ function formatDuration(seconds: number): string {
 }
 
 export const AlbumDetailView: React.FC = () => {
-  const { viewParam, goBack } = useSpatialNav();
+  const { viewParam, goToView } = useSpatialNav();
   const { apiClient } = useServer();
-  const { playAlbum, addToQueue, currentTrack, playbackStatus } = usePlayer();
+  const { playAlbum, playTrack, addToQueue, currentTrack, playbackStatus } = usePlayer();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
 
   useEffect(() => {
     let active = true;
-    if (viewParam) {
-      setLoading(true);
-      apiClient.fetchAlbum(viewParam).then((res) => {
-        if (active) {
+    const albumId = viewParam || 'album-echoes-in-violet';
+
+    // Check mock data first
+    const mockAlbum = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
+    setAlbum(mockAlbum);
+    setLoading(false);
+
+    // If connected to server, try fetching fresh remote album
+    apiClient
+      .fetchAlbum(albumId)
+      .then((res) => {
+        if (active && res) {
           setAlbum(res);
-          setLoading(false);
         }
+      })
+      .catch(() => {
+        // Fallback to mock data already set
       });
-    }
+
     return () => {
       active = false;
     };
@@ -41,145 +50,320 @@ export const AlbumDetailView: React.FC = () => {
 
   if (loading || !album) {
     return (
-      <div className="tv-view-loading">
-        <div className="tv-spinner" />
-        <p>Loading Album Details...</p>
+      <div className="flex flex-col items-center justify-center min-h-[600px] text-on-surface">
+        <div className="w-12 h-12 rounded-full border-2 border-secondary border-t-transparent animate-spin mb-4" />
+        <p className="text-on-surface-variant font-mono">Loading Album Details...</p>
       </div>
     );
   }
 
-  const tracks = album.tracks || [];
-  const totalDuration = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
+  const tracks: Track[] = album.tracks || [];
+  const totalDuration = tracks.reduce((acc, t) => acc + (t.duration || 0), 0) || album.duration || 3360;
+
+  const handlePlayAlbum = (shuffle = false) => {
+    playAlbum(album, undefined, shuffle);
+    goToView('now-playing');
+  };
+
+  const handleAddQueue = () => {
+    if (tracks.length > 0) {
+      addToQueue(tracks);
+    }
+  };
 
   return (
-    <div className="tv-view-content tv-detail-view" role="main">
-      {/* Back button */}
-      <div className="tv-detail-top-nav">
-        <FocusableButton
-          focusId="album-detail-back"
-          group="album-hero"
-          label="Back to Library"
-          icon={<ArrowLeft size={20} />}
-          variant="ghost"
-          size="sm"
-          onEnter={goBack}
-          onClick={goBack}
-        />
-      </div>
+    <div className="w-full flex-1 flex flex-col pb-28">
+      {/* TV Main Widescreen Landscape 2-Column Split */}
+      <main className="flex-1 grid grid-cols-12 gap-8 items-start pt-2">
+        {/* LEFT COLUMN: Vinyl Sleeve Stage & Album Meta & Action Buttons */}
+        <section className="col-span-12 lg:col-span-5 flex flex-col justify-start gap-5 pr-2">
+          {/* Vinyl Record & Album Sleeve Mockup */}
+          <div className="relative w-full max-w-[420px] aspect-square flex items-center justify-start group">
+            {/* Ambient Glow under the record */}
+            <div className="absolute inset-0 bg-primary-container/30 rounded-3xl blur-3xl pointer-events-none"></div>
 
-      {/* Hero Header */}
-      <section className="tv-detail-hero" aria-label="Album Information">
-        <div className="tv-detail-cover-wrapper">
-          <img
-            src={album.artworkUrl}
-            alt={album.title}
-            className="tv-detail-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-            }}
-          />
-        </div>
+            {/* Vinyl Disc (Partially Slipped Out to the right) */}
+            <div className="absolute right-0 top-2 bottom-2 w-[88%] aspect-square rounded-full bg-[#08080c] shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex items-center justify-center overflow-hidden transition-all duration-700 ease-out transform translate-x-12 group-hover:translate-x-20 border border-white/5">
+              {/* Vinyl Grooves concentric rings */}
+              <svg className="absolute inset-0 w-full h-full opacity-60 text-outline-variant/40" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" fill="none" r="95" stroke="currentColor" strokeWidth="0.5"></circle>
+                <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="0.5"></circle>
+                <circle cx="100" cy="100" fill="none" r="85" stroke="currentColor" strokeWidth="0.5"></circle>
+                <circle cx="100" cy="100" fill="none" r="80" stroke="currentColor" strokeWidth="0.75"></circle>
+                <circle cx="100" cy="100" fill="none" r="75" stroke="currentColor" strokeWidth="0.5"></circle>
+                <circle cx="100" cy="100" fill="none" r="70" stroke="currentColor" strokeWidth="0.5"></circle>
+                <circle cx="100" cy="100" fill="none" r="65" stroke="currentColor" strokeWidth="0.75"></circle>
+                <circle cx="100" cy="100" fill="none" r="60" stroke="currentColor" strokeWidth="0.5"></circle>
+              </svg>
 
-        <div className="tv-detail-meta">
-          <div className="tv-eyebrow">ALBUM • {album.genre || 'Music'}</div>
-          <h1 className="tv-detail-title">{album.title}</h1>
-          <div className="tv-detail-artist">{album.artist}</div>
+              {/* Vinyl Center Label */}
+              <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-primary-container via-tertiary-container to-secondary-container flex flex-col items-center justify-center text-center p-2 shadow-2xl border-2 border-surface-container-lowest">
+                <span className="text-[8px] font-extrabold tracking-widest text-on-primary-container uppercase">
+                  Sonzra Master
+                </span>
+                <div className="w-5 h-5 rounded-full bg-surface-container-lowest my-1 shadow-inner flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-[#0e0e14]"></div>
+                </div>
+                <span className="text-[7px] font-mono text-on-primary-container/90 tracking-tighter">
+                  {album.codecBadge || '96kHz / 24-bit'}
+                </span>
+              </div>
+            </div>
 
-          <div className="tv-detail-chips">
-            <span className="tv-chip">{album.year}</span>
-            <span className="tv-chip-dot">•</span>
-            <span className="tv-chip">{tracks.length} Tracks</span>
-            <span className="tv-chip-dot">•</span>
-            <span className="tv-chip">{formatDuration(totalDuration)} Total</span>
+            {/* Album Front Sleeve Jacket */}
+            <div className="relative z-10 w-[84%] aspect-square rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.95)] bg-surface-container-low border border-white/10">
+              <img
+                src={album.artworkUrl}
+                alt={album.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-surface-container-lowest/20"></div>
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                <span className="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-bold tracking-widest text-[10px] uppercase border border-secondary/20">
+                  {album.masterBadge || 'Ultra Studio'}
+                </span>
+                <span className="text-surface-tint/90 font-mono text-[11px] font-semibold tracking-wider">
+                  LP-{album.year || 2024}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="tv-detail-actions">
-            <FocusableButton
+          {/* Album Metadata */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-3 py-1 rounded-full bg-secondary-container/20 text-secondary text-xs font-extrabold tracking-wider uppercase border border-secondary/30 shadow-[0_0_12px_rgba(73,220,202,0.2)]">
+                {album.codecBadge || 'Hi-Res Lossless • 24-bit / 96kHz FLAC'}
+              </span>
+              <span className="text-xs text-on-surface-variant font-mono">• {album.year || 2024}</span>
+            </div>
+
+            <h1 className="text-3xl xl:text-4xl font-extrabold text-on-surface tracking-tight font-serif-title drop-shadow-md">
+              {album.title}
+            </h1>
+
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-bold text-surface-tint">{album.artist}</span>
+              <span className="text-outline">•</span>
+              <span className="text-sm font-medium text-outline">{album.genre || 'Ambient / Electronic'}</span>
+            </div>
+
+            <div className="flex items-center gap-4 text-xs text-on-surface-variant font-medium mt-0.5">
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-secondary">library_music</span>
+                {tracks.length} tracks
+              </span>
+              <span className="text-outline-variant">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
+                {Math.round(totalDuration / 60)} minutes
+              </span>
+              <span className="text-outline-variant">•</span>
+              <span className="font-mono text-outline">Mastered for Spatial Audio</span>
+            </div>
+          </div>
+
+          {/* TV Focus Action Control Bar */}
+          <div className="flex items-center gap-3.5 mt-2">
+            {/* Play Album */}
+            <Focusable
               focusId="album-btn-play"
               group="album-actions"
-              label="Play Album"
-              icon={<Play size={22} />}
-              variant="primary"
-              size="lg"
-              autoFocus={true}
-              onEnter={() => playAlbum(album)}
-              onClick={() => playAlbum(album)}
-            />
+              className="rounded-full cursor-pointer"
+              onEnter={() => handlePlayAlbum(false)}
+              onClick={() => handlePlayAlbum(false)}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold transition-all cursor-pointer ${
+                    isFocused
+                      ? 'bg-primary-container text-on-primary-container shadow-[0_0_30px_rgba(73,220,202,0.6)] ring-4 ring-secondary scale-105'
+                      : 'bg-primary-container text-on-primary-container shadow-md hover:bg-tertiary-container'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[26px]">play_arrow</span>
+                  <span>Play Album</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-black/30 text-[10px] font-mono uppercase">
+                    SELECT
+                  </span>
+                </button>
+              )}
+            </Focusable>
 
-            <FocusableButton
+            {/* Shuffle */}
+            <Focusable
               focusId="album-btn-shuffle"
               group="album-actions"
-              label="Shuffle"
-              icon={<Shuffle size={20} />}
-              variant="secondary"
-              size="lg"
-              onEnter={() => playAlbum(album, undefined, true)}
-              onClick={() => playAlbum(album, undefined, true)}
-            />
+              className="rounded-full cursor-pointer"
+              onEnter={() => handlePlayAlbum(true)}
+              onClick={() => handlePlayAlbum(true)}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                    isFocused
+                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
+                  }`}
+                  title="Shuffle Album"
+                >
+                  <span className="material-symbols-outlined text-[24px]">shuffle</span>
+                </button>
+              )}
+            </Focusable>
 
-            <FocusableButton
-              focusId="album-btn-queue-all"
+            {/* Add to Queue */}
+            <Focusable
+              focusId="album-btn-queue"
               group="album-actions"
-              label="Add to Queue"
-              icon={<Plus size={20} />}
-              variant="secondary"
-              size="lg"
-              onEnter={() => addToQueue(tracks)}
-              onClick={() => addToQueue(tracks)}
-            />
+              className="rounded-full cursor-pointer"
+              onEnter={handleAddQueue}
+              onClick={handleAddQueue}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                    isFocused
+                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
+                  }`}
+                  title="Add to Queue"
+                >
+                  <span className="material-symbols-outlined text-[24px]">playlist_add</span>
+                </button>
+              )}
+            </Focusable>
+
+            {/* Add to Favorites */}
+            <Focusable
+              focusId="album-btn-fav"
+              group="album-actions"
+              className="rounded-full cursor-pointer"
+              onEnter={() => setIsFavorite(!isFavorite)}
+              onClick={() => setIsFavorite(!isFavorite)}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                    isFocused
+                      ? 'bg-surface-container-high text-error ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      : isFavorite
+                      ? 'bg-surface-container-high text-error border border-white/5'
+                      : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
+                  }`}
+                  title="Favorite Album"
+                >
+                  <span
+                    className="material-symbols-outlined text-[24px]"
+                    style={{ fontVariationSettings: isFavorite ? '"FILL" 1' : undefined }}
+                  >
+                    {isFavorite ? 'favorite' : 'favorite_border'}
+                  </span>
+                </button>
+              )}
+            </Focusable>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Tracklist */}
-      <section className="tv-detail-tracklist-section" aria-label="Track List">
-        <div className="tv-tracklist-header">
-          <span className="tv-th-num">#</span>
-          <span className="tv-th-title">TITLE</span>
-          <span className="tv-th-codec">QUALITY</span>
-          <span className="tv-th-duration">
-            <Clock size={16} />
-          </span>
-        </div>
+        {/* RIGHT COLUMN: Expansive Widescreen 10-foot Tracklist Table */}
+        <section className="col-span-12 lg:col-span-7 flex flex-col justify-start pl-2">
+          {/* Table Column Headers */}
+          <div className="flex items-center justify-between pb-2.5 px-4 text-outline font-semibold uppercase tracking-wider text-[11px] border-b border-white/[0.06] shrink-0 mb-2">
+            <div className="flex items-center gap-4">
+              <span className="w-8 text-center">#</span>
+              <span>Title &amp; Artist</span>
+            </div>
+            <div className="flex items-center gap-12">
+              <span>Fidelity</span>
+              <span className="w-16 text-right">Time</span>
+            </div>
+          </div>
 
-        <div className="tv-tracklist-rows">
-          {tracks.map((track, idx) => {
-            const isCurrentPlaying = currentTrack?.id === track.id;
-            const isPlaying = isCurrentPlaying && playbackStatus === 'playing';
+          {/* TV Interactive Track Rows Container */}
+          <div className="flex flex-col gap-2 w-full" role="list">
+            {tracks.map((track, index) => {
+              const isPlayingThisTrack = currentTrack?.id === track.id && playbackStatus === 'playing';
+              const isCurrentTrack = currentTrack?.id === track.id;
+              const focusId = `track-row-${track.id}`;
 
-            return (
-              <Focusable
-                key={track.id}
-                focusId={`track-row-${track.id}`}
-                group="album-tracks"
-                className={`tv-track-row ${isCurrentPlaying ? 'tv-track-playing' : ''}`}
-                onEnter={() => playAlbum(album, track.id)}
-                onClick={() => playAlbum(album, track.id)}
-              >
-                {({ isFocused }) => (
-                  <div className={`tv-track-row-inner ${isFocused ? 'tv-track-focused' : ''}`}>
-                    <span className="tv-td-num">
-                      {isCurrentPlaying ? (
-                        <EqualizerBars isPlaying={isPlaying} size="sm" />
-                      ) : (
-                        track.trackNumber || idx + 1
-                      )}
-                    </span>
-                    <div className="tv-td-title-wrap">
-                      <span className="tv-track-name">{track.title}</span>
-                      <span className="tv-track-artist">{track.artist}</span>
+              return (
+                <Focusable
+                  key={track.id}
+                  focusId={focusId}
+                  group="album-tracks"
+                  className="rounded-2xl cursor-pointer transition-all duration-150"
+                  onEnter={() => playTrack(track, tracks)}
+                  onClick={() => playTrack(track, tracks)}
+                >
+                  {({ isFocused }) => (
+                    <div
+                      className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 cursor-pointer ${
+                        isFocused
+                          ? 'bg-surface-container-high text-on-surface ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.35)] scale-[1.015] z-10'
+                          : isCurrentTrack
+                          ? 'bg-surface-container-high/90 text-on-surface border border-secondary/30'
+                          : 'bg-surface-container-low/70 hover:bg-surface-container text-on-surface border border-transparent hover:border-white/10'
+                      }`}
+                      role="listitem"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        {isPlayingThisTrack ? (
+                          /* Animated Equalizer Bars */
+                          <div className="w-8 flex items-end justify-center gap-1 h-5">
+                            <span className="w-1 bg-secondary rounded-full animate-bounce h-full shadow-[0_0_8px_rgba(73,220,202,0.8)]"></span>
+                            <span className="w-1 bg-secondary rounded-full animate-bounce [animation-delay:150ms] h-4/5 shadow-[0_0_8px_rgba(73,220,202,0.8)]"></span>
+                            <span className="w-1 bg-secondary rounded-full animate-bounce [animation-delay:300ms] h-full shadow-[0_0_8px_rgba(73,220,202,0.8)]"></span>
+                            <span className="w-1 bg-secondary rounded-full animate-bounce [animation-delay:75ms] h-3/5 shadow-[0_0_8px_rgba(73,220,202,0.8)]"></span>
+                          </div>
+                        ) : (
+                          <span className="w-8 text-center font-mono font-bold text-outline group-hover:text-on-surface text-sm">
+                            {String(track.trackNumber || index + 1).padStart(2, '0')}
+                          </span>
+                        )}
+
+                        <div className="flex flex-col min-w-0">
+                          <span
+                            className={`text-base font-bold truncate flex items-center gap-2 ${
+                              isCurrentTrack ? 'text-secondary' : 'text-on-surface'
+                            }`}
+                          >
+                            {track.title}
+                            {isCurrentTrack && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/40">
+                                NOW PLAYING
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-xs text-on-surface-variant truncate">{track.artist}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-12 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded font-mono text-[11px] ${
+                            isCurrentTrack
+                              ? 'bg-secondary-container/20 text-secondary font-bold border border-secondary/30'
+                              : 'bg-surface-container text-outline'
+                          }`}
+                        >
+                          {track.fidelity || '96k / 24-bit'}
+                        </span>
+                        <span
+                          className={`w-16 text-right font-mono text-sm ${
+                            isCurrentTrack ? 'text-secondary font-bold' : 'text-on-surface-variant'
+                          }`}
+                        >
+                          {formatDuration(track.duration)}
+                        </span>
+                      </div>
                     </div>
-                    <span className="tv-td-codec">
-                      {track.codec || 'FLAC'} {track.bitrate ? `• ${track.bitrate}` : ''}
-                    </span>
-                    <span className="tv-td-duration">{formatDuration(track.duration)}</span>
-                  </div>
-                )}
-              </Focusable>
-            );
-          })}
-        </div>
-      </section>
+                  )}
+                </Focusable>
+              );
+            })}
+          </div>
+        </section>
+      </main>
     </div>
   );
 };

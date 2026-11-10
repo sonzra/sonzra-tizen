@@ -39,7 +39,7 @@ const SpatialNavigationContext = createContext<SpatialNavigationContextType | nu
 
 export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<ActiveView>('albums');
+  const [activeView, setActiveView] = useState<ActiveView>('home');
   const [viewParam, setViewParam] = useState<string | null>(null);
   const [history, setHistory] = useState<NavigationHistoryItem[]>([]);
 
@@ -178,14 +178,14 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
       if (previous.focusId && nodesRef.current.has(previous.focusId)) {
         setTimeout(() => setFocus(previous.focusId!), 50);
       }
-    } else if (activeView !== 'albums') {
-      setActiveView('albums');
+    } else if (activeView !== 'home') {
+      setActiveView('home');
       setViewParam(null);
-      setFocus('sidebar-albums');
+      setFocus('sidebar-home');
     } else {
-      // At root albums view: focus sidebar if not already focused
+      // At root home view: focus sidebar if not already focused
       if (focusedIdRef.current && !focusedIdRef.current.startsWith('sidebar-')) {
-        setFocus('sidebar-albums');
+        setFocus('sidebar-home');
       } else {
         // Can exit or minimize on Tizen
         if (typeof window !== 'undefined' && window.tizen?.application?.getCurrentApplication) {
@@ -293,7 +293,7 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         openArtist,
         goToView,
         goBack,
-        canGoBack: history.length > 0 || activeView !== 'albums',
+        canGoBack: history.length > 0 || activeView !== 'home',
         registerMediaHandler,
       }}
     >
