@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { ActiveView, Direction, FocusableNode } from '../types/navigation';
-import { findNearestNeighbor } from './spatialMath';
+import { findNextFocusableNode } from './spatialMath';
 import {
   isBackKey,
   isEnterKey,
@@ -47,6 +47,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   const focusedIdRef = useRef<string | null>(null);
   focusedIdRef.current = focusedId;
 
+  // Track the last focused node in main content (non-sidebar, non-dock)
+  const lastFocusedContentIdRef = useRef<string | null>(null);
+  // Track last focused node per semantic group
+  const lastFocusedByGroupRef = useRef<Map<string, string>>(new Map());
+
   const mediaHandlersRef = useRef<Set<(action: 'play' | 'pause' | 'playpause' | 'next' | 'prev') => void>>(new Set());
 
   // Register Tizen TV hardware keys on startup
@@ -75,16 +80,28 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
       nextNode.element.classList.add('tv-focused');
       nextNode.onFocus?.();
 
-      // Ensure visible in TV viewing area
-      try {
-        nextNode.element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'nearest',
-        });
-      } catch (err) {
-        // Fallback for older WebKit / Tizen browsers
-        nextNode.element.scrollIntoView(false);
+      // Update group memory
+      if (nextNode.group) {
+        lastFocusedByGroupRef.current.set(nextNode.group, id);
+      }
+
+      // Update content memory if inside main view (not fixed bars)
+      if (nextNode.group !== 'sidebar' && nextNode.group !== 'bottom-dock') {
+        lastFocusedContentIdRef.current = id;
+      }
+
+      // Smooth scroll viewport to center focused content element
+      // (Do NOT trigger viewport scrolling when focusing fixed rails)
+      if (nextNode.group !== 'sidebar' && nextNode.group !== 'bottom-dock') {
+        try {
+          nextNode.element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+          });
+        } catch (err) {
+          nextNode.element.scrollIntoView(false);
+        }
       }
     } else {
       setFocusedId(id);
@@ -94,9 +111,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   const registerNode = useCallback((node: FocusableNode) => {
     nodesRef.current.set(node.id, node);
 
-    // If no node is focused yet, focus this first node (or sidebar item)
+    // Initial focus allocation: prioritize hero-resume or sidebar-home on startup
     if (!focusedIdRef.current) {
-      if (node.id === 'sidebar-albums' || node.id.startsWith('sidebar-')) {
+      if (node.id === 'hero-resume' || node.id === 'sidebar-home') {
+        setFocus(node.id);
+      } else if (node.id.startsWith('sidebar-')) {
         setFocus(node.id);
       }
     }
@@ -111,10 +130,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
 
     // If the unmounted node was focused, reset or re-evaluate
     if (focusedIdRef.current === id) {
-      // Find a fallback
       const candidates = Array.from(nodesRef.current.values());
       if (candidates.length > 0) {
-        setFocus(candidates[0].id);
+        // Fallback to entry point of current view
+        const entry = candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock');
+        setFocus(entry ? entry.id : candidates[0].id);
       } else {
         setFocusedId(null);
       }
@@ -134,21 +154,45 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     const currentNode = nodesRef.current.get(currentId);
     if (!currentNode) return;
 
-    // Custom arrow handler override
+    // 1. Custom arrow handler override
     if (currentNode.onArrow) {
       const handled = currentNode.onArrow(direction);
       if (handled) return;
     }
 
+    // 2. Explicit directional overrides
+    if (direction === 'up' && currentNode.upId && nodesRef.current.has(currentNode.upId)) {
+      setFocus(currentNode.upId);
+      return;
+    }
+    if (direction === 'down' && currentNode.downId && nodesRef.current.has(currentNode.downId)) {
+      setFocus(currentNode.downId);
+      return;
+    }
+    if (direction === 'left' && currentNode.leftId && nodesRef.current.has(currentNode.leftId)) {
+      setFocus(currentNode.leftId);
+      return;
+    }
+    if (direction === 'right' && currentNode.rightId && nodesRef.current.has(currentNode.rightId)) {
+      setFocus(currentNode.rightId);
+      return;
+    }
+
+    // 3. Group-aware spatial navigator
     const candidates = Array.from(nodesRef.current.values()).filter(
       (node) => node.id !== currentId && node.element && node.element.isConnected
     );
 
-    const neighbor = findNearestNeighbor(currentNode, candidates, direction);
-    if (neighbor) {
-      setFocus(neighbor.id);
+    const nextNode = findNextFocusableNode(currentNode, candidates, direction, {
+      activeView,
+      lastFocusedByGroup: lastFocusedByGroupRef.current,
+      lastFocusedContentId: lastFocusedContentIdRef.current,
+    });
+
+    if (nextNode) {
+      setFocus(nextNode.id);
     }
-  }, [setFocus]);
+  }, [activeView, setFocus]);
 
   const goToView = useCallback((newView: ActiveView, param?: string) => {
     setHistory((prev) => [
@@ -157,6 +201,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     ]);
     setActiveView(newView);
     setViewParam(param || null);
+
+    // If focus was on main content, reset content memory so view picks its fresh entry point
+    if (focusedIdRef.current && !focusedIdRef.current.startsWith('sidebar-')) {
+      lastFocusedContentIdRef.current = null;
+    }
   }, [activeView, viewParam]);
 
   const openAlbum = useCallback((albumId: string) => {

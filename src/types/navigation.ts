@@ -9,6 +9,10 @@ export interface FocusableNode {
   onBlur?: () => void;
   onArrow?: (direction: Direction) => boolean | void; // return true if handled
   priority?: number;
+  upId?: string;
+  downId?: string;
+  leftId?: string;
+  rightId?: string;
 }
 
 export type ActiveView = 
