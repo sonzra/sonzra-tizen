@@ -350,6 +350,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         case 'prev':
           prev();
           break;
+        case 'stop':
+          pause();
+          break;
       }
     });
 

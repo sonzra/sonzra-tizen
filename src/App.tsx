@@ -5,6 +5,7 @@ import { PlayerProvider } from './context/PlayerContext';
 import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { BottomDock } from './components/BottomDock';
+import { MediaOsdToast } from './components/MediaOsdToast';
 import { HomeView } from './views/HomeView';
 import { LibraryView } from './views/LibraryView';
 import { AlbumDetailView } from './views/AlbumDetailView';
@@ -71,6 +72,9 @@ const MainLayout: React.FC = () => {
 
       {/* Persistent Bottom Player Dock */}
       {!isNowPlaying && <BottomDock />}
+
+      {/* Ambient Remote Media Control Feedback Toast */}
+      <MediaOsdToast />
     </div>
   );
 };

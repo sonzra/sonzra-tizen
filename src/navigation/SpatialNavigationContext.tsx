@@ -12,7 +12,6 @@ import {
   isMediaPrev,
   isMediaStop,
   registerTizenKeys,
-  TIZEN_KEYS,
 } from './tizenKeys';
 
 interface NavigationHistoryItem {
@@ -63,7 +62,7 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     registerTizenKeys();
   }, []);
 
-  const registerMediaHandler = useCallback((handler: (action: 'play' | 'pause' | 'playpause' | 'next' | 'prev') => void) => {
+  const registerMediaHandler = useCallback((handler: (action: MediaAction) => void) => {
     mediaHandlersRef.current.add(handler);
     return () => {
       mediaHandlersRef.current.delete(handler);
