@@ -115,6 +115,9 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-btn-demo"
               group="signin-side-actions"
+              rightId="signin-field-email"
+              upId="signin-field-email"
+              downId="signin-btn-submit"
               className="w-full rounded-2xl cursor-pointer transition-all"
               onEnter={enterDemoMode}
               onClick={enterDemoMode}
@@ -165,6 +168,9 @@ export const SignInView: React.FC = () => {
               focusId="signin-field-email"
               group="signin-inputs"
               autoFocus={true}
+              leftId="signin-btn-demo"
+              rightId="signin-field-password"
+              downId="signin-btn-toggle-server"
               className="rounded-xl cursor-pointer"
               onEnter={() => setActiveField('email')}
               onClick={() => setActiveField('email')}
@@ -201,6 +207,8 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-field-password"
               group="signin-inputs"
+              leftId="signin-field-email"
+              downId="signin-btn-toggle-pw"
               className="rounded-xl cursor-pointer"
               onEnter={() => setActiveField('password')}
               onClick={() => setActiveField('password')}
@@ -247,6 +255,10 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-btn-toggle-server"
               group="signin-inputs"
+              upId="signin-field-email"
+              rightId="signin-btn-toggle-pw"
+              leftId="signin-btn-demo"
+              downId="kb-num-0"
               className="rounded-lg cursor-pointer"
               onEnter={() => setShowAdvancedServer((prev) => !prev)}
               onClick={() => setShowAdvancedServer((prev) => !prev)}
@@ -271,6 +283,9 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-btn-toggle-pw"
               group="signin-inputs"
+              upId="signin-field-password"
+              leftId="signin-btn-toggle-server"
+              downId="kb-num-6"
               className="rounded-lg cursor-pointer"
               onEnter={() => setShowPassword((prev) => !prev)}
               onClick={() => setShowPassword((prev) => !prev)}
@@ -350,6 +365,7 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-btn-submit"
               group="signin-actions"
+              leftId="signin-btn-demo"
               className="flex-1 rounded-2xl cursor-pointer"
               onEnter={handleFormSubmit}
               onClick={handleFormSubmit}

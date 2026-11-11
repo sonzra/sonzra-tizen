@@ -375,8 +375,11 @@ export function findNextFocusableNode(
       });
     }
 
-    // No candidate to the left in content -> seamless handoff to Sidebar rail!
-    return getActiveSidebarItem(activeView, validCandidates);
+    // No candidate to the left in content -> handoff to Sidebar rail if present
+    const sidebarItem = getActiveSidebarItem(activeView, validCandidates);
+    if (sidebarItem) {
+      return sidebarItem;
+    }
   }
 
   // =========================================================================
@@ -419,8 +422,6 @@ export function findNextFocusableNode(
         return dist < bestDist ? c : best;
       });
     }
-
-    return null;
   }
 
   // =========================================================================

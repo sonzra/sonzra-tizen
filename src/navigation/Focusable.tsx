@@ -8,6 +8,10 @@ export interface FocusableProps extends Omit<React.HTMLAttributes<HTMLDivElement
   onEnter?: () => void;
   onArrow?: (direction: Direction) => boolean | void;
   autoFocus?: boolean;
+  upId?: string;
+  downId?: string;
+  leftId?: string;
+  rightId?: string;
   className?: string;
   children: React.ReactNode | ((props: { isFocused: boolean }) => React.ReactNode);
   disabled?: boolean;
@@ -19,6 +23,10 @@ export const Focusable: React.FC<FocusableProps> = ({
   onEnter,
   onArrow,
   autoFocus = false,
+  upId,
+  downId,
+  leftId,
+  rightId,
   className = '',
   children,
   disabled = false,
@@ -37,6 +45,10 @@ export const Focusable: React.FC<FocusableProps> = ({
       group,
       element: elementRef.current,
       autoFocus,
+      upId,
+      downId,
+      leftId,
+      rightId,
       onEnter: () => {
         if (!disabled && onEnter) {
           onEnter();
@@ -54,7 +66,22 @@ export const Focusable: React.FC<FocusableProps> = ({
     return () => {
       unregisterNode(focusId);
     };
-  }, [focusId, group, disabled, onEnter, onArrow, autoFocus, registerNode, unregisterNode, setFocus, onClick]);
+  }, [
+    focusId,
+    group,
+    disabled,
+    onEnter,
+    onArrow,
+    autoFocus,
+    upId,
+    downId,
+    leftId,
+    rightId,
+    registerNode,
+    unregisterNode,
+    setFocus,
+    onClick,
+  ]);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (disabled) return;
