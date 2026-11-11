@@ -66,7 +66,7 @@ npm test
 ```
 
 ### Step 4: Quality Gate
-Run canonical project quality gate:
+Run canonical project quality gate (enforcing Typecheck & Asset Build, Vitest unit/spatial tests, and 23 Playwright E2E tests):
 ```bash
 bin/quality
 ```
