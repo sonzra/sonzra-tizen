@@ -71,7 +71,17 @@ Run canonical project quality gate:
 bin/quality
 ```
 
-### Step 5: Git Commit
+### Step 5: Cross-Project Parity Audit (sonzra-tizen -> sonzra)
+Before committing any TV feature, audio buffering fix, or API integration in `sonzra-tizen`:
+1. **Assess Sister Impact**: Determine if this fix, audio streaming detail, or backend endpoint requirement affects the main `sonzra` server or web app.
+2. **File Issue if Applicable**: If a sister backend issue, schema gap, or web player fix is needed, file an issue on `sonzra/sonzra` using `gh`:
+   ```bash
+   gh issue create -R sonzra/sonzra \
+     --title "[Parity] <Description of TV requirement or bugfix>" \
+     --body "..."
+   ```
+
+### Step 6: Git Commit
 Commit with a conventional commit message:
 ```bash
 git add -A

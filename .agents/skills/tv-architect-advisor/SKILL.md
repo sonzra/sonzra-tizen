@@ -39,6 +39,10 @@ The TV Architect Advisor evaluates code changes, proposed designs, and refactori
 - **Spatial Matrix Coverage:** Any change introducing new focusable components, shelves, or views must include unit tests in `src/navigation/__tests__/spatialMath.test.ts`.
 - **Quality Gate:** Code changes must pass `bin/quality` (`npm run build` + `npm test`).
 
+### 5. Cross-Project Parity Audit (sonzra-tizen <-> sonzra)
+- **Sister Repository Impact:** Verify whether changes to audio playback, streaming, state scrobbling, or API usage require backend support or web player parity fixes in `sonzra/sonzra`.
+- **Sister Issue Gate:** Ensure a structured GitHub issue has been filed on `sonzra/sonzra` using `gh issue create -R sonzra/sonzra` before signing off on architectural reviews that touch cross-cutting domains.
+
 ## Review Workflow
 
 1. **Inspect Code Changes**:
