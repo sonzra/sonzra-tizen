@@ -51,7 +51,10 @@ When executing Compound Engineering skills (`ce-brainstorm`, `ce-plan`, `ce-work
 - **Developer Discipline:** Follow [`tv-developer`](.agents/skills/tv-developer/SKILL.md). Always write Vitest spatial navigation tests alongside new views and shelves in `src/navigation/__tests__/`.
 - **Focusable Component Discipline:** Every interactive TV element must be wrapped in `<Focusable focusId="..." group="...">` with canonical focus rings.
 
-### 3. Verification & Review Phase (`ce-work` quality check, `ce-code-review`)
+### 3. Verification & Review Phase (`ce-code-review`, `tv-verify-implementation`)
 - **Automated Quality Gate:** Run [`tv-verify-implementation`](.agents/skills/tv-verify-implementation/SKILL.md) to ensure zero TypeScript errors (`npm run build`), 100% test pass on Vitest suites, and exit 0 on `bin/quality`.
 - **TV Packaging & Hardware Verification:** When testing hardware, execute `./deploy-tv.sh` to package, sign with the Samsung Certificate profile, and launch live on the physical TV screen.
-- **Cross-Project Parity Hook:** Immediately after `ce-work` finishes, invoke the [`cross-project-parity`](.agents/skills/cross-project-parity/SKILL.md) agent to audit changes against `sonzra` and automatically file structured GitHub issues on `sonzra/sonzra` for any needed backend endpoints, player fixes, or parity gaps.
+- **Cross-Project Parity Gate:** During code review and verification, verify that any cross-cutting changes have sister issues tracked on `sonzra/sonzra` (or that [`cross-project-parity`](.agents/skills/cross-project-parity/SKILL.md) confirmed no sister impact).
+
+### 4. Shipping & PR Phase (`ce-commit-push-pr`)
+- **Cross-Project Parity Hook:** When preparing, pushing, and opening a PR via `ce-commit-push-pr`, invoke the [`cross-project-parity`](.agents/skills/cross-project-parity/SKILL.md) agent. It audits the finalized PR diff against `origin/main`, checks for existing sister issues, and automatically creates a structured GitHub issue on `sonzra/sonzra` linking the newly created PR.
