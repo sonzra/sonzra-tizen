@@ -76,6 +76,7 @@ export const Focusable: React.FC<FocusableProps> = ({
     <div
       ref={elementRef}
       id={`tv-node-${focusId}`}
+      data-focus-id={focusId}
       tabIndex={-1}
       className={`tv-focusable ${isFocused ? 'tv-focused' : ''} ${className}`}
       onClick={handleClick}
