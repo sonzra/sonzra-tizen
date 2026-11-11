@@ -128,16 +128,16 @@ export const HomeView: React.FC = () => {
                 focusId="hero-resume"
                 group="hero-actions"
                 autoFocus={true}
-                className="rounded-full cursor-pointer transition-all duration-200"
+                className="rounded-full cursor-pointer"
                 onEnter={handleResumePlayback}
                 onClick={handleResumePlayback}
               >
                 {({ isFocused }) => (
                   <button
-                    className={`flex items-center gap-2 font-label-lg text-label-lg px-6 py-3 rounded-full transition-all cursor-pointer ${
+                    className={`flex items-center gap-2 font-label-lg text-label-lg px-6 py-3 rounded-full transition-colors duration-75 cursor-pointer ${
                       isFocused
-                        ? 'bg-primary-container text-on-primary-container shadow-[0_0_28px_rgba(122,90,248,0.8)] ring-2 ring-secondary scale-105'
-                        : 'bg-primary-container/90 text-on-primary-container shadow-md hover:bg-primary-container'
+                        ? 'bg-primary-container text-on-primary-container font-bold'
+                        : 'bg-primary-container/90 text-on-primary-container shadow-md'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[26px]">play_arrow</span>
@@ -151,16 +151,16 @@ export const HomeView: React.FC = () => {
               <Focusable
                 focusId="hero-queue"
                 group="hero-actions"
-                className="rounded-full cursor-pointer transition-all duration-200"
+                className="rounded-full cursor-pointer"
                 onEnter={handleAddHeroToQueue}
                 onClick={handleAddHeroToQueue}
               >
                 {({ isFocused }) => (
                   <button
-                    className={`flex items-center gap-2 font-label-lg text-label-lg px-5 py-3 rounded-full transition-all cursor-pointer ${
+                    className={`flex items-center gap-2 font-label-lg text-label-lg px-5 py-3 rounded-full transition-colors duration-75 cursor-pointer ${
                       isFocused
-                        ? 'bg-surface-container-highest text-secondary ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.5)] scale-105'
-                        : 'bg-surface-container-high text-on-surface hover:text-secondary shadow-md'
+                        ? 'bg-surface-container-highest text-secondary'
+                        : 'bg-surface-container-high text-on-surface shadow-md'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[20px]">queue_music</span>
@@ -173,15 +173,15 @@ export const HomeView: React.FC = () => {
               <Focusable
                 focusId="hero-details"
                 group="hero-actions"
-                className="rounded-full cursor-pointer transition-all duration-200"
+                className="rounded-full cursor-pointer"
                 onEnter={() => openAlbum(heroAlbum.id)}
                 onClick={() => openAlbum(heroAlbum.id)}
               >
                 {({ isFocused }) => (
                   <button
-                    className={`flex items-center gap-2 font-label-lg text-label-lg px-5 py-3 rounded-full transition-all cursor-pointer ${
+                    className={`flex items-center gap-2 font-label-lg text-label-lg px-5 py-3 rounded-full transition-colors duration-75 cursor-pointer ${
                       isFocused
-                        ? 'bg-surface-container-highest text-secondary ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.5)] scale-105'
+                        ? 'bg-surface-container-highest text-secondary'
                         : 'bg-surface-container-high text-on-surface shadow-md'
                     }`}
                   >
@@ -195,14 +195,14 @@ export const HomeView: React.FC = () => {
               <Focusable
                 focusId="hero-favorite"
                 group="hero-actions"
-                className="rounded-full cursor-pointer transition-all duration-200"
+                className="rounded-full cursor-pointer"
               >
                 {({ isFocused }) => (
                   <button
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-error shadow-md transition-all cursor-pointer ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-error shadow-md transition-colors duration-75 cursor-pointer ${
                       isFocused
-                        ? 'bg-surface-container-highest ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.5)] scale-105'
-                        : 'bg-surface-container-high hover:bg-surface-container-highest'
+                        ? 'bg-surface-container-highest'
+                        : 'bg-surface-container-high'
                     }`}
                   >
                     <span
@@ -309,16 +309,16 @@ export const HomeView: React.FC = () => {
                 key={album.id}
                 focusId={focusId}
                 group="continue-shelf"
-                className="rounded-xl cursor-pointer transition-all duration-200"
+                className="rounded-xl cursor-pointer"
                 onEnter={() => playAlbum(album)}
                 onClick={() => playAlbum(album)}
               >
                 {({ isFocused }) => (
                   <div
-                    className={`flex flex-col rounded-xl p-3 transition-all duration-200 h-full ${
+                    className={`flex flex-col rounded-xl p-3 h-full transition-colors duration-75 ${
                       isFocused
-                        ? 'bg-surface-container ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.4)] scale-[1.03] z-10'
-                        : 'bg-surface-container-low hover:bg-surface-container shadow-md'
+                        ? 'bg-surface-container z-10'
+                        : 'bg-surface-container-low shadow-md'
                     }`}
                   >
                     <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-3 shadow-md">
@@ -411,16 +411,16 @@ export const HomeView: React.FC = () => {
                 key={album.id}
                 focusId={focusId}
                 group="recent-shelf"
-                className="rounded-xl cursor-pointer transition-all duration-200"
+                className="rounded-xl cursor-pointer"
                 onEnter={() => openAlbum(album.id)}
                 onClick={() => openAlbum(album.id)}
               >
                 {({ isFocused }) => (
                   <div
-                    className={`flex flex-col rounded-xl p-3 transition-all duration-200 h-full ${
+                    className={`flex flex-col rounded-xl p-3 h-full transition-colors duration-75 ${
                       isFocused
-                        ? 'bg-surface-container ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.4)] scale-[1.03] z-10'
-                        : 'bg-surface-container-low hover:bg-surface-container shadow-md'
+                        ? 'bg-surface-container z-10'
+                        : 'bg-surface-container-low shadow-md'
                     }`}
                   >
                     <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-3 shadow-md">
