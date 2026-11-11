@@ -8,6 +8,10 @@ export interface FocusableProps extends Omit<React.HTMLAttributes<HTMLDivElement
   onEnter?: () => void;
   onArrow?: (direction: Direction) => boolean | void;
   autoFocus?: boolean;
+  upId?: string;
+  downId?: string;
+  leftId?: string;
+  rightId?: string;
   className?: string;
   children: React.ReactNode | ((props: { isFocused: boolean }) => React.ReactNode);
   disabled?: boolean;
@@ -19,6 +23,10 @@ export const Focusable: React.FC<FocusableProps> = ({
   onEnter,
   onArrow,
   autoFocus = false,
+  upId,
+  downId,
+  leftId,
+  rightId,
   className = '',
   children,
   disabled = false,
@@ -29,21 +37,64 @@ export const Focusable: React.FC<FocusableProps> = ({
   const { focusedId, setFocus, registerNode, unregisterNode } = useSpatialNav();
   const isFocused = focusedId === focusId;
 
+  // Store mutable callbacks & dynamic navigation properties in a ref so changes
+  // do not trigger effect re-execution or unregistering/re-registering nodes.
+  const propsRef = useRef({
+    group,
+    onEnter,
+    onArrow,
+    onClick,
+    upId,
+    downId,
+    leftId,
+    rightId,
+    disabled,
+  });
+  propsRef.current = {
+    group,
+    onEnter,
+    onArrow,
+    onClick,
+    upId,
+    downId,
+    leftId,
+    rightId,
+    disabled,
+  };
+
   useEffect(() => {
     if (disabled || !elementRef.current) return;
 
     registerNode({
       id: focusId,
-      group,
+      get group() {
+        return propsRef.current.group;
+      },
       element: elementRef.current,
+      autoFocus,
+      get upId() {
+        return propsRef.current.upId;
+      },
+      get downId() {
+        return propsRef.current.downId;
+      },
+      get leftId() {
+        return propsRef.current.leftId;
+      },
+      get rightId() {
+        return propsRef.current.rightId;
+      },
       onEnter: () => {
-        if (!disabled && onEnter) {
-          onEnter();
-        } else if (!disabled && onClick) {
+        const current = propsRef.current;
+        if (!current.disabled && current.onEnter) {
+          current.onEnter();
+        } else if (!current.disabled && current.onClick) {
           elementRef.current?.click();
         }
       },
-      onArrow,
+      onArrow: (direction: Direction) => {
+        return propsRef.current.onArrow?.(direction);
+      },
     });
 
     if (autoFocus) {
@@ -53,7 +104,7 @@ export const Focusable: React.FC<FocusableProps> = ({
     return () => {
       unregisterNode(focusId);
     };
-  }, [focusId, group, disabled, onEnter, onArrow, autoFocus, registerNode, unregisterNode, setFocus, onClick]);
+  }, [focusId, disabled, autoFocus, registerNode, unregisterNode, setFocus]);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (disabled) return;
@@ -76,6 +127,7 @@ export const Focusable: React.FC<FocusableProps> = ({
     <div
       ref={elementRef}
       id={`tv-node-${focusId}`}
+      data-focus-id={focusId}
       tabIndex={-1}
       className={`tv-focusable ${isFocused ? 'tv-focused' : ''} ${className}`}
       onClick={handleClick}

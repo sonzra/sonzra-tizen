@@ -21,15 +21,28 @@ export const Sidebar: React.FC = () => {
     >
       <div className="flex flex-col items-center gap-7 w-full">
         {/* Brand Glyph */}
-        <div
-          className="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_24px_rgba(122,90,248,0.55)] cursor-pointer"
+        <Focusable
+          focusId="sidebar-brand"
+          group="sidebar"
+          className="w-12 h-12 rounded-xl cursor-pointer transition-all duration-200"
+          onEnter={() => goToView('home')}
           onClick={() => goToView('home')}
-          title="Sonzra TV"
         >
-          <span className="material-symbols-outlined text-surface-container-lowest text-[28px] font-bold">
-            graphic_eq
-          </span>
-        </div>
+          {({ isFocused }) => (
+            <div
+              className={`w-12 h-12 rounded-xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                isFocused
+                  ? 'ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.8)] scale-110'
+                  : 'shadow-[0_0_24px_rgba(122,90,248,0.55)]'
+              }`}
+              title="Sonzra TV Home"
+            >
+              <span className="material-symbols-outlined text-surface-container-lowest text-[28px] font-bold">
+                graphic_eq
+              </span>
+            </div>
+          )}
+        </Focusable>
 
         {/* TV Nav Icons */}
         <nav className="flex flex-col items-center gap-4 w-full px-2">
@@ -97,12 +110,26 @@ export const Sidebar: React.FC = () => {
           }}
         </Focusable>
 
-        <div
-          className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-[0_0_14px_rgba(202,190,255,0.35)] ring-2 ring-primary/40 cursor-pointer"
-          title="User Profile"
+        <Focusable
+          focusId="sidebar-profile"
+          group="sidebar"
+          className="w-10 h-10 rounded-full cursor-pointer transition-all duration-200"
+          onEnter={() => goToView('settings')}
+          onClick={() => goToView('settings')}
         >
-          <span className="material-symbols-outlined text-on-primary text-[20px]">person</span>
-        </div>
+          {({ isFocused }) => (
+            <div
+              className={`w-10 h-10 rounded-full bg-primary flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                isFocused
+                  ? 'ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.8)] scale-110'
+                  : 'shadow-[0_0_14px_rgba(202,190,255,0.35)] ring-2 ring-primary/40'
+              }`}
+              title="User Account & Settings"
+            >
+              <span className="material-symbols-outlined text-on-primary text-[20px]">person</span>
+            </div>
+          )}
+        </Focusable>
       </div>
     </aside>
   );

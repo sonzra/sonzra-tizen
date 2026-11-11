@@ -110,7 +110,7 @@ function getVisualRows(nodes: FocusableNode[]): FocusableNode[][] {
 /**
  * Finds the appropriate active sidebar item matching the current view.
  */
-function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[]): FocusableNode | null {
+export function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[]): FocusableNode | null {
   const sidebarItems = candidates.filter((c) => c.group === 'sidebar');
   if (sidebarItems.length === 0) return null;
 
@@ -132,7 +132,7 @@ function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[
 /**
  * Finds the default primary entry point for a view when entering from the sidebar rail.
  */
-function getViewEntryPoint(
+export function getViewEntryPoint(
   activeView: ActiveView,
   candidates: FocusableNode[],
   lastFocusedContentId?: string | null
@@ -145,6 +145,13 @@ function getViewEntryPoint(
 
   const contentCandidates = candidates.filter((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock' && isVisible(c.element));
   if (contentCandidates.length === 0) return null;
+
+  // 1.5. Prioritize any element explicitly marked with autoFocus or login anchor
+  const autoFocusNode = contentCandidates.find((c) => c.autoFocus);
+  if (autoFocusNode) return autoFocusNode;
+
+  const emailField = contentCandidates.find((c) => c.id === 'signin-field-email');
+  if (emailField) return emailField;
 
   switch (activeView) {
     case 'home': {
@@ -375,8 +382,11 @@ export function findNextFocusableNode(
       });
     }
 
-    // No candidate to the left in content -> seamless handoff to Sidebar rail!
-    return getActiveSidebarItem(activeView, validCandidates);
+    // No candidate to the left in content -> handoff to Sidebar rail if present
+    const sidebarItem = getActiveSidebarItem(activeView, validCandidates);
+    if (sidebarItem) {
+      return sidebarItem;
+    }
   }
 
   // =========================================================================
@@ -419,8 +429,6 @@ export function findNextFocusableNode(
         return dist < bestDist ? c : best;
       });
     }
-
-    return null;
   }
 
   // =========================================================================

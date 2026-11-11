@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useServer } from '../context/ServerContext';
+import { useAuth } from '../context/AuthContext';
 import { Focusable } from '../navigation/Focusable';
 import { FocusableButton } from '../components/FocusableButton';
-import { Server, Wifi, CheckCircle2, AlertCircle, RefreshCw, Tv, HelpCircle } from 'lucide-react';
+import { Server, Wifi, CheckCircle2, AlertCircle, RefreshCw, Tv, HelpCircle, LogOut, User as UserIcon } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { config, updateConfig, testConnection, refreshLibrary } = useServer();
+  const { user, isDemoUser, signOut } = useAuth();
 
   const [serverUrl, setServerUrl] = useState(config.serverUrl);
   const [serverConnectionId, setServerConnectionId] = useState(config.serverConnectionId);
@@ -231,8 +233,42 @@ export const SettingsView: React.FC = () => {
           )}
         </section>
 
-        {/* Right Column: Tizen TV Environment & Remote Control Guide */}
+        {/* Right Column: Account & Tizen TV Environment */}
         <div className="tv-settings-side-column">
+          {/* User Account Card */}
+          <section className="tv-settings-card" aria-label="User Account">
+            <div className="tv-settings-card-header">
+              <UserIcon className="tv-settings-header-icon" size={24} />
+              <h2>Active Account</h2>
+            </div>
+            <div className="tv-diag-rows">
+              <div className="tv-diag-row">
+                <span className="tv-diag-label">Signed-in User</span>
+                <span className="tv-diag-value font-mono">
+                  {user ? user.email_address : isDemoUser ? 'Standalone Demo' : 'Guest'}
+                </span>
+              </div>
+              <div className="tv-diag-row">
+                <span className="tv-diag-label">Session Scope</span>
+                <span className="tv-diag-value">
+                  {isDemoUser ? 'Local Offline Preview' : 'User-Scoped Server API'}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-white/[0.04]">
+              <FocusableButton
+                focusId="btn-sign-out"
+                group="settings-form"
+                label="Sign Out & Switch User"
+                icon={<LogOut size={20} />}
+                variant="danger"
+                size="md"
+                onEnter={signOut}
+                onClick={signOut}
+              />
+            </div>
+          </section>
+
           <section className="tv-settings-card" aria-label="System Diagnostics">
             <div className="tv-settings-card-header">
               <Tv className="tv-settings-header-icon" size={24} />

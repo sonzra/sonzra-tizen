@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TV_IP="192.168.31.189"
 TV_PORT="26101"
 TARGET_NAME="TQ65QN80FAUXXC"
-DIST_DIR="/root/Projects/sonzra-tizen/dist"
+DIST_DIR="$SCRIPT_DIR/dist"
 CERTS_DIR="/root/SamsungCertificate/Sonzra Tizen"
 
 echo "=== [1/5] Building Web Assets (Vite + TypeScript) ==="
-cd /root/Projects/sonzra-tizen
+cd "$SCRIPT_DIR"
 npm run build
 
 echo "=== [2/5] Packaging & Signing Sonzra.wgt with Samsung Profile ==="
@@ -48,6 +49,6 @@ docker run --rm --net=host \
 echo "=== [5/5] Launching Sonzra on Samsung TV Screen ==="
 docker run --rm --net=host \
   --entrypoint /bin/bash georift/install-jellyfin-tizen -c \
-  "tizen run -p Sonzra0002.SonzraTV -t $TARGET_NAME"
+  "tizen run -p Sonzra0001.SonzraTV -t $TARGET_NAME"
 
 echo "🎉 Sonzra TV app deployed and launched successfully!"

@@ -1,3 +1,5 @@
+import { Direction } from '../types/navigation';
+
 // Samsung Tizen TV Remote Control Key Handling
 
 export const TIZEN_KEYS = {
@@ -10,6 +12,12 @@ export const TIZEN_KEYS = {
   RETURN: 10009, // Tizen TV hardware Return / Back key
   ESCAPE: 27,
   BACKSPACE: 8,
+
+  // Alternative Tizen TV Remote Arrow codes
+  TIZEN_UP: 29460,
+  TIZEN_DOWN: 29461,
+  TIZEN_LEFT: 4,
+  TIZEN_RIGHT: 5,
 
   // Samsung TV Hardware Media Keys
   MEDIA_PLAY: 415,
@@ -44,7 +52,6 @@ export function registerTizenKeys(): void {
       keysToRegister.forEach((keyName) => {
         try {
           window.tizen?.tvinputdevice?.registerKey(keyName);
-          // console.log(`Registered Tizen TV key: ${keyName}`);
         } catch (err) {
           console.warn(`Could not register Tizen key "${keyName}":`, err);
         }
@@ -69,6 +76,42 @@ export function isBackKey(e: KeyboardEvent): boolean {
   );
 }
 
+export function getDirectionFromEvent(e: KeyboardEvent): Direction | null {
+  if (
+    e.keyCode === TIZEN_KEYS.UP ||
+    e.keyCode === TIZEN_KEYS.TIZEN_UP ||
+    e.key === 'ArrowUp' ||
+    e.key === 'Up'
+  ) {
+    return 'up';
+  }
+  if (
+    e.keyCode === TIZEN_KEYS.DOWN ||
+    e.keyCode === TIZEN_KEYS.TIZEN_DOWN ||
+    e.key === 'ArrowDown' ||
+    e.key === 'Down'
+  ) {
+    return 'down';
+  }
+  if (
+    e.keyCode === TIZEN_KEYS.LEFT ||
+    e.keyCode === TIZEN_KEYS.TIZEN_LEFT ||
+    e.key === 'ArrowLeft' ||
+    e.key === 'Left'
+  ) {
+    return 'left';
+  }
+  if (
+    e.keyCode === TIZEN_KEYS.RIGHT ||
+    e.keyCode === TIZEN_KEYS.TIZEN_RIGHT ||
+    e.key === 'ArrowRight' ||
+    e.key === 'Right'
+  ) {
+    return 'right';
+  }
+  return null;
+}
+
 export function isMediaPlayPause(e: KeyboardEvent): boolean {
   return (
     e.keyCode === TIZEN_KEYS.MEDIA_PLAY_PAUSE ||
@@ -85,10 +128,30 @@ export function isMediaPause(e: KeyboardEvent): boolean {
   return e.keyCode === TIZEN_KEYS.MEDIA_PAUSE || e.key === 'MediaPause';
 }
 
+export function isMediaStop(e: KeyboardEvent): boolean {
+  return e.keyCode === TIZEN_KEYS.MEDIA_STOP || e.key === 'MediaStop';
+}
+
 export function isMediaNext(e: KeyboardEvent): boolean {
   return e.keyCode === TIZEN_KEYS.MEDIA_TRACK_NEXT || e.key === 'MediaTrackNext';
 }
 
 export function isMediaPrev(e: KeyboardEvent): boolean {
   return e.keyCode === TIZEN_KEYS.MEDIA_TRACK_PREV || e.key === 'MediaTrackPrevious';
+}
+
+export function isMediaFastForward(e: KeyboardEvent): boolean {
+  return (
+    e.keyCode === TIZEN_KEYS.MEDIA_FAST_FORWARD ||
+    e.key === 'MediaFastForward' ||
+    e.key === 'FastForward'
+  );
+}
+
+export function isMediaRewind(e: KeyboardEvent): boolean {
+  return (
+    e.keyCode === TIZEN_KEYS.MEDIA_REWIND ||
+    e.key === 'MediaRewind' ||
+    e.key === 'Rewind'
+  );
 }

@@ -9,6 +9,7 @@ export interface FocusableNode {
   onBlur?: () => void;
   onArrow?: (direction: Direction) => boolean | void; // return true if handled
   priority?: number;
+  autoFocus?: boolean;
   upId?: string;
   downId?: string;
   leftId?: string;
