@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import { ActiveView, Direction, FocusableNode } from '../types/navigation';
 import { findNextFocusableNode } from './spatialMath';
 import {
+  getDirectionFromEvent,
   isBackKey,
   isEnterKey,
   isMediaNext,
@@ -9,6 +10,7 @@ import {
   isMediaPlay,
   isMediaPlayPause,
   isMediaPrev,
+  isMediaStop,
   registerTizenKeys,
   TIZEN_KEYS,
 } from './tizenKeys';
@@ -18,6 +20,8 @@ interface NavigationHistoryItem {
   param?: string;
   focusId?: string;
 }
+
+export type MediaAction = 'play' | 'pause' | 'playpause' | 'next' | 'prev' | 'stop';
 
 interface SpatialNavigationContextType {
   focusedId: string | null;
@@ -32,7 +36,7 @@ interface SpatialNavigationContextType {
   goToView: (view: ActiveView, param?: string) => void;
   goBack: () => void;
   canGoBack: boolean;
-  registerMediaHandler: (handler: (action: 'play' | 'pause' | 'playpause' | 'next' | 'prev') => void) => () => void;
+  registerMediaHandler: (handler: (action: MediaAction) => void) => () => void;
 }
 
 const SpatialNavigationContext = createContext<SpatialNavigationContextType | null>(null);
@@ -52,7 +56,7 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   // Track last focused node per semantic group
   const lastFocusedByGroupRef = useRef<Map<string, string>>(new Map());
 
-  const mediaHandlersRef = useRef<Set<(action: 'play' | 'pause' | 'playpause' | 'next' | 'prev') => void>>(new Set());
+  const mediaHandlersRef = useRef<Set<(action: MediaAction) => void>>(new Set());
 
   // Register Tizen TV hardware keys on startup
   useEffect(() => {
@@ -267,6 +271,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         mediaHandlersRef.current.forEach((fn) => fn('pause'));
         return;
       }
+      if (isMediaStop(e)) {
+        e.preventDefault();
+        mediaHandlersRef.current.forEach((fn) => fn('stop'));
+        return;
+      }
       if (isMediaNext(e)) {
         e.preventDefault();
         mediaHandlersRef.current.forEach((fn) => fn('next'));
@@ -298,27 +307,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
       }
 
       // 4. Directional D-Pad Keys
-      switch (e.keyCode) {
-        case TIZEN_KEYS.UP:
-        case 38: // ArrowUp
-          e.preventDefault();
-          navigate('up');
-          break;
-        case TIZEN_KEYS.DOWN:
-        case 40: // ArrowDown
-          e.preventDefault();
-          navigate('down');
-          break;
-        case TIZEN_KEYS.LEFT:
-        case 37: // ArrowLeft
-          e.preventDefault();
-          navigate('left');
-          break;
-        case TIZEN_KEYS.RIGHT:
-        case 39: // ArrowRight
-          e.preventDefault();
-          navigate('right');
-          break;
+      const direction = getDirectionFromEvent(e);
+      if (direction) {
+        e.preventDefault();
+        navigate(direction);
+        return;
       }
     };
 

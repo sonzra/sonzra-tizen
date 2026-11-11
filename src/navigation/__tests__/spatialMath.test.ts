@@ -1,6 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { findNearestNeighbor, findNextFocusableNode } from '../spatialMath';
 import { FocusableNode } from '../../types/navigation';
+import {
+  getDirectionFromEvent,
+  isBackKey,
+  isEnterKey,
+  isMediaFastForward,
+  isMediaNext,
+  isMediaPause,
+  isMediaPlay,
+  isMediaPlayPause,
+  isMediaPrev,
+  isMediaRewind,
+  isMediaStop,
+  TIZEN_KEYS,
+} from '../tizenKeys';
 
 describe('Spatial Navigation Math', () => {
   beforeEach(() => {
@@ -313,6 +327,76 @@ describe('Spatial Navigation Math', () => {
       // Right from ctrlPrev -> ctrlPlay
       const rightFromPrev = findNextFocusableNode(ctrlPrev, allNodes, 'right', { activeView: 'now-playing' });
       expect(rightFromPrev?.id).toBe('np-ctrl-play');
+    });
+  });
+
+  describe('Tizen Hardware Remote Key Normalization', () => {
+    it('correctly normalizes standard Arrow keys and e.key strings to spatial directions', () => {
+      expect(getDirectionFromEvent({ keyCode: 38, key: 'ArrowUp' } as any)).toBe('up');
+      expect(getDirectionFromEvent({ keyCode: 40, key: 'ArrowDown' } as any)).toBe('down');
+      expect(getDirectionFromEvent({ keyCode: 37, key: 'ArrowLeft' } as any)).toBe('left');
+      expect(getDirectionFromEvent({ keyCode: 39, key: 'ArrowRight' } as any)).toBe('right');
+    });
+
+    it('correctly maps Samsung TV platform-specific keycodes', () => {
+      expect(getDirectionFromEvent({ keyCode: TIZEN_KEYS.TIZEN_UP, key: '' } as any)).toBe('up');
+      expect(getDirectionFromEvent({ keyCode: TIZEN_KEYS.TIZEN_DOWN, key: '' } as any)).toBe('down');
+      expect(getDirectionFromEvent({ keyCode: TIZEN_KEYS.TIZEN_LEFT, key: '' } as any)).toBe('left');
+      expect(getDirectionFromEvent({ keyCode: TIZEN_KEYS.TIZEN_RIGHT, key: '' } as any)).toBe('right');
+    });
+
+    it('identifies Samsung TV multimedia keys correctly', () => {
+      expect(isMediaPlay({ keyCode: 415, key: 'MediaPlay' } as any)).toBe(true);
+      expect(isMediaPause({ keyCode: 19, key: 'MediaPause' } as any)).toBe(true);
+      expect(isMediaPlayPause({ keyCode: 10252, key: 'MediaPlayPause' } as any)).toBe(true);
+      expect(isMediaStop({ keyCode: 413, key: 'MediaStop' } as any)).toBe(true);
+      expect(isMediaNext({ keyCode: 10233, key: 'MediaTrackNext' } as any)).toBe(true);
+      expect(isMediaPrev({ keyCode: 10232, key: 'MediaTrackPrevious' } as any)).toBe(true);
+      expect(isMediaFastForward({ keyCode: 417, key: 'MediaFastForward' } as any)).toBe(true);
+      expect(isMediaRewind({ keyCode: 412, key: 'MediaRewind' } as any)).toBe(true);
+    });
+
+    it('identifies Enter and Back/Return keys correctly', () => {
+      expect(isEnterKey({ keyCode: 13, key: 'Enter' } as any)).toBe(true);
+      expect(isBackKey({ keyCode: 10009, key: '' } as any)).toBe(true);
+      expect(isBackKey({ keyCode: 27, key: 'Escape' } as any)).toBe(true);
+    });
+  });
+
+  describe('Sidebar Rail Full Reachability (Brand & Profile)', () => {
+    it('navigates cleanly through sidebar brand, nav items, and profile', () => {
+      const brand = createMockNode('sidebar-brand', 24, 20, 48, 48, 'sidebar');
+      const home = createMockNode('sidebar-home', 24, 80, 48, 48, 'sidebar');
+      const lib = createMockNode('sidebar-library', 24, 140, 48, 48, 'sidebar');
+      const settings = createMockNode('sidebar-settings', 24, 900, 48, 48, 'sidebar');
+      const profile = createMockNode('sidebar-profile', 24, 960, 48, 48, 'sidebar');
+
+      const heroResume = createMockNode('hero-resume', 200, 500, 150, 50, 'hero-actions');
+      const allNodes = [brand, home, lib, settings, profile, heroResume];
+
+      // Up from home -> brand
+      const upFromHome = findNextFocusableNode(home, allNodes, 'up', { activeView: 'home' });
+      expect(upFromHome?.id).toBe('sidebar-brand');
+
+      // Down from brand -> home
+      const downFromBrand = findNextFocusableNode(brand, allNodes, 'down', { activeView: 'home' });
+      expect(downFromBrand?.id).toBe('sidebar-home');
+
+      // Down from settings -> profile
+      const downFromSettings = findNextFocusableNode(settings, allNodes, 'down', { activeView: 'home' });
+      expect(downFromSettings?.id).toBe('sidebar-profile');
+
+      // Up from profile -> settings
+      const upFromProfile = findNextFocusableNode(profile, allNodes, 'up', { activeView: 'home' });
+      expect(upFromProfile?.id).toBe('sidebar-settings');
+
+      // Right from brand -> heroResume (entry point)
+      const rightFromBrand = findNextFocusableNode(brand, allNodes, 'right', { activeView: 'home' });
+      expect(rightFromBrand?.id).toBe('hero-resume');
+
+      // Right from profile -> heroResume (entry point)
+      const rightFromProfile = findNextFocusableNode(profile, allNodes, 'right', { activeView: 'home' });
+      expect(rightFromProfile?.id).toBe('hero-resume');
     });
   });
 });
