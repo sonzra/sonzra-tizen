@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { BottomDock } from './components/BottomDock';
 import { MediaOsdToast } from './components/MediaOsdToast';
+import { TvRemoteSimulator } from './components/TvRemoteSimulator';
 import { SignInView } from './views/SignInView';
 import { HomeView } from './views/HomeView';
 import { LibraryView } from './views/LibraryView';
@@ -84,27 +85,28 @@ const MainLayout: React.FC = () => {
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="w-screen h-screen bg-background flex flex-col items-center justify-center gap-4 text-on-surface">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.7)] animate-pulse">
-          <span className="material-symbols-outlined text-[36px] text-surface-container-lowest font-bold">
-            graphic_eq
-          </span>
+  return (
+    <>
+      {loading ? (
+        <div className="w-screen h-screen bg-background flex flex-col items-center justify-center gap-4 text-on-surface">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.7)] animate-pulse">
+            <span className="material-symbols-outlined text-[36px] text-surface-container-lowest font-bold">
+              graphic_eq
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-secondary text-[13px] font-mono uppercase tracking-widest">
+            <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+            <span>CONNECTING TO SONZRA...</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-secondary text-[13px] font-mono uppercase tracking-widest">
-          <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
-          <span>CONNECTING TO SONZRA...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <SignInView />;
-  }
-
-  return <MainLayout />;
+      ) : !isAuthenticated ? (
+        <SignInView />
+      ) : (
+        <MainLayout />
+      )}
+      <TvRemoteSimulator />
+    </>
+  );
 };
 
 export const App: React.FC = () => {
