@@ -10,9 +10,9 @@ export const SignInView: React.FC = () => {
   const { signIn, enterDemoMode, loading: authLoading } = useAuth();
   const { config } = useServer();
 
-  const [email, setEmail] = useState<string>('audiophile@sonzra.org');
-  const [password, setPassword] = useState<string>('');
-  const [serverUrl, setServerUrl] = useState<string>(config.serverUrl || 'http://localhost:3000');
+  const [email, setEmail] = useState<string>('demo@sonzra.com');
+  const [password, setPassword] = useState<string>('password');
+  const [serverUrl, setServerUrl] = useState<string>(config.serverUrl || 'http://192.168.31.139:3000');
   const [activeField, setActiveField] = useState<ActiveField>('email');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -164,6 +164,7 @@ export const SignInView: React.FC = () => {
             <Focusable
               focusId="signin-field-email"
               group="signin-inputs"
+              autoFocus={true}
               className="rounded-xl cursor-pointer"
               onEnter={() => setActiveField('email')}
               onClick={() => setActiveField('email')}

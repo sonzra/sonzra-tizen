@@ -127,6 +127,7 @@ export const HomeView: React.FC = () => {
               <Focusable
                 focusId="hero-resume"
                 group="hero-actions"
+                autoFocus={true}
                 className="rounded-full cursor-pointer transition-all duration-200"
                 onEnter={handleResumePlayback}
                 onClick={handleResumePlayback}

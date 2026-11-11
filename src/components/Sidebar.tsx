@@ -24,7 +24,7 @@ export const Sidebar: React.FC = () => {
         <Focusable
           focusId="sidebar-brand"
           group="sidebar"
-          className="rounded-xl cursor-pointer transition-all duration-200"
+          className="w-12 h-12 rounded-xl cursor-pointer transition-all duration-200"
           onEnter={() => goToView('home')}
           onClick={() => goToView('home')}
         >
@@ -113,7 +113,7 @@ export const Sidebar: React.FC = () => {
         <Focusable
           focusId="sidebar-profile"
           group="sidebar"
-          className="rounded-full cursor-pointer transition-all duration-200"
+          className="w-10 h-10 rounded-full cursor-pointer transition-all duration-200"
           onEnter={() => goToView('settings')}
           onClick={() => goToView('settings')}
         >

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { ActiveView, Direction, FocusableNode } from '../types/navigation';
-import { findNextFocusableNode } from './spatialMath';
+import { findNextFocusableNode, getViewEntryPoint } from './spatialMath';
 import {
   getDirectionFromEvent,
   isBackKey,
@@ -75,10 +75,19 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
 
     if (prevNode && prevNode.id !== id) {
       prevNode.onBlur?.();
-      prevNode.element.classList.remove('tv-focused');
+      prevNode.element?.classList?.remove('tv-focused');
     }
 
-    if (nextNode) {
+    // Clean up any stray focus halos across the document
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.tv-focused').forEach((el) => {
+        if (!nextNode || el !== nextNode.element) {
+          el.classList.remove('tv-focused');
+        }
+      });
+    }
+
+    if (nextNode && nextNode.element && nextNode.element.isConnected) {
       setFocusedId(id);
       nextNode.element.classList.add('tv-focused');
       nextNode.onFocus?.();
@@ -114,11 +123,19 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   const registerNode = useCallback((node: FocusableNode) => {
     nodesRef.current.set(node.id, node);
 
-    // Initial focus allocation: prioritize hero-resume or sidebar-home on startup
-    if (!focusedIdRef.current) {
-      if (node.id === 'hero-resume' || node.id === 'sidebar-home') {
-        setFocus(node.id);
-      } else if (node.id.startsWith('sidebar-')) {
+    const currentActiveNode = focusedIdRef.current ? nodesRef.current.get(focusedIdRef.current) : null;
+    const isCurrentValid = Boolean(currentActiveNode && currentActiveNode.element && currentActiveNode.element.isConnected);
+
+    // Initial focus allocation or re-anchor if current focus is missing/stale
+    if (node.autoFocus) {
+      setFocus(node.id);
+    } else if (!isCurrentValid) {
+      if (
+        node.id === 'signin-field-email' ||
+        node.id === 'hero-resume' ||
+        node.id === 'sidebar-home' ||
+        node.id === 'library-tab-albums'
+      ) {
         setFocus(node.id);
       }
     }
@@ -133,29 +150,39 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
 
     // If the unmounted node was focused, reset or re-evaluate
     if (focusedIdRef.current === id) {
-      const candidates = Array.from(nodesRef.current.values());
+      const candidates = Array.from(nodesRef.current.values()).filter(
+        (n) => n.element && n.element.isConnected
+      );
       if (candidates.length > 0) {
         // Fallback to entry point of current view
-        const entry = candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock');
-        setFocus(entry ? entry.id : candidates[0].id);
+        const entry =
+          getViewEntryPoint(activeView, candidates, lastFocusedContentIdRef.current) ||
+          candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock') ||
+          candidates[0];
+        setFocus(entry.id);
       } else {
         setFocusedId(null);
       }
     }
-  }, [setFocus]);
+  }, [activeView, setFocus]);
 
   const navigate = useCallback((direction: Direction) => {
     const currentId = focusedIdRef.current;
-    if (!currentId) {
-      const candidates = Array.from(nodesRef.current.values());
+    const currentNode = currentId ? nodesRef.current.get(currentId) : null;
+    if (!currentNode || !currentNode.element || !currentNode.element.isConnected) {
+      // Current focus was lost, unmounted, or detached. Re-anchor immediately.
+      const candidates = Array.from(nodesRef.current.values()).filter(
+        (n) => n.element && n.element.isConnected
+      );
       if (candidates.length > 0) {
-        setFocus(candidates[0].id);
+        const entry =
+          getViewEntryPoint(activeView, candidates, lastFocusedContentIdRef.current) ||
+          candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock') ||
+          candidates[0];
+        setFocus(entry.id);
       }
       return;
     }
-
-    const currentNode = nodesRef.current.get(currentId);
-    if (!currentNode) return;
 
     // 1. Custom arrow handler override
     if (currentNode.onArrow) {

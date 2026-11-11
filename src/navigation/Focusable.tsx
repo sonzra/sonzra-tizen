@@ -36,6 +36,7 @@ export const Focusable: React.FC<FocusableProps> = ({
       id: focusId,
       group,
       element: elementRef.current,
+      autoFocus,
       onEnter: () => {
         if (!disabled && onEnter) {
           onEnter();

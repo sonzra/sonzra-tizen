@@ -110,7 +110,7 @@ function getVisualRows(nodes: FocusableNode[]): FocusableNode[][] {
 /**
  * Finds the appropriate active sidebar item matching the current view.
  */
-function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[]): FocusableNode | null {
+export function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[]): FocusableNode | null {
   const sidebarItems = candidates.filter((c) => c.group === 'sidebar');
   if (sidebarItems.length === 0) return null;
 
@@ -132,7 +132,7 @@ function getActiveSidebarItem(activeView: ActiveView, candidates: FocusableNode[
 /**
  * Finds the default primary entry point for a view when entering from the sidebar rail.
  */
-function getViewEntryPoint(
+export function getViewEntryPoint(
   activeView: ActiveView,
   candidates: FocusableNode[],
   lastFocusedContentId?: string | null

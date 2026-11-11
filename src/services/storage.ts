@@ -5,8 +5,8 @@ const CONFIG_KEY = 'sonzra_tv_server_config';
 const AUTH_SESSION_KEY = 'sonzra_tv_auth_session';
 
 export const DEFAULT_SERVER_CONFIG: ServerConfig = {
-  serverUrl: 'http://localhost:3000',
-  serverConnectionId: '1',
+  serverUrl: 'http://192.168.31.139:3000',
+  serverConnectionId: '11',
   authToken: '',
   demoMode: false,
   serverName: 'Local Sonzra',

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TV_IP="192.168.31.189"
 TV_PORT="26101"
 TARGET_NAME="TQ65QN80FAUXXC"
-DIST_DIR="/root/Projects/sonzra-tizen/dist"
+DIST_DIR="$SCRIPT_DIR/dist"
 CERTS_DIR="/root/SamsungCertificate/Sonzra Tizen"
 
 echo "=== [1/5] Building Web Assets (Vite + TypeScript) ==="
-cd /root/Projects/sonzra-tizen
+cd "$SCRIPT_DIR"
 npm run build
 
 echo "=== [2/5] Packaging & Signing Sonzra.wgt with Samsung Profile ==="
