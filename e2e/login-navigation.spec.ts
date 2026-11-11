@@ -224,4 +224,77 @@ test.describe('Login & TV Remote Spatial Navigation E2E Suite', () => {
     await pressRemote(page, 'ArrowUp');
     await expectFocused(page, 'signin-field-password');
   });
+
+  test('Flow 1.11: Keyboard retention - Pressing Enter on Backspace retains focus on keyboard without jumping to username', async ({
+    page,
+  }) => {
+    await expectFocused(page, 'signin-field-email');
+    const emailField = page.locator('#tv-node-signin-field-email');
+    await expect(emailField).toContainText('demo@sonzra.com');
+
+    // Focus directly on the backspace button in the virtual keyboard via hover
+    const backspaceNode = page.locator('#tv-node-kb-btn-backspace');
+    await backspaceNode.hover();
+    await expectFocused(page, 'kb-btn-backspace');
+
+    // Press Enter via remote controller 3 times consecutively
+    await pressRemote(page, 'Enter');
+    // Focus MUST remain on backspace button, NOT jump back to email field!
+    await expectFocused(page, 'kb-btn-backspace');
+    await expect(emailField).toContainText('demo@sonzra.co'); // 'm' deleted
+
+    await pressRemote(page, 'Enter');
+    await expectFocused(page, 'kb-btn-backspace');
+    await expect(emailField).toContainText('demo@sonzra.c'); // 'o' deleted
+
+    await pressRemote(page, 'Enter');
+    await expectFocused(page, 'kb-btn-backspace');
+    await expect(emailField).toContainText('demo@sonzra.'); // 'c' deleted
+
+    // Test a character key: hover 'a', press Enter twice, focus stays on 'a'
+    const charA = page.locator('#tv-node-kb-char-a');
+    await charA.hover();
+    await expectFocused(page, 'kb-char-a');
+
+    await pressRemote(page, 'Enter');
+    await expectFocused(page, 'kb-char-a');
+    await expect(emailField).toContainText('demo@sonzra.a');
+
+    await pressRemote(page, 'Enter');
+    await expectFocused(page, 'kb-char-a');
+    await expect(emailField).toContainText('demo@sonzra.aa');
+  });
+
+  test('Flow 1.12: Failed authentication displays visible error banner in app without unmounting SignInView', async ({
+    page,
+  }) => {
+    await expectFocused(page, 'signin-field-email');
+
+    // Fill in invalid credentials
+    // Click on password field and clear/type invalid password
+    const clearBtn = page.locator('#tv-node-kb-btn-clear');
+    const passwordField = page.locator('#tv-node-signin-field-password');
+    await passwordField.click();
+
+    // Clear password
+    await clearBtn.click();
+
+    // Type a single character 'x' into password
+    const charX = page.locator('#tv-node-kb-char-x');
+    await charX.click();
+    await pressRemote(page, 'Enter');
+
+    // Submit the form with bad password (demo@sonzra.com / x)
+    const submitBtn = page.locator('#tv-node-signin-btn-submit');
+    await submitBtn.click();
+
+    // Error banner MUST appear with visible role="alert" containing the server error message
+    const alert = page.locator('[role="alert"]');
+    await expect(alert).toBeVisible({ timeout: 10000 });
+    await expect(alert).toContainText(/Invalid email address or password|failed/i);
+
+    // Verify SignInView remains visible (did NOT unmount into blank screen)
+    await expect(page.locator('#tv-node-signin-field-email')).toBeVisible();
+    await expect(page.locator('#tv-node-signin-btn-submit')).toBeVisible();
+  });
 });

@@ -83,11 +83,11 @@ const MainLayout: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, initialLoading } = useAuth();
 
   return (
     <>
-      {loading ? (
+      {initialLoading ? (
         <div className="w-screen h-screen bg-background flex flex-col items-center justify-center gap-4 text-on-surface">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.7)] animate-pulse">
             <span className="material-symbols-outlined text-[36px] text-surface-container-lowest font-bold">

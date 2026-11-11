@@ -146,6 +146,13 @@ export function getViewEntryPoint(
   const contentCandidates = candidates.filter((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock' && isVisible(c.element));
   if (contentCandidates.length === 0) return null;
 
+  // 1.5. Prioritize any element explicitly marked with autoFocus or login anchor
+  const autoFocusNode = contentCandidates.find((c) => c.autoFocus);
+  if (autoFocusNode) return autoFocusNode;
+
+  const emailField = contentCandidates.find((c) => c.id === 'signin-field-email');
+  if (emailField) return emailField;
+
   switch (activeView) {
     case 'home': {
       const heroResume = contentCandidates.find((c) => c.id === 'hero-resume');

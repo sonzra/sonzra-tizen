@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isDemoUser: boolean;
+  initialLoading: boolean;
   loading: boolean;
   signIn: (email: string, password: string, serverUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -22,7 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isDemoUser, setIsDemoUser] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Restore existing session on mount
   useEffect(() => {
@@ -43,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Error initializing auth state:', e);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, []);
 
@@ -104,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         isAuthenticated,
         isDemoUser,
+        initialLoading,
         loading,
         signIn,
         signOut,

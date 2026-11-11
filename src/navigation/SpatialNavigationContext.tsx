@@ -70,7 +70,9 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   }, []);
 
   const setFocus = useCallback((id: string) => {
-    const prevNode = focusedIdRef.current ? nodesRef.current.get(focusedIdRef.current) : null;
+    const prevId = focusedIdRef.current;
+    focusedIdRef.current = id;
+    const prevNode = prevId ? nodesRef.current.get(prevId) : null;
     const nextNode = nodesRef.current.get(id);
 
     if (prevNode && prevNode.id !== id) {
@@ -126,11 +128,10 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     const currentActiveNode = focusedIdRef.current ? nodesRef.current.get(focusedIdRef.current) : null;
     const isCurrentValid = Boolean(currentActiveNode && currentActiveNode.element && currentActiveNode.element.isConnected);
 
-    // Initial focus allocation or re-anchor if current focus is missing/stale
-    if (node.autoFocus) {
-      setFocus(node.id);
-    } else if (!isCurrentValid) {
+    // Initial focus allocation: ONLY if current focus is missing or stale
+    if (!isCurrentValid) {
       if (
+        node.autoFocus ||
         node.id === 'signin-field-email' ||
         node.id === 'hero-resume' ||
         node.id === 'sidebar-home' ||
@@ -157,10 +158,13 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         // Fallback to entry point of current view
         const entry =
           getViewEntryPoint(activeView, candidates, lastFocusedContentIdRef.current) ||
+          candidates.find((c) => c.autoFocus) ||
+          candidates.find((c) => c.id === 'signin-field-email') ||
           candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock') ||
           candidates[0];
         setFocus(entry.id);
       } else {
+        focusedIdRef.current = null;
         setFocusedId(null);
       }
     }
