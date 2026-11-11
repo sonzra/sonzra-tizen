@@ -57,8 +57,8 @@ export const Sidebar: React.FC = () => {
                 focusId={item.id}
                 group="sidebar"
                 className="w-14 h-14 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-200"
-                onEnter={() => goToView(item.view)}
-                onClick={() => goToView(item.view)}
+                onEnter={() => goToView(item.view, undefined, true)}
+                onClick={() => goToView(item.view, undefined, true)}
               >
                 {({ isFocused }) => (
                   <div

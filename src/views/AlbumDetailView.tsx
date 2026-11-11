@@ -14,8 +14,8 @@ function formatDuration(seconds: number): string {
 }
 
 export const AlbumDetailView: React.FC = () => {
-  const { viewParam, goToView } = useSpatialNav();
-  const { apiClient } = useServer();
+  const { viewParam } = useSpatialNav();
+  const { apiClient, config } = useServer();
   const { playAlbum, playTrack, addToQueue, currentTrack, playbackStatus } = usePlayer();
 
   const [album, setAlbum] = useState<Album | null>(null);
@@ -26,27 +26,40 @@ export const AlbumDetailView: React.FC = () => {
     let active = true;
     const albumId = viewParam || 'album-echoes-in-violet';
 
-    // Check mock data first
-    const mockAlbum = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
-    setAlbum(mockAlbum);
-    setLoading(false);
+    // If demo mode or no server configured, use mock data immediately
+    if (config.demoMode || !config.serverUrl) {
+      const mockAlbum = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
+      setAlbum(mockAlbum);
+      setLoading(false);
+      return;
+    }
 
-    // If connected to server, try fetching fresh remote album
+    setLoading(true);
     apiClient
       .fetchAlbum(albumId)
       .then((res) => {
-        if (active && res) {
-          setAlbum(res);
+        if (active) {
+          if (res) {
+            setAlbum(res);
+          } else {
+            const fallback = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
+            setAlbum(fallback);
+          }
+          setLoading(false);
         }
       })
       .catch(() => {
-        // Fallback to mock data already set
+        if (active) {
+          const fallback = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
+          setAlbum(fallback);
+          setLoading(false);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [viewParam, apiClient]);
+  }, [viewParam, apiClient, config.demoMode, config.serverUrl]);
 
   if (loading || !album) {
     return (
@@ -62,7 +75,6 @@ export const AlbumDetailView: React.FC = () => {
 
   const handlePlayAlbum = (shuffle = false) => {
     playAlbum(album, undefined, shuffle);
-    goToView('now-playing');
   };
 
   const handleAddQueue = () => {
@@ -115,7 +127,10 @@ export const AlbumDetailView: React.FC = () => {
               <img
                 src={album.artworkUrl}
                 alt={album.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-surface-container-lowest/20"></div>
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
@@ -169,15 +184,16 @@ export const AlbumDetailView: React.FC = () => {
             <Focusable
               focusId="album-btn-play"
               group="album-actions"
+              autoFocus={true}
               className="rounded-full cursor-pointer"
               onEnter={() => handlePlayAlbum(false)}
               onClick={() => handlePlayAlbum(false)}
             >
               {({ isFocused }) => (
                 <button
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold cursor-pointer ${
                     isFocused
-                      ? 'bg-primary-container text-on-primary-container shadow-[0_0_30px_rgba(73,220,202,0.6)] ring-4 ring-secondary scale-105'
+                      ? 'bg-primary-container text-on-primary-container'
                       : 'bg-primary-container text-on-primary-container shadow-md hover:bg-tertiary-container'
                   }`}
                 >
@@ -200,9 +216,9 @@ export const AlbumDetailView: React.FC = () => {
             >
               {({ isFocused }) => (
                 <button
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md ${
                     isFocused
-                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      ? 'bg-surface-container-high text-secondary'
                       : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
                   }`}
                   title="Shuffle Album"
@@ -222,9 +238,9 @@ export const AlbumDetailView: React.FC = () => {
             >
               {({ isFocused }) => (
                 <button
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md ${
                     isFocused
-                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      ? 'bg-surface-container-high text-secondary'
                       : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
                   }`}
                   title="Add to Queue"
@@ -244,9 +260,9 @@ export const AlbumDetailView: React.FC = () => {
             >
               {({ isFocused }) => (
                 <button
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md ${
+                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md ${
                     isFocused
-                      ? 'bg-surface-container-high text-error ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.5)] scale-110'
+                      ? 'bg-surface-container-high text-error'
                       : isFavorite
                       ? 'bg-surface-container-high text-error border border-white/5'
                       : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
@@ -291,15 +307,15 @@ export const AlbumDetailView: React.FC = () => {
                   key={track.id}
                   focusId={focusId}
                   group="album-tracks"
-                  className="rounded-2xl cursor-pointer transition-all duration-150"
+                  className="rounded-2xl cursor-pointer"
                   onEnter={() => playTrack(track, tracks)}
                   onClick={() => playTrack(track, tracks)}
                 >
                   {({ isFocused }) => (
                     <div
-                      className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 cursor-pointer ${
+                      className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer ${
                         isFocused
-                          ? 'bg-surface-container-high text-on-surface ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.35)] scale-[1.015] z-10'
+                          ? 'bg-surface-container-high text-on-surface z-10'
                           : isCurrentTrack
                           ? 'bg-surface-container-high/90 text-on-surface border border-secondary/30'
                           : 'bg-surface-container-low/70 hover:bg-surface-container text-on-surface border border-transparent hover:border-white/10'

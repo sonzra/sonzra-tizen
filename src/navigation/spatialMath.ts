@@ -407,14 +407,6 @@ export function findNextFocusableNode(
       }
     }
 
-    // Album Actions: right goes to tracklist
-    if (currentGroup === 'album-actions') {
-      const trackNodes = validCandidates.filter((c) => c.group === 'album-tracks');
-      if (trackNodes.length > 0) {
-        return trackNodes[0];
-      }
-    }
-
     // Move within same group in the same visual row
     const sameGroupToRight = validCandidates.filter((c) => {
       if (c.group !== currentGroup) return false;
@@ -428,6 +420,14 @@ export function findNextFocusableNode(
         const bestDist = getRect(best.element).centerX - currentRect.centerX;
         return dist < bestDist ? c : best;
       });
+    }
+
+    // Album Actions: rightmost action goes to tracklist
+    if (currentGroup === 'album-actions') {
+      const trackNodes = validCandidates.filter((c) => c.group === 'album-tracks');
+      if (trackNodes.length > 0) {
+        return trackNodes[0];
+      }
     }
   }
 
@@ -522,7 +522,11 @@ export function findNextFocusableNode(
     // --- ALBUM DETAIL VIEW ---
     if (activeView === 'album-detail') {
       if (currentGroup === 'album-actions') {
-        // Actions column down -> Bottom Dock
+        // Actions down -> first track in tracklist, or bottom dock if no tracks
+        const trackNodes = validCandidates.filter((c) => c.group === 'album-tracks');
+        if (trackNodes.length > 0) {
+          return trackNodes[0];
+        }
         const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
         if (dockPlay) return dockPlay;
       }
@@ -641,6 +645,12 @@ export function findNextFocusableNode(
             const bestDist = currentRect.centerY - getRect(best.element).centerY;
             return dist < bestDist ? c : best;
           });
+        }
+        // Top track up -> album action button (Play Album)
+        const actions = validCandidates.filter((c) => c.group === 'album-actions');
+        if (actions.length > 0) {
+          const playBtn = actions.find((c) => c.id === 'album-btn-play');
+          return playBtn || actions[0];
         }
         return null;
       }

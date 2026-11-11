@@ -32,7 +32,7 @@ interface SpatialNavigationContextType {
   viewParam: string | null;
   openAlbum: (albumId: string) => void;
   openArtist: (artistId: string) => void;
-  goToView: (view: ActiveView, param?: string) => void;
+  goToView: (view: ActiveView, param?: string, focusContent?: boolean) => void;
   goBack: () => void;
   canGoBack: boolean;
   registerMediaHandler: (handler: (action: MediaAction) => void) => () => void;
@@ -148,7 +148,8 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         node.id === 'signin-field-email' ||
         node.id === 'hero-resume' ||
         node.id === 'sidebar-home' ||
-        node.id === 'library-tab-albums'
+        node.id === 'library-tab-albums' ||
+        node.id === 'album-btn-play'
       ) {
         setFocus(node.id);
       }
@@ -252,27 +253,43 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, [activeView, setFocus]);
 
-  const goToView = useCallback((newView: ActiveView, param?: string) => {
-    setHistory((prev) => [
-      ...prev,
-      { view: activeView, param: viewParam || undefined, focusId: focusedIdRef.current || undefined },
-    ]);
-    setActiveView(newView);
-    setViewParam(param || null);
+  const goToView = useCallback(
+    (newView: ActiveView, param?: string, focusContent = false) => {
+      setHistory((prev) => [
+        ...prev,
+        { view: activeView, param: viewParam || undefined, focusId: focusedIdRef.current || undefined },
+      ]);
+      setActiveView(newView);
+      setViewParam(param || null);
 
-    // If focus was on main content, reset content memory so view picks its fresh entry point
-    if (focusedIdRef.current && !focusedIdRef.current.startsWith('sidebar-')) {
-      lastFocusedContentIdRef.current = null;
-    }
-  }, [activeView, viewParam]);
+      if (focusContent) {
+        setTimeout(() => {
+          const candidates = Array.from(nodesRef.current.values());
+          const entry = getViewEntryPoint(newView, candidates, null);
+          if (entry) {
+            setFocus(entry.id);
+          }
+        }, 60);
+      } else if (focusedIdRef.current && !focusedIdRef.current.startsWith('sidebar-')) {
+        lastFocusedContentIdRef.current = null;
+      }
+    },
+    [activeView, viewParam, setFocus]
+  );
 
-  const openAlbum = useCallback((albumId: string) => {
-    goToView('album-detail', albumId);
-  }, [goToView]);
+  const openAlbum = useCallback(
+    (albumId: string) => {
+      goToView('album-detail', albumId, true);
+    },
+    [goToView]
+  );
 
-  const openArtist = useCallback((artistId: string) => {
-    goToView('artist-detail', artistId);
-  }, [goToView]);
+  const openArtist = useCallback(
+    (artistId: string) => {
+      goToView('artist-detail', artistId, true);
+    },
+    [goToView]
+  );
 
   const goBack = useCallback(() => {
     if (history.length > 0) {
@@ -282,8 +299,19 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
       setActiveView(previous.view);
       setViewParam(previous.param || null);
 
-      if (previous.focusId && nodesRef.current.has(previous.focusId)) {
-        setTimeout(() => setFocus(previous.focusId!), 50);
+      if (previous.focusId) {
+        const targetId = previous.focusId;
+        setTimeout(() => {
+          if (nodesRef.current.has(targetId)) {
+            setFocus(targetId);
+          } else {
+            setTimeout(() => {
+              if (nodesRef.current.has(targetId)) {
+                setFocus(targetId);
+              }
+            }, 80);
+          }
+        }, 50);
       }
     } else if (activeView !== 'home') {
       setActiveView('home');
