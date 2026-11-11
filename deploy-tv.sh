@@ -48,6 +48,6 @@ docker run --rm --net=host \
 echo "=== [5/5] Launching Sonzra on Samsung TV Screen ==="
 docker run --rm --net=host \
   --entrypoint /bin/bash georift/install-jellyfin-tizen -c \
-  "tizen run -p Sonzra0002.SonzraTV -t $TARGET_NAME"
+  "tizen run -p Sonzra0001.SonzraTV -t $TARGET_NAME"
 
 echo "🎉 Sonzra TV app deployed and launched successfully!"
