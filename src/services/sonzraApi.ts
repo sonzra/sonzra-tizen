@@ -1,4 +1,5 @@
 import { Album, Artist, ServerConfig, Track } from '../types/music';
+import { AuthSession, User } from '../types/auth';
 import { MOCK_ALBUMS, MOCK_ARTISTS } from './mockData';
 
 export class SonzraApiClient {
@@ -19,6 +20,68 @@ export class SonzraApiClient {
     }
     const base = this.config.serverUrl.replace(/\/$/, '');
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  async signIn(email_address: string, password: string): Promise<AuthSession> {
+    const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+    const response = await fetch(`${cleanUrl}/api/v1/session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ email_address, password }),
+    });
+
+    if (!response.ok) {
+      let errorMsg = `Sign in failed (HTTP ${response.status})`;
+      try {
+        const data = await response.json();
+        if (data.error) errorMsg = data.error;
+      } catch {}
+      throw new Error(errorMsg);
+    }
+
+    const data = await response.json();
+    return {
+      token: data.token,
+      session_id: data.session_id,
+      user: data.user,
+    };
+  }
+
+  async signOut(): Promise<void> {
+    if (!this.config.authToken || !this.config.serverUrl) return;
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      await fetch(`${cleanUrl}/api/v1/session`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.config.authToken}`,
+        },
+      });
+    } catch (err) {
+      console.warn('Sign out request failed:', err);
+    }
+  }
+
+  async fetchCurrentSession(): Promise<User | null> {
+    if (!this.config.authToken || !this.config.serverUrl) return null;
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const response = await fetch(`${cleanUrl}/api/v1/session`, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.config.authToken}`,
+        },
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.user;
+    } catch {
+      return null;
+    }
   }
 
   getAudioUrl(track: Track): string {
