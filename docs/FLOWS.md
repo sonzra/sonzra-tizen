@@ -12,6 +12,8 @@ This document defines the core end-to-end user flows for the Sonzra Samsung Smar
    $$\text{Hero} \longrightarrow \text{Shelf 1 (Continue)} \longrightarrow \text{Shelf 2 (Vault)} \longrightarrow \text{Bottom Player Dock}$$
 4. **Group Memory Invariant:** Pressing **Up** from `<BottomDock />` restores focus to the last-focused content element, never jumping blindly across the screen to the hero.
 5. **Real Server Boundary:** When authenticated, the TV client communicates with the real Sonzra server (default: `http://192.168.31.139:3000`) via structured JSON endpoints with Bearer tokens. Audio streams and album art resolve to `/server_connections/:id/audio/:item_id` and `/server_connections/:id/artwork/:item_id`.
+6. **TV GPU Acceleration & Boundary-Guarded Centering:** Focus transitions run on a 90ms curve (`0.09s ease-out`) backed by `transform: translateZ(0)` and `will-change: transform`. Vertical `scrollIntoView` is strictly boundary-guarded (`rect.top >= 80 && rect.bottom <= viewHeight - 130`); horizontal shelf moves never trigger redundant vertical scroll recalculations.
+7. **Virtual Keyboard Focus Continuity:** Keyboard keys retain active focus across keystrokes via callback stabilization (`propsRef`), preventing re-render focus stealing.
 
 ---
 
@@ -55,15 +57,15 @@ The application entry point when no valid cached session exists.
    - D-pad **Right** from `signin-field-email` or `signin-field-password` $\to$ transitions directly into the on-screen virtual keyboard (targeting row 0, `key-q` or nearest key).
 3. **Virtual Keyboard Navigation:**
    - D-pad **Arrows** (Up, Down, Left, Right) navigate across the 4 keyboard rows.
-   - Pressing **Enter (OK)** on an alphanumeric key appends the character to the active field (`email`, `password`, or `serverUrl`).
-   - Pressing **Enter** on `[BACKSPACE]` deletes the last character.
-   - Pressing **Enter** on `[CLEAR]` empties the active field.
+   - Pressing **Enter (OK)** on an alphanumeric key appends the character to the active field (`email`, `password`, or `serverUrl`). Focus remains firmly on the pressed key (no focus theft back to input fields).
+   - Pressing **Enter** on `[BACKSPACE]` deletes the last character while keeping focus on the `[BACKSPACE]` key.
+   - Pressing **Enter** on `[CLEAR]` empties the active field while retaining focus on `[CLEAR]`.
    - Pressing **Enter** on `[DONE]` or pressing D-pad **Left** from column 0 exits keyboard back to input fields.
 4. **Submitting Authentication:**
    - Pressing **Enter** on `signin-btn-submit` initiates `POST /api/v1/session` with `{ email_address, password }`.
-   - **Loading State:** Button displays pulsating "AUTHENTICATING..." spinner.
+   - **Loading State:** Button displays pulsating "AUTHENTICATING..." spinner with disabled state.
    - **Success State:** Token and session ID cached in `localStorage` under `sonzra_tv_auth_session`. Application transitions to `<HomeView />` with initial focus set to `hero-resume`.
-   - **Failure State:** Error message banner displayed at top of form (`"Invalid email or password"` or `"Server unreachable"`). Focus automatically returns to `signin-field-email`.
+   - **Failure State:** High-contrast error message banner displayed above the form (`"Invalid email or password"` or `"Cannot connect to server. Check host and port."`). Focus remains accessible and can be moved directly to the fields to retry.
 5. **Standalone Demo Shortcut:**
    - Pressing **Enter** on `signin-btn-demo` sets `isDemoMode = true` and immediately enters `<HomeView />` using offline audiophile mock data.
 
@@ -150,7 +152,7 @@ Fast global navigation across views without leaving the 10-foot comfort zone.
    - Pressing **Enter** on `sidebar-home` $\to$ switches to `<HomeView />`, moves focus to `hero-resume`.
    - Pressing **Enter** on `sidebar-library` $\to$ switches to `<LibraryView />`, moves focus to `tab-all`.
    - Pressing **Enter** on `sidebar-artists` $\to$ switches to `<ArtistsView />`, moves focus to `artist-card-0`.
-   - Pressing **Enter** on `sidebar-settings` $\to$ switches to `<SettingsView />`, moves focus to `settings-input-server`.
+   - Pressing **Enter** on `sidebar-settings` $\to$ switches to `<SettingsView />`, moves focus to `input-server-url`.
 3. **Exiting Sidebar to Content:**
    - Pressing D-pad **Right** from any sidebar item transitions focus into the primary entry element of the current view (e.g. from `sidebar-home` to `hero-resume`, or from `sidebar-library` to `tab-all`).
 

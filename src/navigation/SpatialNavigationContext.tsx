@@ -55,11 +55,17 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
   // Track last focused node per semantic group
   const lastFocusedByGroupRef = useRef<Map<string, string>>(new Map());
 
+  const reanchorTimeoutRef = useRef<any>(null);
   const mediaHandlersRef = useRef<Set<(action: MediaAction) => void>>(new Set());
 
   // Register Tizen TV hardware keys on startup
   useEffect(() => {
     registerTizenKeys();
+    return () => {
+      if (reanchorTimeoutRef.current) {
+        clearTimeout(reanchorTimeoutRef.current);
+      }
+    };
   }, []);
 
   const registerMediaHandler = useCallback((handler: (action: MediaAction) => void) => {
@@ -104,15 +110,22 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         lastFocusedContentIdRef.current = id;
       }
 
-      // Smooth scroll viewport to center focused content element
-      // (Do NOT trigger viewport scrolling when focusing fixed rails)
+      // Viewport scroll management for main content elements
+      // (Do NOT trigger viewport scrolling when focusing fixed rails or when already visible)
       if (nextNode.group !== 'sidebar' && nextNode.group !== 'bottom-dock') {
         try {
-          nextNode.element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
-          });
+          const rect = nextNode.element.getBoundingClientRect();
+          const viewHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight) : 1080;
+          // Check if element is already comfortably visible within safe overscan margins (top: 80px, bottom: dock clearance 130px)
+          const isVerticallyVisible = rect.top >= 80 && rect.bottom <= (viewHeight - 130);
+
+          if (!isVerticallyVisible) {
+            nextNode.element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+              inline: 'nearest',
+            });
+          }
         } catch (err) {
           nextNode.element.scrollIntoView(false);
         }
@@ -149,24 +162,35 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     }
     nodesRef.current.delete(id);
 
-    // If the unmounted node was focused, reset or re-evaluate
+    // If the unmounted node was focused, clear focus immediately and schedule
+    // a debounced re-anchoring pass once unmount/remount batching has settled.
     if (focusedIdRef.current === id) {
-      const candidates = Array.from(nodesRef.current.values()).filter(
-        (n) => n.element && n.element.isConnected
-      );
-      if (candidates.length > 0) {
-        // Fallback to entry point of current view
-        const entry =
-          getViewEntryPoint(activeView, candidates, lastFocusedContentIdRef.current) ||
-          candidates.find((c) => c.autoFocus) ||
-          candidates.find((c) => c.id === 'signin-field-email') ||
-          candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock') ||
-          candidates[0];
-        setFocus(entry.id);
-      } else {
-        focusedIdRef.current = null;
-        setFocusedId(null);
+      focusedIdRef.current = null;
+      setFocusedId(null);
+
+      if (reanchorTimeoutRef.current) {
+        clearTimeout(reanchorTimeoutRef.current);
       }
+      reanchorTimeoutRef.current = setTimeout(() => {
+        // Only re-anchor if current focus is still unallocated or detached
+        const currentActive = focusedIdRef.current ? nodesRef.current.get(focusedIdRef.current) : null;
+        const isValid = Boolean(currentActive && currentActive.element && currentActive.element.isConnected);
+
+        if (!isValid) {
+          const candidates = Array.from(nodesRef.current.values()).filter(
+            (n) => n.element && n.element.isConnected
+          );
+          if (candidates.length > 0) {
+            const entry =
+              getViewEntryPoint(activeView, candidates, lastFocusedContentIdRef.current) ||
+              candidates.find((c) => c.autoFocus) ||
+              candidates.find((c) => c.id === 'signin-field-email') ||
+              candidates.find((c) => c.group !== 'sidebar' && c.group !== 'bottom-dock') ||
+              candidates[0];
+            setFocus(entry.id);
+          }
+        }
+      }, 0);
     }
   }, [activeView, setFocus]);
 

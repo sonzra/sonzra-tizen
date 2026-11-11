@@ -48,20 +48,21 @@
 
 /* TV Spatial Navigation Focus Halo & Elevate */
 .tv-focusable {
-  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.09s cubic-bezier(0, 0, 0.2, 1), box-shadow 0.09s ease-out;
   position: relative;
   outline: none !important;
+  will-change: transform;
 }
 
 .tv-focusable.tv-focused {
-  transform: scale(1.05);
-  box-shadow: 0 0 0 3px #43D7C6, 0 12px 36px rgba(67, 215, 198, 0.4);
+  transform: scale(1.04) translateZ(0);
+  box-shadow: 0 0 0 3px #43D7C6, 0 8px 24px rgba(67, 215, 198, 0.45);
   z-index: 40;
 }
 
 .tv-focusable.tv-focused-primary {
-  transform: scale(1.05);
-  box-shadow: 0 0 0 3px #9B82FF, 0 12px 36px rgba(122, 90, 248, 0.45);
+  transform: scale(1.04) translateZ(0);
+  box-shadow: 0 0 0 3px #9B82FF, 0 8px 24px rgba(122, 90, 248, 0.45);
   z-index: 40;
 }
 

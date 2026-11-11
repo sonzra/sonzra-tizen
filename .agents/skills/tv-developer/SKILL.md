@@ -45,6 +45,8 @@ flowchart LR
 - Wrap every interactive TV element in `<Focusable focusId="..." group="...">`.
 - Declare semantic group names consistently (`hero-actions`, `continue-shelf`, `recent-shelf`, `library-tabs`, `library-grid`, `album-actions`, `album-tracks`, `bottom-dock`, `sidebar`).
 - Apply the canonical focus indicator: `isFocused ? 'ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.4)] scale-[1.03]' : ''`.
+- **PropsRef Stabilization:** Store mutable event handlers (`onEnter`, `onFocus`, `onBlur`) in `propsRef` inside `<Focusable />` to prevent unregister/re-register focus theft across typing re-renders.
+- **Hardware Acceleration:** Ensure `.tv-focusable` uses `0.09s` transition durations, `will-change: transform`, and `transform: translateZ(0)`. Do not nest transitions inside child divs.
 
 ---
 
@@ -57,17 +59,22 @@ Run these lifecycle commands at each step of development:
 npm test
 ```
 
-### 2. Run Type Check & Asset Build
+### 2. Run End-to-End Playwright Tests
+```bash
+npx playwright test
+```
+
+### 3. Run Type Check & Asset Build
 ```bash
 npm run build
 ```
 
-### 3. Run Quality Gate
+### 4. Run Quality Gate
 ```bash
 bin/quality
 ```
 
-### 4. Deploy to Physical Samsung TV (When Verification Complete)
+### 5. Deploy to Physical Samsung TV (When Verification Complete)
 ```bash
 ./deploy-tv.sh
 ```

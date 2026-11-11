@@ -65,7 +65,7 @@ const MainLayout: React.FC = () => {
       {/* Main Viewport Container */}
       <div
         id="tv-main-scroll-container"
-        className={`relative z-10 w-full h-full overflow-y-auto scroll-smooth ${
+        className={`relative z-10 w-full h-full overflow-y-auto ${
           isNowPlaying ? 'p-8 xl:p-12' : 'pl-24 pt-20 px-10 pb-44'
         }`}
         style={{ scrollPaddingBottom: '140px', scrollPaddingTop: '90px' }}

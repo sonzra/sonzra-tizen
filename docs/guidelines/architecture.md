@@ -28,7 +28,9 @@ src/
 
 ## 3. Spatial Navigation Invariants
 
-* **Node Registration Lifecycle:** Every focusable node must register on mount and unregister on unmount via `<Focusable />`.
+* **Node Registration Lifecycle & Callback Stabilization:** Every focusable node registers on mount and unregisters on unmount via `<Focusable />`. Mutable callbacks (`onEnter`, `onFocus`, `onBlur`) and dynamic navigation overrides must be stored in a stable `propsRef` to prevent unregister/re-register cycles during component re-renders (such as typing into form inputs or virtual keyboard strokes).
+* **Debounced Unmount Re-anchoring:** When a focused node unmounts, fallback election must be debounced via `setTimeout(..., 0)` so that batched unmounts and React Strict Mode remount cycles settle before selecting a stable fallback node.
+* **Boundary-Guarded Centering:** Programmatic `scrollIntoView` must only trigger when an element falls outside safe vertical overscan margins (`rect.top < 80 || rect.bottom > window.innerHeight - 130`). Horizontal shelf transitions must not invoke vertical scrolling. Never apply global CSS `scroll-smooth` to main TV containers.
 * **Group Attribution:** Every `<Focusable />` must declare its semantic group:
   - `sidebar` (Left rail)
   - `bottom-dock` (Persistent player)
@@ -48,3 +50,11 @@ src/
   - Enter / OK: `13` (Select).
   - Return / Back: `10009` (Tizen Return key).
   - Media Keys: `MediaPlay` (415), `MediaPause` (19), `MediaPlayPause` (10252), `MediaFastForward` (417), `MediaRewind` (412).
+
+---
+
+## 5. Testing & Verification Gates
+
+* **Unit & Spatial Navigation Suites:** Run via `npm test` (Vitest). Assert directional transitions and mathematical group boundaries.
+* **Full End-to-End Playwright Suites:** Run via `npm run test:e2e` or `npx playwright test`. Exercises complete authentication, keyboard typing, shelf transitions, view switching, and player dock interactions.
+* **Automated Quality Gate:** `bin/quality` must execute clean with exit code 0 (`npm run build` typecheck + asset build, Vitest unit suite, and Playwright E2E suites).

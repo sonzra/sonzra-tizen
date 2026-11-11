@@ -32,15 +32,21 @@ The TV UI & UX Advisor evaluates frontend code changes, layout geometry, focus a
   - Cyan focus ring: `ring-2 ring-secondary` (`#43D7C6`).
   - Outer glow shadow: `shadow-[0_0_24px_rgba(73,220,202,0.55)]`.
   - Gentle physical lift: `scale-[1.03]` or `scale-105`.
+  - Snappy 90ms animation curve: `transition: transform 0.09s ease-out, box-shadow 0.09s ease-out`.
+  - GPU hardware acceleration: `will-change: transform; transform: translateZ(0)` on `.tv-focusable`.
+- **Zero Nested Transitions:** Child elements inside cards must not define their own `transition-all` or duplicate `scale-[1.03]` transforms.
 - **Zero Browser Default Chrome:** No default white or un-themed focus outlines.
 
 ### 3. Remote Control Ergonomics & Rail Flow
 - **No Dead Ends:** From any interactive component, pressing D-pad arrows must move naturally to neighboring cards or rows.
 - **Left Barrier Escape:** Pressing Left on the leftmost item of any content row must escape to the persistent Sidebar rail.
 - **Dock Return Flow:** Pressing Up from the bottom player dock must return to the active shelf, never jumping to the hero.
+- **Keyboard Focus Retention:** Virtual keyboard character, space, and backspace keys must retain focus when pressed; typing must never bounce focus back to the text input field.
+- **High-Contrast Error Feedback:** Form validation and network errors must display an immediate high-contrast banner with an icon above action buttons without breaking spatial navigation.
 
 ### 4. Viewport Auto-Centering & Overscan Clearance
-- **Center Scrolling:** Focusable items must scroll with `block: 'center'`.
+- **Boundary-Guarded Scrolling:** Only scroll elements if they fall outside safe vertical overscan margins (`rect.top < 80 || rect.bottom > viewHeight - 130`). Horizontal shelf navigation must bypass vertical scrolling entirely.
+- **No Conflicting Smooth Scroll:** Never apply `scroll-smooth` to the main scroll container (`#tv-main-scroll-container`).
 - **Bottom Clearance:** The main scroll container must enforce bottom padding (`pb-44`, `scrollPaddingBottom: 140px`) so content never hides behind the fixed 96px bottom player dock.
 - **Overscan Margins:** Edge chrome must observe minimum 40px safe-area margins.
 

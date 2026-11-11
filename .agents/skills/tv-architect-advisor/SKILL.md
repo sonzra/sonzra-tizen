@@ -25,6 +25,9 @@ The TV Architect Advisor evaluates code changes, proposed designs, and refactori
 - **Zero Focus Traps:** Spatial transitions must strictly follow the defined shelf/row hierarchy. Moving Down from content elements must advance to the next shelf down, never skipping directly to the fixed bottom player dock.
 - **Group Attribution:** Every focusable node must declare its semantic group attribute (`sidebar`, `bottom-dock`, `hero-actions`, `continue-shelf`, `recent-shelf`, `library-tabs`, `library-grid`, `album-actions`, `album-tracks`).
 - **Sidebar Rail Flow:** Pressing Left on the leftmost element of any content row must escape into the Sidebar rail (`sidebar-home`, `sidebar-library`, etc.). Pressing Right from the Sidebar rail must cleanly enter the active view's primary content.
+- **Callback Stabilization (`propsRef`):** Components wrapping `<Focusable />` must never cause node unregister/re-register cycles across state re-renders (such as keystroke typing or backspacing). Dynamic handlers must be cached via `propsRef`.
+- **Debounced Unmount Re-anchoring:** Node unregistration must debounce fallback focus selection (`setTimeout(..., 0)`) so React Strict Mode cycles and batch unmounts settle safely.
+- **Boundary-Guarded Centering:** Vertical `scrollIntoView` must be guarded by safe overscan margins (`rect.top >= 80 && rect.bottom <= viewHeight - 130`) so horizontal shelf transitions never cause vertical jitter. Never apply global CSS `scroll-smooth` to the main TV container.
 
 ### 2. Decoupled Server Client Boundary
 - **REST/JSON API Boundary:** The TV client must communicate with the Sonzra server via clean API services (`src/services/apiClient.ts`). No backend business logic or media server transcoding code belongs on the TV client.
@@ -37,7 +40,8 @@ The TV Architect Advisor evaluates code changes, proposed designs, and refactori
 
 ### 4. Automated Testing & Quality Standards
 - **Spatial Matrix Coverage:** Any change introducing new focusable components, shelves, or views must include unit tests in `src/navigation/__tests__/spatialMath.test.ts`.
-- **Quality Gate:** Code changes must pass `bin/quality` (`npm run build` + `npm test`).
+- **Playwright E2E Coverage:** End-to-end user flows, login typing, keyboard retention, and view switching must be tested in `e2e/*.spec.ts`.
+- **Quality Gate:** Code changes must pass `bin/quality` (`npm run build` + `npm test` + Playwright suites).
 
 ### 5. Cross-Project Parity Audit (sonzra-tizen <-> sonzra)
 - **Sister Repository Impact:** Verify whether changes to audio playback, streaming, state scrobbling, or API usage require backend support or web player parity fixes in `sonzra/sonzra`.

@@ -14,12 +14,15 @@
 - **Zero Focus Traps:** Spatial transitions must strictly follow the defined shelf/row hierarchy. Moving Down from content elements must advance to the next shelf down, never skipping directly to the fixed bottom player dock.
 - **Left Barrier Escape:** Pressing **Left** on the leftmost interactive element of any content row (`hero-resume`, Card 0 of any shelf, Tab 0, Column 0 of the library grid, or `dock-track-info`) must transition cleanly into the `<Sidebar />` rail.
 - **Group Memory & Up Escape:** Leaving the bottom player dock (`<BottomDock />`) by pressing **Up** must restore focus to the last-focused content element or active shelf, never jumping blindly across the screen to the hero.
-- **Viewport Auto-Centering:** The scroll container must use `block: 'center'` with explicit padding (`pb-44`, `scrollPaddingBottom: 140px`) to prevent focused cards from scrolling beneath the fixed dock.
+- **Callback Stabilization (`propsRef`):** `<Focusable />` must cache dynamic callbacks (`onEnter`, `onFocus`, `onBlur`) and directions in a stable `propsRef` to prevent node re-registration and focus theft during re-renders (e.g. typing or deleting text).
+- **Debounced Unmount Re-anchoring:** Fallback focus selection when a node unmounts must be debounced via `setTimeout(..., 0)` to allow batch unmounts and React Strict Mode remounts to settle.
+- **Boundary-Guarded Centering:** The scroll container uses `block: 'nearest'` guarded by vertical safe overscan bounds (`rect.top >= 80 && rect.bottom <= viewHeight - 130`). Horizontal shelf moves must never trigger vertical scroll recalculations. Never use global CSS `scroll-smooth`.
 
 ### 2. Design System & 10-Foot Visual Standards
 - Follow [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and [docs/BRAND.md](docs/BRAND.md).
 - **OLED Dark Sanctuary:** Canvas is deep space black (`#09090F`, `#131319`). Typography is high-contrast warm white (`#E2E1E6`).
-- **Radiant Focus Halo:** Every focused element must project the cyan focus halo (`ring-2 ring-[#43D7C6]`, `shadow-[0_0_24px_rgba(73,220,202,0.55)]`, `scale-[1.03]`). Focus must never be ambiguous or invisible.
+- **Snappy GPU Focus Halo:** Every focused element must project the cyan focus halo (`ring-2 ring-[#43D7C6]`, `shadow-[0_0_24px_rgba(73,220,202,0.55)]`, `scale-[1.03]`) on a fast 90ms curve (`0.09s ease-out`).
+- **Hardware Acceleration:** `.tv-focusable` must enforce `will-change: transform` and `transform: translateZ(0)` for GPU compositing planes. Never add nested CSS transitions or duplicate `scale` transforms on child components.
 - **Distance Legibility:** Primary text must be $\ge 14\text{px}$; shelf titles $\ge 24\text{px}$; hero titles $\ge 38\text{px}$. Tabular numerics (`font-mono`) on all timers.
 
 ### 3. Tizen Hardware & Runtime Isolation
@@ -35,7 +38,7 @@
 - Consult [docs/solutions/](docs/solutions/) for verified solutions to past spatial navigation traps and Samsung certificate packaging issues (organized by category with YAML frontmatter).
 
 ### 6. Quality Gate
-- All changes must pass `bin/quality` (`npm run build` typecheck and asset build + `npm test` spatial navigation test suites).
+- All changes must pass `bin/quality` (`npm run build` typecheck and asset build + `npm test` spatial navigation unit suites + Playwright end-to-end suites).
 
 ---
 
