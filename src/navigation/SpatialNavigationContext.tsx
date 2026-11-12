@@ -11,6 +11,7 @@ import {
   isMediaPlayPause,
   isMediaPrev,
   isMediaStop,
+  isPlayerShortcut,
   registerTizenKeys,
 } from './tizenKeys';
 
@@ -114,14 +115,35 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
       // (Do NOT trigger viewport scrolling when focusing fixed rails or when already visible)
       if (nextNode.group !== 'sidebar' && nextNode.group !== 'bottom-dock') {
         try {
-          const rect = nextNode.element.getBoundingClientRect();
-          const viewHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight) : 1080;
-          // Check if element is already comfortably visible within safe overscan margins (top: 80px, bottom: dock clearance 130px)
-          const isVerticallyVisible = rect.top >= 80 && rect.bottom <= (viewHeight - 130);
+          const container = typeof document !== 'undefined' ? document.getElementById('tv-main-scroll-container') : null;
 
-          if (!isVerticallyVisible) {
+          // Check if newly focused element is a top-anchor element of the view
+          const isTopAnchor =
+            nextNode.group === 'hero-actions' ||
+            nextNode.group === 'library-tabs' ||
+            nextNode.group === 'album-actions' ||
+            nextNode.id === 'hero-resume' ||
+            nextNode.id === 'library-tab-albums' ||
+            nextNode.id === 'album-btn-play' ||
+            nextNode.id === 'settings-card-profile' ||
+            nextNode.id === 'input-server-url';
+
+          if (isTopAnchor && container && container.scrollTop > 0) {
+            container.scrollTo({ top: 0, behavior: 'instant' });
+          } else if (container) {
+            const cRect = container.getBoundingClientRect();
+            const nRect = nextNode.element.getBoundingClientRect();
+            // Visible if inside container with safe overscan clearance (top: 70px, bottom: 140px above player dock)
+            const isVerticallyVisible = nRect.top >= cRect.top + 70 && nRect.bottom <= cRect.bottom - 140;
+
+            if (!isVerticallyVisible) {
+              nextNode.element.scrollIntoView({
+                block: 'nearest',
+                inline: 'nearest',
+              });
+            }
+          } else {
             nextNode.element.scrollIntoView({
-              behavior: 'smooth',
               block: 'nearest',
               inline: 'nearest',
             });
@@ -250,6 +272,11 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
 
     if (nextNode) {
       setFocus(nextNode.id);
+    } else if (direction === 'up') {
+      const container = typeof document !== 'undefined' ? document.getElementById('tv-main-scroll-container') : null;
+      if (container && container.scrollTop > 0) {
+        container.scrollTo({ top: 0, behavior: 'instant' });
+      }
     }
   }, [activeView, setFocus]);
 
@@ -369,6 +396,19 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
         return;
       }
 
+      // 1.5. Remote Player Shortcut (Green Key / 'p')
+      if (isPlayerShortcut(e)) {
+        e.preventDefault();
+        if (nodesRef.current.has('dock-btn-play')) {
+          setFocus('dock-btn-play');
+        } else if (nodesRef.current.has('dock-track-info')) {
+          setFocus('dock-track-info');
+        } else {
+          goToView('now-playing');
+        }
+        return;
+      }
+
       // 2. Return / Back Key
       if (isBackKey(e)) {
         e.preventDefault();
@@ -401,7 +441,7 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [goBack, navigate]);
+  }, [goBack, navigate, setFocus, goToView]);
 
   return (
     <SpatialNavigationContext.Provider

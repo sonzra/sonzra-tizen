@@ -4,7 +4,7 @@ import { Focusable } from '../navigation/Focusable';
 import { ActiveView } from '../types/navigation';
 
 export const Sidebar: React.FC = () => {
-  const { activeView, goToView } = useSpatialNav();
+  const { activeView, goToView, setFocus } = useSpatialNav();
 
   const navItems: Array<{ id: string; view: ActiveView; label: string; icon: string }> = [
     { id: 'sidebar-home', view: 'home', label: 'Home', icon: 'home' },
@@ -127,6 +127,28 @@ export const Sidebar: React.FC = () => {
               title="User Account & Settings"
             >
               <span className="material-symbols-outlined text-on-primary text-[20px]">person</span>
+            </div>
+          )}
+        </Focusable>
+
+        {/* Quick Player Dock Connector */}
+        <Focusable
+          focusId="sidebar-player-dock"
+          group="sidebar"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-200"
+          onEnter={() => setFocus('dock-btn-play')}
+          onClick={() => setFocus('dock-btn-play')}
+        >
+          {({ isFocused }) => (
+            <div
+              className={`w-full h-full rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                isFocused
+                  ? 'bg-secondary text-surface-container-lowest ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.8)] scale-110'
+                  : 'bg-surface-container-high/60 text-secondary border border-secondary/20 hover:bg-surface-container-high'
+              }`}
+              title="Jump to Player Dock (Down to Enter)"
+            >
+              <span className="material-symbols-outlined text-[24px]">graphic_eq</span>
             </div>
           )}
         </Focusable>
