@@ -156,28 +156,26 @@ export const LibraryView: React.FC = () => {
                 key={album.id}
                 focusId={focusId}
                 group="library-grid"
-                className="rounded-xl cursor-pointer transition-all duration-300 relative"
+                className="rounded-xl cursor-pointer relative"
                 onEnter={() => openAlbum(album.id)}
                 onClick={() => openAlbum(album.id)}
               >
                 {({ isFocused }) => (
                   <article
-                    className={`group relative flex flex-col rounded-xl p-2.5 transition-all duration-300 cursor-pointer h-full ${
+                    className={`group relative flex flex-col rounded-xl p-2.5 cursor-pointer h-full ${
                       isFocused
-                        ? 'bg-surface-container-high transform scale-[1.04] shadow-[0_0_35px_rgba(73,220,202,0.4),0_12px_24px_rgba(0,0,0,0.6)] z-20'
+                        ? 'bg-surface-container-high z-10'
                         : 'bg-surface-container-low hover:bg-surface-container-high'
                     }`}
                   >
-                    {/* Radiant Neon Teal/Purple Halo Ring on Focus */}
-                    {isFocused && (
-                      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-secondary via-primary to-secondary opacity-95 blur-sm pointer-events-none"></div>
-                    )}
-
                     <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-lowest mb-2 shadow-md">
                       <img
                         alt={album.title}
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover"
                         src={album.artworkUrl}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                        }}
                       />
                       <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md">
                         <span className="font-mono text-secondary text-[11px] font-bold tracking-wider">
@@ -193,11 +191,11 @@ export const LibraryView: React.FC = () => {
                               e.stopPropagation();
                               playAlbum(album);
                             }}
-                            className="w-13 h-13 p-3 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_24px_rgba(73,220,202,0.9)] transform scale-110 cursor-pointer"
+                            className="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_24px_rgba(73,220,202,0.9)] cursor-pointer"
                             title="Play Album"
                           >
                             <span
-                              className="material-symbols-outlined text-[32px]"
+                              className="material-symbols-outlined text-[28px]"
                               style={{ fontVariationSettings: '"FILL" 1' }}
                             >
                               {isPlayingThisAlbum ? 'pause' : 'play_arrow'}

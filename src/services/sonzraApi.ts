@@ -15,11 +15,22 @@ export class SonzraApiClient {
 
   private resolveUrl(url?: string): string | undefined {
     if (!url) return undefined;
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
       return url;
     }
-    const base = this.config.serverUrl.replace(/\/$/, '');
-    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+    let resolved = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      const base = this.config.serverUrl.replace(/\/$/, '');
+      resolved = `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+
+    if (this.config.authToken && (resolved.includes('/artwork/') || resolved.includes('/audio/'))) {
+      if (!resolved.includes('token=')) {
+        const delimiter = resolved.includes('?') ? '&' : '?';
+        resolved = `${resolved}${delimiter}token=${encodeURIComponent(this.config.authToken)}`;
+      }
+    }
+    return resolved;
   }
 
   async signIn(email_address: string, password: string): Promise<AuthSession> {
@@ -92,7 +103,7 @@ export class SonzraApiClient {
       return this.resolveUrl(track.audioUrl)!;
     }
     const base = this.config.serverUrl.replace(/\/$/, '');
-    return `${base}/server_connections/${this.config.serverConnectionId}/audio/${track.id}`;
+    return this.resolveUrl(`${base}/server_connections/${this.config.serverConnectionId}/audio/${track.id}`)!;
   }
 
   getArtworkUrl(itemId: string, fallback?: string): string {
@@ -103,7 +114,7 @@ export class SonzraApiClient {
       return this.resolveUrl(fallback)!;
     }
     const base = this.config.serverUrl.replace(/\/$/, '');
-    return `${base}/server_connections/${this.config.serverConnectionId}/artwork/${itemId}`;
+    return this.resolveUrl(`${base}/server_connections/${this.config.serverConnectionId}/artwork/${itemId}`)!;
   }
 
   async testConnection(url: string, _connectionId: string): Promise<{ success: boolean; message: string; latency?: number }> {

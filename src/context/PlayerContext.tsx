@@ -242,12 +242,21 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 
   const playAlbum = useCallback(
-    (album: Album, startTrackId?: string, doShuffle = false) => {
-      if (!album.tracks || album.tracks.length === 0) return;
+    async (album: Album, startTrackId?: string, doShuffle = false) => {
+      let tracks = album.tracks;
+      if (!tracks || tracks.length === 0) {
+        try {
+          const fullAlbum = await apiClientRef.current.fetchAlbum(album.id);
+          tracks = fullAlbum?.tracks || [];
+        } catch (err) {
+          console.warn('Failed to load album tracks for playback:', err);
+        }
+      }
+      if (!tracks || tracks.length === 0) return;
       const startIndex = startTrackId
-        ? album.tracks.findIndex((t) => t.id === startTrackId)
+        ? tracks.findIndex((t) => t.id === startTrackId)
         : 0;
-      playTracks(album.tracks, Math.max(0, startIndex), doShuffle);
+      playTracks(tracks, Math.max(0, startIndex), doShuffle);
     },
     [playTracks]
   );

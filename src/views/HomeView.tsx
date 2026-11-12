@@ -2,29 +2,45 @@ import React from 'react';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { usePlayer } from '../context/PlayerContext';
+import { useServer } from '../context/ServerContext';
 import { MOCK_ALBUMS } from '../services/mockData';
 
 export const HomeView: React.FC = () => {
   const { openAlbum, goToView } = useSpatialNav();
-  const { playAlbum, addToQueue, playTrack, currentTrack, playbackStatus } = usePlayer();
+  const { playAlbum, addToQueue, currentTrack, playbackStatus } = usePlayer();
+  const { albums: serverAlbums, apiClient } = useServer();
 
-  const heroAlbum = MOCK_ALBUMS.find((a) => a.id === 'album-echoes-in-violet') || MOCK_ALBUMS[0];
-  const continueListeningAlbums = MOCK_ALBUMS.filter((a) => a.progressPercent !== undefined);
-  const recentlyAddedAlbums = MOCK_ALBUMS.slice(0, 4);
+  const hasLiveAlbums = serverAlbums && serverAlbums.length > 0;
+  const heroAlbum = hasLiveAlbums
+    ? serverAlbums[0]
+    : (MOCK_ALBUMS.find((a) => a.id === 'album-echoes-in-violet') || MOCK_ALBUMS[0]);
+
+  const continueListeningAlbums = hasLiveAlbums
+    ? (serverAlbums.filter((a) => a.progressPercent !== undefined).length > 0
+        ? serverAlbums.filter((a) => a.progressPercent !== undefined)
+        : serverAlbums.slice(1, 5))
+    : MOCK_ALBUMS.filter((a) => a.progressPercent !== undefined);
+
+  const recentlyAddedAlbums = hasLiveAlbums
+    ? serverAlbums.slice(0, 8)
+    : MOCK_ALBUMS.slice(0, 4);
 
   const handleResumePlayback = () => {
-    if (heroAlbum.tracks && heroAlbum.tracks.length > 0) {
-      const trackIndex = (heroAlbum.currentTrackIndex || 8) - 1;
-      const targetTrack = heroAlbum.tracks[trackIndex] || heroAlbum.tracks[0];
-      playTrack(targetTrack, heroAlbum.tracks);
-    } else {
-      playAlbum(heroAlbum);
-    }
+    playAlbum(heroAlbum);
   };
 
-  const handleAddHeroToQueue = () => {
-    if (heroAlbum.tracks) {
+  const handleAddHeroToQueue = async () => {
+    if (heroAlbum.tracks && heroAlbum.tracks.length > 0) {
       addToQueue(heroAlbum.tracks);
+    } else {
+      try {
+        const full = await apiClient.fetchAlbum(heroAlbum.id);
+        if (full?.tracks && full.tracks.length > 0) {
+          addToQueue(full.tracks);
+        }
+      } catch (e) {
+        console.warn('Failed to load hero album tracks for queue:', e);
+      }
     }
   };
 
@@ -260,6 +276,9 @@ export const HomeView: React.FC = () => {
                   className="w-full h-full object-cover"
                   src={heroAlbum.artworkUrl}
                   alt={heroAlbum.title}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-transparent flex flex-col justify-end p-5">
                   <span className="font-serif-title text-[22px] text-on-surface font-bold drop-shadow">
@@ -326,6 +345,9 @@ export const HomeView: React.FC = () => {
                         className="w-full h-full object-cover"
                         src={album.artworkUrl}
                         alt={album.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                        }}
                       />
                       {idx === 0 && (
                         <div className="absolute top-2.5 left-2.5 bg-secondary text-surface-container-lowest px-2 py-0.5 rounded font-label-md text-[11px] font-bold tracking-wider flex items-center gap-1 shadow-md">
@@ -428,6 +450,9 @@ export const HomeView: React.FC = () => {
                         className="w-full h-full object-cover"
                         src={album.artworkUrl}
                         alt={album.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                        }}
                       />
                       {album.isNew && (
                         <div className="absolute top-2.5 left-2.5 bg-primary-container text-on-primary-container px-2 py-0.5 rounded font-label-md text-[11px] font-bold">
