@@ -12,7 +12,7 @@ const TestApp: React.FC = () => {
         <Focusable focusId="hero-resume" group="hero-actions">
           {({ isFocused }) => <button id="btn-hero">{isFocused ? 'Focused Hero' : 'Hero'}</button>}
         </Focusable>
-        <Focusable focusId="shelf-item-1" group="recent-shelf">
+        <Focusable focusId="shelf-item-1" group="recent-shelf" autoFocus={true}>
           {({ isFocused }) => <button id="btn-shelf">{isFocused ? 'Focused Shelf' : 'Shelf'}</button>}
         </Focusable>
       </div>

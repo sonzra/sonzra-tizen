@@ -1,22 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { usePlayer } from '../context/PlayerContext';
 import { useServer } from '../context/ServerContext';
-import { MOCK_ALBUMS, MOCK_SERVER_STATS } from '../services/mockData';
 
 type LibraryTab = 'albums' | 'artists' | 'tracks' | 'playlists' | 'podcasts';
 
 export const LibraryView: React.FC = () => {
   const { openAlbum, goToView } = useSpatialNav();
   const { playAlbum, currentTrack, playbackStatus } = usePlayer();
-  const { albums: serverAlbums } = useServer();
+  const { albums: serverAlbums, artists: serverArtists, config } = useServer();
 
   const [activeTab, setActiveTab] = useState<LibraryTab>('albums');
   const [sortOption, setSortOption] = useState<string>('Recently Added');
 
-  // Use server albums if connected, otherwise fallback to rich design mock albums
-  const albums = serverAlbums.length > 0 ? serverAlbums : MOCK_ALBUMS;
+  const albums = serverAlbums || [];
+  const artists = serverArtists || [];
+  const totalTracks = useMemo(
+    () => albums.reduce((acc, a) => acc + (a.trackCount || 0), 0),
+    [albums]
+  );
+
+  const serverHost = useMemo(() => {
+    try {
+      if (config.serverUrl) return new URL(config.serverUrl).host;
+    } catch {}
+    return 'Sonzra Media Server';
+  }, [config.serverUrl]);
+
+  const sortedAlbums = useMemo(() => {
+    const list = [...albums];
+    if (sortOption === 'Title (A-Z)') {
+      return list.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    if (sortOption === 'Artist (A-Z)') {
+      return list.sort((a, b) => a.artist.localeCompare(b.artist));
+    }
+    if (sortOption === 'Year') {
+      return list.sort((a, b) => (b.year || 0) - (a.year || 0));
+    }
+    return list;
+  }, [albums, sortOption]);
 
   const tabs: Array<{ id: LibraryTab; label: string; icon: string }> = [
     { id: 'albums', label: 'Albums', icon: 'album' },
@@ -42,7 +66,7 @@ export const LibraryView: React.FC = () => {
             Your Library
           </h1>
           <span className="text-[14px] font-mono text-outline font-medium tracking-wider">
-            {MOCK_SERVER_STATS.nodeName}
+            {serverHost}
           </span>
         </div>
 
@@ -50,23 +74,23 @@ export const LibraryView: React.FC = () => {
         <div className="flex items-center gap-2 bg-surface-container-low/90 px-3 py-1.5 rounded-xl border border-white/[0.04] text-[13px]">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
             <span className="material-symbols-outlined text-[16px] text-primary">album</span>
-            <span className="font-bold text-on-surface">{albums.length || MOCK_SERVER_STATS.albumsCount}</span>
+            <span className="font-bold text-on-surface">{albums.length}</span>
             <span className="text-outline">Albums</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
             <span className="material-symbols-outlined text-[16px] text-tertiary">person</span>
-            <span className="font-bold text-on-surface">{MOCK_SERVER_STATS.artistsCount}</span>
+            <span className="font-bold text-on-surface">{artists.length}</span>
             <span className="text-outline">Artists</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
             <span className="material-symbols-outlined text-[16px] text-secondary">audiotrack</span>
-            <span className="font-bold text-on-surface">{MOCK_SERVER_STATS.tracksCount.toLocaleString()}</span>
+            <span className="font-bold text-on-surface">{totalTracks.toLocaleString()}</span>
             <span className="text-outline">Tracks</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary-container/20 text-secondary-fixed">
             <span className="material-symbols-outlined text-[16px] text-secondary">memory</span>
-            <span className="font-bold font-mono">{MOCK_SERVER_STATS.storageUsed}</span>
-            <span className="text-secondary text-[12px] uppercase">{MOCK_SERVER_STATS.storageFormat}</span>
+            <span className="font-bold font-mono">LOSSLESS</span>
+            <span className="text-secondary text-[12px] uppercase">PCM / FLAC</span>
           </div>
         </div>
       </div>
@@ -146,10 +170,19 @@ export const LibraryView: React.FC = () => {
 
       {/* 5-Column Widescreen Album Grid */}
       <section className="w-full" aria-label="Library Media Grid">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
-          {albums.map((album) => {
-            const focusId = `library-card-${album.id}`;
-            const isPlayingThisAlbum = currentTrack?.albumId === album.id && playbackStatus === 'playing';
+        {sortedAlbums.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-16 rounded-2xl bg-surface-container-low/60 border border-white/[0.04] text-center gap-4 my-8">
+            <span className="material-symbols-outlined text-[48px] text-outline">album</span>
+            <h2 className="text-xl font-bold text-on-surface">No Albums Found</h2>
+            <p className="text-sm text-on-surface-variant max-w-md">
+              Your Sonzra server library does not contain any albums yet, or the server is still indexing.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+            {sortedAlbums.map((album) => {
+              const focusId = `library-card-${album.id}`;
+              const isPlayingThisAlbum = currentTrack?.albumId === album.id && playbackStatus === 'playing';
 
             return (
               <Focusable
@@ -224,6 +257,7 @@ export const LibraryView: React.FC = () => {
             );
           })}
         </div>
+      )}
       </section>
     </div>
   );

@@ -3,33 +3,33 @@ import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { usePlayer } from '../context/PlayerContext';
 import { useServer } from '../context/ServerContext';
-import { MOCK_ALBUMS } from '../services/mockData';
 
 export const HomeView: React.FC = () => {
   const { openAlbum, goToView } = useSpatialNav();
   const { playAlbum, addToQueue, currentTrack, playbackStatus } = usePlayer();
   const { albums: serverAlbums, apiClient } = useServer();
 
-  const hasLiveAlbums = serverAlbums && serverAlbums.length > 0;
-  const heroAlbum = hasLiveAlbums
-    ? serverAlbums[0]
-    : (MOCK_ALBUMS.find((a) => a.id === 'album-echoes-in-violet') || MOCK_ALBUMS[0]);
+  const hasLiveAlbums = Boolean(serverAlbums && serverAlbums.length > 0);
+  const heroAlbum = hasLiveAlbums ? serverAlbums[0] : null;
 
   const continueListeningAlbums = hasLiveAlbums
     ? (serverAlbums.filter((a) => a.progressPercent !== undefined).length > 0
         ? serverAlbums.filter((a) => a.progressPercent !== undefined)
         : serverAlbums.slice(1, 5))
-    : MOCK_ALBUMS.filter((a) => a.progressPercent !== undefined);
+    : [];
 
-  const recentlyAddedAlbums = hasLiveAlbums
-    ? serverAlbums.slice(0, 8)
-    : MOCK_ALBUMS.slice(0, 4);
+  const recentlyAddedAlbums = hasLiveAlbums ? serverAlbums.slice(0, 8) : [];
 
   const handleResumePlayback = () => {
-    playAlbum(heroAlbum);
+    if (heroAlbum) {
+      playAlbum(heroAlbum);
+    } else {
+      goToView('library');
+    }
   };
 
   const handleAddHeroToQueue = async () => {
+    if (!heroAlbum) return;
     if (heroAlbum.tracks && heroAlbum.tracks.length > 0) {
       addToQueue(heroAlbum.tracks);
     } else {
@@ -52,7 +52,7 @@ export const HomeView: React.FC = () => {
           <div className="flex items-center gap-2 bg-surface-container-low/90 px-4 py-1.5 rounded-full shadow-md border border-white/[0.04]">
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(73,220,202,0.8)]"></span>
             <span className="font-label-md text-label-md text-on-surface uppercase tracking-wider text-[13px] font-semibold">
-              IN PROGRESS · TRACK {heroAlbum.currentTrackIndex || 8} OF {heroAlbum.trackCount}
+              IN PROGRESS · TRACK {heroAlbum?.currentTrackIndex || 1} OF {heroAlbum?.trackCount || 1}
             </span>
           </div>
           <div className="flex items-center gap-2 bg-surface-container-high/60 px-4 py-1.5 rounded-full border border-white/[0.03]">
@@ -74,8 +74,42 @@ export const HomeView: React.FC = () => {
         </div>
       </div>
 
-      {/* Hero Album Spotlight (Echoes in Violet) */}
-      <section className="relative w-full rounded-2xl bg-gradient-to-r from-surface-container-lowest via-surface-container-low to-surface-container/60 p-10 overflow-hidden shadow-2xl mb-12 border border-white/[0.04]">
+      {/* Hero Album Spotlight */}
+      {!heroAlbum ? (
+        <section className="relative w-full rounded-2xl bg-gradient-to-r from-surface-container-lowest via-surface-container-low to-surface-container/60 p-10 overflow-hidden shadow-2xl mb-12 border border-white/[0.04]">
+          <div className="flex flex-col items-center justify-center text-center py-12 gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-primary/20 text-primary flex items-center justify-center">
+              <span className="material-symbols-outlined text-[36px]">library_music</span>
+            </div>
+            <h2 className="text-2xl font-bold text-on-surface">No Albums in Library Yet</h2>
+            <p className="text-on-surface-variant max-w-md text-sm">
+              Connect your Sonzra music server or sync your library in Settings to begin streaming.
+            </p>
+            <Focusable
+              focusId="hero-resume"
+              group="hero-actions"
+              autoFocus={true}
+              className="rounded-full cursor-pointer mt-2"
+              onEnter={() => goToView('library')}
+              onClick={() => goToView('library')}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`px-6 py-3 rounded-full font-bold text-sm flex items-center gap-2 ${
+                    isFocused
+                      ? 'bg-secondary text-surface-container-lowest ring-2 ring-secondary'
+                      : 'bg-surface-container-high text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">grid_view</span>
+                  <span>Open Library</span>
+                </button>
+              )}
+            </Focusable>
+          </div>
+        </section>
+      ) : (
+        <section className="relative w-full rounded-2xl bg-gradient-to-r from-surface-container-lowest via-surface-container-low to-surface-container/60 p-10 overflow-hidden shadow-2xl mb-12 border border-white/[0.04]">
         {/* Atmospheric Ambient Glow Backlights */}
         <div className="absolute -right-16 -top-24 w-[540px] h-[540px] bg-primary-container/20 rounded-full blur-[110px] pointer-events-none"></div>
         <div className="absolute right-48 bottom-0 w-[420px] h-[420px] bg-secondary/15 rounded-full blur-[90px] pointer-events-none"></div>
@@ -296,8 +330,10 @@ export const HomeView: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* SHELF 1: CONTINUE LISTENING */}
+      {continueListeningAlbums.length > 0 && (
       <section className="flex flex-col w-full mb-12">
         <div className="flex items-baseline justify-between mb-4">
           <div className="flex items-baseline gap-3">
@@ -402,8 +438,10 @@ export const HomeView: React.FC = () => {
           })}
         </div>
       </section>
+      )}
 
       {/* SHELF 2: RECENTLY ADDED TO SERVER (LOSSLESS LIBRARY) */}
+      {recentlyAddedAlbums.length > 0 && (
       <section className="flex flex-col w-full mb-10">
         <div className="flex items-baseline justify-between mb-4">
           <div className="flex items-baseline gap-3">
@@ -480,6 +518,7 @@ export const HomeView: React.FC = () => {
           })}
         </div>
       </section>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createRoot } from 'react-dom/client';
 import { SpatialNavigationProvider } from '../../navigation/SpatialNavigationContext';
 import { ServerProvider } from '../../context/ServerContext';
@@ -40,6 +40,24 @@ describe('SignInView & Auth Flow Integration', () => {
       configurable: true,
     });
 
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/v1/session')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            token: 'mock-jwt-token',
+            user: { id: 1, email_address: 'demo@sonzra.com' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => [],
+      });
+    });
+
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -56,7 +74,7 @@ describe('SignInView & Auth Flow Integration', () => {
       </SpatialNavigationProvider>
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const signInTitle = document.querySelector('h1');
     expect(signInTitle?.textContent).toContain('Sonzra Audio');
@@ -83,13 +101,13 @@ describe('SignInView & Auth Flow Integration', () => {
       </SpatialNavigationProvider>
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const demoBtn = document.querySelector('[data-focus-id="signin-btn-demo"]');
     expect(demoBtn).not.toBeNull();
     demoBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const authView = document.getElementById('authenticated-view');
     expect(authView).not.toBeNull();

@@ -7,8 +7,29 @@ import { SettingsView } from '../SettingsView';
 
 describe('SettingsView Redesign & Virtual Keyboard Integration', () => {
   let container: HTMLDivElement;
+  let mockStore: Record<string, string> = {};
 
   beforeEach(() => {
+    mockStore = {};
+    const mockLocalStorage = {
+      getItem: (key: string) => mockStore[key] || null,
+      setItem: (key: string, value: string) => {
+        mockStore[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete mockStore[key];
+      },
+      clear: () => {
+        mockStore = {};
+      },
+    };
+
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true,
+    });
+
     document.body.innerHTML = '';
     container = document.createElement('div');
     document.body.appendChild(container);

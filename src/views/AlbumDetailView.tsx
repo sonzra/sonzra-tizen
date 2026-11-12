@@ -4,7 +4,6 @@ import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { usePlayer } from '../context/PlayerContext';
 import { Album, Track } from '../types/music';
 import { Focusable } from '../navigation/Focusable';
-import { getMockAlbumById, MOCK_ALBUMS } from '../services/mockData';
 
 function formatDuration(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -14,8 +13,8 @@ function formatDuration(seconds: number): string {
 }
 
 export const AlbumDetailView: React.FC = () => {
-  const { viewParam } = useSpatialNav();
-  const { apiClient, config } = useServer();
+  const { viewParam, goToView } = useSpatialNav();
+  const { apiClient } = useServer();
   const { playAlbum, playTrack, addToQueue, currentTrack, playbackStatus } = usePlayer();
 
   const [album, setAlbum] = useState<Album | null>(null);
@@ -24,12 +23,10 @@ export const AlbumDetailView: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    const albumId = viewParam || 'album-echoes-in-violet';
+    const albumId = viewParam;
 
-    // If demo mode or no server configured, use mock data immediately
-    if (config.demoMode || !config.serverUrl) {
-      const mockAlbum = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
-      setAlbum(mockAlbum);
+    if (!albumId) {
+      setAlbum(null);
       setLoading(false);
       return;
     }
@@ -39,19 +36,13 @@ export const AlbumDetailView: React.FC = () => {
       .fetchAlbum(albumId)
       .then((res) => {
         if (active) {
-          if (res) {
-            setAlbum(res);
-          } else {
-            const fallback = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
-            setAlbum(fallback);
-          }
+          setAlbum(res);
           setLoading(false);
         }
       })
       .catch(() => {
         if (active) {
-          const fallback = getMockAlbumById(albumId) || MOCK_ALBUMS[0];
-          setAlbum(fallback);
+          setAlbum(null);
           setLoading(false);
         }
       });
@@ -59,13 +50,45 @@ export const AlbumDetailView: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [viewParam, apiClient, config.demoMode, config.serverUrl]);
+  }, [viewParam, apiClient]);
 
-  if (loading || !album) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] text-on-surface">
         <div className="w-12 h-12 rounded-full border-2 border-secondary border-t-transparent animate-spin mb-4" />
         <p className="text-on-surface-variant font-mono">Loading Album Details...</p>
+      </div>
+    );
+  }
+
+  if (!album) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] text-center gap-6 my-12">
+        <span className="material-symbols-outlined text-[64px] text-outline">album</span>
+        <h2 className="text-2xl font-bold text-on-surface">Album Not Found</h2>
+        <p className="text-on-surface-variant max-w-md text-sm">
+          The requested album could not be loaded from your Sonzra server.
+        </p>
+        <Focusable
+          focusId="album-detail-back-btn"
+          group="album-detail-actions"
+          className="rounded-full cursor-pointer"
+          onEnter={() => goToView('library')}
+          onClick={() => goToView('library')}
+        >
+          {({ isFocused }) => (
+            <button
+              className={`px-8 py-3 rounded-full font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                isFocused
+                  ? 'bg-secondary text-on-secondary shadow-[0_0_24px_rgba(73,220,202,0.6)]'
+                  : 'bg-surface-container-high text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              Return to Library
+            </button>
+          )}
+        </Focusable>
       </div>
     );
   }

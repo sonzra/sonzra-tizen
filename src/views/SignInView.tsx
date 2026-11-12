@@ -110,7 +110,7 @@ export const SignInView: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Demo Mode CTA */}
+          {/* Quick Demo Connect CTA */}
           <div className="pt-2">
             <Focusable
               focusId="signin-btn-demo"
@@ -135,9 +135,9 @@ export const SignInView: React.FC = () => {
                       play_circle
                     </span>
                     <div className="flex flex-col text-left">
-                      <span className="font-semibold text-[15px]">Explore Standalone Demo Mode</span>
+                      <span className="font-semibold text-[15px]">Quick Connect (Demo Account)</span>
                       <span className="text-[12px] text-on-surface-variant font-mono">
-                        Test UI & navigation without signing in
+                        Instant sign-in with server demo credentials
                       </span>
                     </div>
                   </div>
