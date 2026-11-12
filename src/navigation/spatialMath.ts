@@ -235,7 +235,16 @@ export function findNextFocusableNode(
 
     if (direction === 'down') {
       const below = sidebarNodes.filter((c) => getRect(c.element).centerY > currentRect.centerY + 2);
-      if (below.length === 0) return null;
+      if (below.length === 0) {
+        // At the bottom of sidebar rail -> transition directly to Bottom Player Dock!
+        const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
+        if (dockPlay) return dockPlay;
+        const dockTrack = validCandidates.find((c) => c.id === 'dock-track-info');
+        if (dockTrack) return dockTrack;
+        const dockNodes = validCandidates.filter((c) => c.group === 'bottom-dock');
+        if (dockNodes.length > 0) return dockNodes[0];
+        return null;
+      }
       // Closest below
       return below.reduce((best, c) => {
         const dist = getRect(c.element).centerY - currentRect.centerY;
@@ -270,7 +279,11 @@ export function findNextFocusableNode(
           return dist < bestDist ? c : best;
         });
       }
-      // Reached leftmost item in bottom dock -> transition to Sidebar
+      // Reached leftmost item in bottom dock -> transition to Sidebar!
+      const sidebarDock = validCandidates.find((c) => c.id === 'sidebar-player-dock');
+      if (sidebarDock) return sidebarDock;
+      const sidebarProfile = validCandidates.find((c) => c.id === 'sidebar-profile');
+      if (sidebarProfile) return sidebarProfile;
       return getActiveSidebarItem(activeView, validCandidates);
     }
 
@@ -367,6 +380,19 @@ export function findNextFocusableNode(
       }
     }
 
+    // Now Playing view: moving left from queue returns to transport controls
+    if (activeView === 'now-playing' && currentGroup === 'now-playing-queue') {
+      const lastId = lastFocusedByGroup?.get('now-playing-controls');
+      if (lastId) {
+        const remembered = validCandidates.find((c) => c.id === lastId);
+        if (remembered) return remembered;
+      }
+      const playBtn = validCandidates.find((c) => c.id === 'np-ctrl-play');
+      if (playBtn) return playBtn;
+      const controls = validCandidates.filter((c) => c.group === 'now-playing-controls');
+      if (controls.length > 0) return controls[0];
+    }
+
     // Check if there is an item to the left in the SAME group and same visual row
     const sameGroupToLeft = validCandidates.filter((c) => {
       if (c.group !== currentGroup) return false;
@@ -427,6 +453,14 @@ export function findNextFocusableNode(
       const trackNodes = validCandidates.filter((c) => c.group === 'album-tracks');
       if (trackNodes.length > 0) {
         return trackNodes[0];
+      }
+    }
+
+    // Now Playing view: moving right from controls enters queue shelf
+    if (activeView === 'now-playing' && currentGroup === 'now-playing-controls') {
+      const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
+      if (queueNodes.length > 0) {
+        return queueNodes[0];
       }
     }
   }
@@ -559,6 +593,18 @@ export function findNextFocusableNode(
         const playBtn = validCandidates.find((c) => c.id === 'np-ctrl-play');
         if (playBtn) return playBtn;
       }
+      if (currentGroup === 'now-playing-queue') {
+        const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
+        const below = queueNodes.filter((c) => getRect(c.element).centerY > currentRect.centerY + 4);
+        if (below.length > 0) {
+          return below.reduce((best, c) => {
+            const dist = getRect(c.element).centerY - currentRect.centerY;
+            const bestDist = getRect(best.element).centerY - currentRect.centerY;
+            return dist < bestDist ? c : best;
+          });
+        }
+        return null;
+      }
     }
   }
 
@@ -666,6 +712,19 @@ export function findNextFocusableNode(
           const scrub = validCandidates.find((c) => c.id === 'np-scrub-bar');
           if (scrub) return scrub;
         }
+      }
+      if (currentGroup === 'now-playing-queue') {
+        const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
+        const above = queueNodes.filter((c) => getRect(c.element).centerY < currentRect.centerY - 4);
+        if (above.length > 0) {
+          return above.reduce((best, c) => {
+            const dist = currentRect.centerY - getRect(c.element).centerY;
+            const bestDist = currentRect.centerY - getRect(best.element).centerY;
+            return dist < bestDist ? c : best;
+          });
+        }
+        const backBtn = validCandidates.find((c) => c.id === 'np-btn-back');
+        if (backBtn) return backBtn;
       }
     }
   }

@@ -33,6 +33,12 @@ export const TIZEN_KEYS = {
   VOLUME_UP: 447,
   VOLUME_DOWN: 448,
   VOLUME_MUTE: 449,
+
+  // Samsung TV Color Keys
+  COLOR_RED: 403,
+  COLOR_GREEN: 404,
+  COLOR_YELLOW: 405,
+  COLOR_BLUE: 406,
 } as const;
 
 export function registerTizenKeys(): void {
@@ -47,6 +53,8 @@ export function registerTizenKeys(): void {
         'MediaRewind',
         'MediaTrackPrevious',
         'MediaTrackNext',
+        'ColorF1Green',
+        'ColorF0Red',
       ];
 
       keysToRegister.forEach((keyName) => {
@@ -153,5 +161,13 @@ export function isMediaRewind(e: KeyboardEvent): boolean {
     e.keyCode === TIZEN_KEYS.MEDIA_REWIND ||
     e.key === 'MediaRewind' ||
     e.key === 'Rewind'
+  );
+}
+
+export function isPlayerShortcut(e: KeyboardEvent): boolean {
+  return (
+    e.keyCode === TIZEN_KEYS.COLOR_GREEN ||
+    e.key === 'ColorF1Green' ||
+    (e.key === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement))
   );
 }

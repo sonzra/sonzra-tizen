@@ -27,11 +27,12 @@ export const NowPlayingView: React.FC = () => {
     seek,
     toggleShuffle,
     cycleRepeat,
-    playTrack,
+    playTracks,
   } = usePlayer();
 
   const { goBack } = useSpatialNav();
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
 
   // If no track is playing yet, default to the hero track for pristine 10ft cinema display
   const activeTrack =
@@ -222,7 +223,11 @@ export const NowPlayingView: React.FC = () => {
               focusId="np-scrub-bar"
               group="now-playing-controls"
               className="w-full cursor-pointer py-2"
+              onEnter={() => setIsScrubbing((prev) => !prev)}
+              onClick={() => setIsScrubbing((prev) => !prev)}
+              onBlur={() => setIsScrubbing(false)}
               onArrow={(direction) => {
+                if (!isScrubbing) return false;
                 if (direction === 'left') {
                   seek(Math.max(0, currentTime - 10));
                   return true;
@@ -231,12 +236,17 @@ export const NowPlayingView: React.FC = () => {
                   seek(Math.min(displayDuration, currentTime + 10));
                   return true;
                 }
+                return false;
               }}
             >
               {({ isFocused }) => (
                 <div
                   className={`relative w-full h-3.5 bg-surface-container-highest rounded-full overflow-visible flex items-center transition-all ${
-                    isFocused ? 'ring-2 ring-secondary shadow-[0_0_12px_rgba(73,220,202,0.5)]' : ''
+                    isFocused
+                      ? isScrubbing
+                        ? 'ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.9)] animate-pulse'
+                        : 'ring-2 ring-secondary/80 shadow-[0_0_12px_rgba(73,220,202,0.5)]'
+                      : ''
                   }`}
                 >
                   <div
@@ -244,19 +254,36 @@ export const NowPlayingView: React.FC = () => {
                     style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
                   >
                     {/* Playhead with Glow */}
-                    <div className="absolute -right-3.5 -top-2 w-7 h-7 rounded-full bg-white shadow-[0_0_16px_#49dcca] flex items-center justify-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-secondary"></div>
+                    <div
+                      className={`absolute -right-3.5 -top-2 w-7 h-7 rounded-full bg-white shadow-[0_0_16px_#49dcca] flex items-center justify-center transition-transform ${
+                        isScrubbing ? 'scale-125' : ''
+                      }`}
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          isScrubbing ? 'bg-secondary animate-ping' : 'bg-secondary'
+                        }`}
+                      ></div>
                     </div>
                   </div>
                 </div>
               )}
             </Focusable>
 
-            {/* Timestamps */}
+            {/* Timestamps & Scrub State Hint */}
             <div className="flex justify-between items-center text-sm font-label-md px-1 text-on-surface-variant">
               <span className="text-secondary font-bold font-mono">
                 {formatTime(currentTime || 0)}
               </span>
+              {isScrubbing ? (
+                <span className="text-[11px] font-mono text-secondary uppercase tracking-wider font-semibold animate-pulse">
+                  Seek Mode Active • Press Enter to lock
+                </span>
+              ) : (
+                <span className="text-[11px] font-mono text-outline">
+                  Press Enter to Seek
+                </span>
+              )}
               <span className="font-mono text-outline">
                 {formatTime(displayDuration)}
               </span>
@@ -436,14 +463,27 @@ export const NowPlayingView: React.FC = () => {
             {upcomingTracks.map((track) => {
               const focusId = `np-queue-${track.id}`;
 
+              const handleSelectQueueTrack = () => {
+                if (queue.length > 0) {
+                  const targetIdx = queue.findIndex((t) => t.id === track.id);
+                  if (targetIdx >= 0) {
+                    playTracks(queue, targetIdx);
+                    return;
+                  }
+                }
+                const fullList = [activeTrack, ...upcomingTracks];
+                const targetIdx = fullList.findIndex((t) => t.id === track.id);
+                playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
+              };
+
               return (
                 <Focusable
                   key={track.id}
                   focusId={focusId}
                   group="now-playing-queue"
                   className="rounded-2xl cursor-pointer"
-                  onEnter={() => playTrack(track)}
-                  onClick={() => playTrack(track)}
+                  onEnter={handleSelectQueueTrack}
+                  onClick={handleSelectQueueTrack}
                 >
                   {({ isFocused }) => (
                     <div

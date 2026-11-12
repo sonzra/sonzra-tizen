@@ -66,11 +66,11 @@ const MainLayout: React.FC = () => {
       <div
         id="tv-main-scroll-container"
         className={`relative z-10 w-full h-full overflow-y-auto ${
-          isNowPlaying ? 'p-8 xl:p-12' : 'pl-24 pt-20 px-10 pb-44'
+          isNowPlaying ? 'p-8 xl:p-12' : 'pl-24 pt-20 px-10 pb-64'
         }`}
-        style={{ scrollPaddingBottom: '140px', scrollPaddingTop: '90px' }}
+        style={{ scrollPaddingBottom: '180px', scrollPaddingTop: '90px' }}
       >
-        <main className="w-full h-full min-h-full">{renderActiveView()}</main>
+        <main className="w-full min-h-full">{renderActiveView()}</main>
       </div>
 
       {/* Persistent Bottom Player Dock */}
