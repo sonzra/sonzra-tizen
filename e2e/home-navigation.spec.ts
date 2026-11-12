@@ -35,6 +35,8 @@ async function enterHomeView(page: Page) {
   await pressRemote(page, 'ArrowLeft');
   await expectFocused(page, 'signin-btn-demo');
   await pressRemote(page, 'Enter');
+  // Wait for real server session authentication & library to settle
+  await page.waitForSelector('#tv-node-hero-queue', { timeout: 15000 });
   await expectFocused(page, 'hero-resume');
 }
 

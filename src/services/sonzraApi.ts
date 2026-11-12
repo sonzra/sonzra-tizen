@@ -1,6 +1,5 @@
 import { Album, Artist, ServerConfig, Track } from '../types/music';
 import { AuthSession, User } from '../types/auth';
-import { MOCK_ALBUMS, MOCK_ARTISTS } from './mockData';
 
 export class SonzraApiClient {
   private config: ServerConfig;
@@ -138,8 +137,8 @@ export class SonzraApiClient {
   }
 
   async fetchAlbums(): Promise<Album[]> {
-    if (this.config.demoMode || !this.config.serverUrl) {
-      return MOCK_ALBUMS;
+    if (!this.config.serverUrl) {
+      return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -149,7 +148,10 @@ export class SonzraApiClient {
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
         },
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        console.warn(`fetchAlbums returned HTTP ${response.status}`);
+        return [];
+      }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.albums || []);
 
@@ -164,14 +166,14 @@ export class SonzraApiClient {
         tracks: item.tracks?.map((t: any) => this.mapTrack(t)),
       }));
     } catch (err) {
-      console.warn('Falling back to mock albums:', err);
-      return MOCK_ALBUMS;
+      console.warn('Failed to fetch albums from server:', err);
+      return [];
     }
   }
 
   async fetchAlbum(albumId: string): Promise<Album | null> {
-    if (this.config.demoMode || !this.config.serverUrl) {
-      return MOCK_ALBUMS.find((a) => a.id === albumId) || null;
+    if (!this.config.serverUrl) {
+      return null;
     }
 
     try {
@@ -202,12 +204,12 @@ export class SonzraApiClient {
     } catch (e) {
       console.warn(`Failed to fetch album ${albumId}:`, e);
     }
-    return MOCK_ALBUMS.find((a) => a.id === albumId) || null;
+    return null;
   }
 
   async fetchArtists(): Promise<Artist[]> {
-    if (this.config.demoMode || !this.config.serverUrl) {
-      return MOCK_ARTISTS;
+    if (!this.config.serverUrl) {
+      return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -217,7 +219,10 @@ export class SonzraApiClient {
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
         },
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        console.warn(`fetchArtists returned HTTP ${response.status}`);
+        return [];
+      }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.artists || []);
 
@@ -229,14 +234,14 @@ export class SonzraApiClient {
         albumCount: item.album_count || item.albums?.length || 0,
       }));
     } catch (err) {
-      console.warn('Falling back to mock artists:', err);
-      return MOCK_ARTISTS;
+      console.warn('Failed to fetch artists from server:', err);
+      return [];
     }
   }
 
   async fetchArtist(artistId: string): Promise<Artist | null> {
-    if (this.config.demoMode || !this.config.serverUrl) {
-      return MOCK_ARTISTS.find((a) => a.id === artistId) || null;
+    if (!this.config.serverUrl) {
+      return null;
     }
 
     try {
@@ -273,7 +278,7 @@ export class SonzraApiClient {
     } catch (e) {
       console.warn(`Failed to fetch artist ${artistId}:`, e);
     }
-    return MOCK_ARTISTS.find((a) => a.id === artistId) || null;
+    return null;
   }
 
   async reportPlayback(report: {

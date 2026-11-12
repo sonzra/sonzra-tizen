@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
-import { MOCK_ALBUMS } from '../services/mockData';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -34,22 +33,9 @@ export const BottomDock: React.FC = () => {
     return null;
   }
 
-  // Fallback to active album track if nothing currently playing
-  const displayTrack =
-    currentTrack ||
-    MOCK_ALBUMS[0].tracks?.[7] ||
-    MOCK_ALBUMS[0].tracks?.[0] || {
-      id: 'fallback',
-      title: 'Solaris Reflections',
-      artist: 'Aethelgard Ambient',
-      album: 'Solaris',
-      duration: 310,
-      artworkUrl: MOCK_ALBUMS[0].artworkUrl,
-    };
-
   const isPlaying = playbackStatus === 'playing';
-  const displayDuration = duration > 0 ? duration : displayTrack.duration || 310;
-  const progressPercent = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 66;
+  const displayDuration = duration > 0 ? duration : currentTrack?.duration || 0;
+  const progressPercent = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0;
 
   return (
     <aside
@@ -62,8 +48,8 @@ export const BottomDock: React.FC = () => {
         focusId="dock-track-info"
         group="bottom-dock"
         className="rounded-xl cursor-pointer"
-        onEnter={() => goToView('now-playing')}
-        onClick={() => goToView('now-playing')}
+        onEnter={() => goToView(currentTrack ? 'now-playing' : 'library')}
+        onClick={() => goToView(currentTrack ? 'now-playing' : 'library')}
       >
         {({ isFocused }) => (
           <div
@@ -73,7 +59,7 @@ export const BottomDock: React.FC = () => {
           >
             <div className="w-14 h-14 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden ring-1 ring-outline-variant/30 shrink-0">
               <img
-                src={displayTrack.artworkUrl || MOCK_ALBUMS[0].artworkUrl}
+                src={currentTrack?.artworkUrl || './sonzra-mark.svg'}
                 alt=""
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -83,10 +69,10 @@ export const BottomDock: React.FC = () => {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-label-lg text-label-lg text-on-surface font-semibold truncate max-w-[200px]">
-                {displayTrack.title}
+                {currentTrack ? currentTrack.title : 'No Track Playing'}
               </span>
               <span className="font-label-md text-label-md text-on-surface-variant truncate max-w-[200px]">
-                {displayTrack.artist}
+                {currentTrack ? currentTrack.artist : 'Select an album to start'}
               </span>
             </div>
           </div>
@@ -219,7 +205,7 @@ export const BottomDock: React.FC = () => {
         {/* Scrub line with timestamps */}
         <div className="w-full flex items-center gap-3">
           <span className="font-label-md text-label-md text-outline font-mono text-[13px]">
-            {formatTime(currentTime || 204)}
+            {formatTime(currentTime)}
           </span>
           <div className="relative flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
             <div

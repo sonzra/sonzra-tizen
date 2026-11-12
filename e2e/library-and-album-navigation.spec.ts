@@ -34,6 +34,8 @@ async function enterHomeView(page: Page) {
   await pressRemote(page, 'ArrowLeft');
   await expectFocused(page, 'signin-btn-demo');
   await pressRemote(page, 'Enter');
+  // Wait for real server session authentication & library to settle
+  await page.waitForSelector('#tv-node-hero-queue', { timeout: 15000 });
   await expectFocused(page, 'hero-resume');
 }
 
@@ -47,6 +49,8 @@ async function navigateToLibrary(page: Page) {
 
   await pressRemote(page, 'Enter');
   await expectFocused(page, 'library-tab-albums');
+  // Wait for real server album grid cards to render
+  await page.waitForSelector('[id^="tv-node-library-card-"]', { timeout: 15000 });
 }
 
 test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', () => {

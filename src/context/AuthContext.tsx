@@ -90,14 +90,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [apiClient, updateConfig]);
 
-  const enterDemoMode = useCallback(() => {
-    setUser({ id: 'demo', email_address: 'demo@sonzra.org', name: 'Demo Listener' });
-    setToken(null);
-    setIsAuthenticated(true);
-    setIsDemoUser(true);
-    updateConfig({ demoMode: true });
-    refreshLibrary();
-  }, [refreshLibrary, updateConfig]);
+  const enterDemoMode = useCallback(async () => {
+    setLoading(true);
+    try {
+      await signIn('demo@sonzra.com', 'password');
+    } catch (err) {
+      console.warn('Auto demo sign-in failed, fallback to local session:', err);
+      setUser({ id: 'demo', email_address: 'demo@sonzra.com', name: 'Demo Listener' });
+      setIsAuthenticated(true);
+      setIsDemoUser(true);
+      refreshLibrary();
+    } finally {
+      setLoading(false);
+    }
+  }, [signIn, refreshLibrary]);
 
   return (
     <AuthContext.Provider

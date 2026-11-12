@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
-import { MOCK_ALBUMS } from '../services/mockData';
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -30,34 +29,55 @@ export const NowPlayingView: React.FC = () => {
     playTracks,
   } = usePlayer();
 
-  const { goBack } = useSpatialNav();
+  const { goBack, goToView } = useSpatialNav();
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
 
-  // If no track is playing yet, default to the hero track for pristine 10ft cinema display
-  const activeTrack =
-    currentTrack ||
-    MOCK_ALBUMS[0].tracks?.[7] ||
-    MOCK_ALBUMS[0].tracks?.[0] || {
-      id: 'fallback-track',
-      title: 'Celestial Reverie',
-      artist: 'The Glass Hours',
-      album: 'Echoes in Violet',
-      duration: 375,
-      artworkUrl: MOCK_ALBUMS[0].artworkUrl,
-      fidelity: '96kHz / 24-bit',
-      trackNumber: 8,
-    };
+  if (!currentTrack) {
+    return (
+      <div className="relative w-full flex-1 flex flex-col items-center justify-center text-center p-8 select-none my-12">
+        <div className="w-24 h-24 rounded-full bg-surface-container-high flex items-center justify-center mb-6 shadow-2xl border border-white/5">
+          <span className="material-symbols-outlined text-[48px] text-secondary">music_note</span>
+        </div>
+        <h2 className="text-3xl font-bold font-serif-title text-on-surface mb-2">No Music Playing</h2>
+        <p className="text-on-surface-variant max-w-md text-base mb-8">
+          Select an album or track from your Sonzra library to experience Hi-Res audiophile streaming.
+        </p>
+        <Focusable
+          focusId="np-btn-browse-library"
+          group="now-playing-idle"
+          autoFocus={true}
+          className="rounded-full cursor-pointer"
+          onEnter={() => goToView('library')}
+          onClick={() => goToView('library')}
+        >
+          {({ isFocused }) => (
+            <button
+              className={`flex items-center gap-3 px-8 py-3.5 rounded-full text-base font-bold transition-all cursor-pointer ${
+                isFocused
+                  ? 'bg-secondary text-on-secondary shadow-[0_0_24px_rgba(73,220,202,0.8)] scale-105'
+                  : 'bg-primary-container text-on-primary-container hover:bg-tertiary-container'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[24px]">library_music</span>
+              <span>Browse Library</span>
+            </button>
+          )}
+        </Focusable>
+      </div>
+    );
+  }
 
+  const activeTrack = currentTrack;
   const isPlaying = playbackStatus === 'playing';
-  const displayDuration = duration > 0 ? duration : activeTrack.duration || 375;
-  const progressPercent = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 38;
+  const displayDuration = duration > 0 ? duration : activeTrack.duration || 0;
+  const progressPercent = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0;
 
-  // Queue tracks or remaining album tracks
+  // Upcoming tracks from the active queue
   const upcomingTracks =
     queue.length > 0 && currentIndex >= 0
       ? queue.slice(currentIndex + 1)
-      : (MOCK_ALBUMS[0].tracks || []).filter((t) => t.id !== activeTrack.id).slice(0, 5);
+      : [];
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between overflow-hidden select-none pb-28">
@@ -163,7 +183,7 @@ export const NowPlayingView: React.FC = () => {
             <div className="relative z-10 w-[310px] h-[310px] xl:w-[360px] xl:h-[360px] rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] bg-surface-container-high border border-outline-variant/30">
               <img
                 className="w-full h-full object-cover"
-                src={activeTrack.artworkUrl || MOCK_ALBUMS[0].artworkUrl}
+                src={activeTrack.artworkUrl || './sonzra-mark.svg'}
                 alt={activeTrack.title}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = './sonzra-mark.svg';
@@ -460,71 +480,78 @@ export const NowPlayingView: React.FC = () => {
 
           {/* Queue Track List */}
           <div className="flex flex-col gap-2.5 overflow-y-auto max-h-[380px]">
-            {upcomingTracks.map((track) => {
-              const focusId = `np-queue-${track.id}`;
+            {upcomingTracks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-2 my-auto">
+                <span className="material-symbols-outlined text-[32px] text-outline">queue_music</span>
+                <span className="text-xs text-on-surface-variant font-medium">No more tracks in queue</span>
+              </div>
+            ) : (
+              upcomingTracks.map((track) => {
+                const focusId = `np-queue-${track.id}`;
 
-              const handleSelectQueueTrack = () => {
-                if (queue.length > 0) {
-                  const targetIdx = queue.findIndex((t) => t.id === track.id);
-                  if (targetIdx >= 0) {
-                    playTracks(queue, targetIdx);
-                    return;
+                const handleSelectQueueTrack = () => {
+                  if (queue.length > 0) {
+                    const targetIdx = queue.findIndex((t) => t.id === track.id);
+                    if (targetIdx >= 0) {
+                      playTracks(queue, targetIdx);
+                      return;
+                    }
                   }
-                }
-                const fullList = [activeTrack, ...upcomingTracks];
-                const targetIdx = fullList.findIndex((t) => t.id === track.id);
-                playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
-              };
+                  const fullList = [activeTrack, ...upcomingTracks];
+                  const targetIdx = fullList.findIndex((t) => t.id === track.id);
+                  playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
+                };
 
-              return (
-                <Focusable
-                  key={track.id}
-                  focusId={focusId}
-                  group="now-playing-queue"
-                  className="rounded-2xl cursor-pointer"
-                  onEnter={handleSelectQueueTrack}
-                  onClick={handleSelectQueueTrack}
-                >
-                  {({ isFocused }) => (
-                    <div
-                      className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
-                        isFocused
-                          ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
-                          : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
-                          <img
-                            className="w-full h-full object-cover"
-                            src={track.artworkUrl || activeTrack.artworkUrl}
-                            alt={track.title}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-                            }}
-                          />
+                return (
+                  <Focusable
+                    key={track.id}
+                    focusId={focusId}
+                    group="now-playing-queue"
+                    className="rounded-2xl cursor-pointer"
+                    onEnter={handleSelectQueueTrack}
+                    onClick={handleSelectQueueTrack}
+                  >
+                    {({ isFocused }) => (
+                      <div
+                        className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
+                          isFocused
+                            ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
+                            : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
+                            <img
+                              className="w-full h-full object-cover"
+                              src={track.artworkUrl || activeTrack.artworkUrl}
+                              alt={track.title}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                              }}
+                            />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span
+                              className={`font-bold text-xs truncate ${
+                                isFocused ? 'text-secondary' : 'text-on-surface'
+                              }`}
+                            >
+                              {track.title}
+                            </span>
+                            <span className="text-[11px] text-on-surface-variant truncate">
+                              {track.artist}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col min-w-0">
-                          <span
-                            className={`font-bold text-xs truncate ${
-                              isFocused ? 'text-secondary' : 'text-on-surface'
-                            }`}
-                          >
-                            {track.title}
-                          </span>
-                          <span className="text-[11px] text-on-surface-variant truncate">
-                            {track.artist}
-                          </span>
-                        </div>
+                        <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
+                          {formatTime(track.duration)}
+                        </span>
                       </div>
-                      <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
-                        {formatTime(track.duration)}
-                      </span>
-                    </div>
-                  )}
-                </Focusable>
-              );
-            })}
+                    )}
+                  </Focusable>
+                );
+              })
+            )}
           </div>
         </div>
       </main>

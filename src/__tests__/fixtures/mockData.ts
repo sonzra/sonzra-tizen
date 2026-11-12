@@ -1,4 +1,4 @@
-import { Album, Artist, Track } from '../types/music';
+import { Album, Artist, Track } from '../../types/music';
 
 // Working royalty-free MP3 streams for reliable TV playback demonstration
 const DEMO_AUDIO_STREAMS = [

@@ -12,7 +12,6 @@ export const SettingsView: React.FC = () => {
   const [serverUrl, setServerUrl] = useState(config.serverUrl);
   const [serverConnectionId, setServerConnectionId] = useState(config.serverConnectionId);
   const [authToken, setAuthToken] = useState(config.authToken || '');
-  const [demoMode, setDemoMode] = useState(config.demoMode);
 
   // Active virtual keyboard input field
   const [activeField, setActiveField] = useState<'serverUrl' | 'connectionId' | 'authToken' | null>(null);
@@ -48,7 +47,7 @@ export const SettingsView: React.FC = () => {
       serverUrl,
       serverConnectionId,
       authToken,
-      demoMode,
+      demoMode: false,
     });
     refreshLibrary();
     setIsSaved(true);
@@ -251,38 +250,6 @@ export const SettingsView: React.FC = () => {
               </div>
             )}
 
-            {/* Standalone Demo Mode Switch */}
-            <Focusable
-              focusId="toggle-demo-mode"
-              group="settings-form"
-              className="w-full cursor-pointer rounded-2xl"
-              onEnter={() => setDemoMode((prev) => !prev)}
-              onClick={() => setDemoMode((prev) => !prev)}
-            >
-              {({ isFocused }) => (
-                <div
-                  className={`p-4 rounded-2xl flex items-center justify-between border transition-all ${
-                    isFocused
-                      ? 'bg-surface-container-high border-secondary ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.5)] scale-101'
-                      : 'bg-surface-container/60 border-white/[0.06] hover:bg-surface-container/80'
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-bold text-sm text-on-surface">Standalone Demo Mode</span>
-                    <span className="text-xs text-on-surface-variant max-w-md">
-                      Uses built-in sample albums and live audio streams for offline evaluation.
-                    </span>
-                  </div>
-                  <div
-                    className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 flex items-center ${
-                      demoMode ? 'bg-secondary justify-end' : 'bg-surface-container-highest justify-start'
-                    }`}
-                  >
-                    <div className="w-5 h-5 rounded-full bg-surface-container-lowest shadow-md" />
-                  </div>
-                </div>
-              )}
-            </Focusable>
 
             {/* Action Buttons: Test Connection & Save */}
             <div className="flex items-center gap-4 pt-2">
