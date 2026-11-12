@@ -76,6 +76,9 @@ export const BottomDock: React.FC = () => {
                 src={displayTrack.artworkUrl || MOCK_ALBUMS[0].artworkUrl}
                 alt=""
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                }}
               />
             </div>
             <div className="flex flex-col min-w-0">

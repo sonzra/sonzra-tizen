@@ -164,6 +164,9 @@ export const NowPlayingView: React.FC = () => {
                 className="w-full h-full object-cover"
                 src={activeTrack.artworkUrl || MOCK_ALBUMS[0].artworkUrl}
                 alt={activeTrack.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-surface-container-lowest/80 via-transparent to-primary/20 pointer-events-none"></div>
               {/* Sleek Tag Badge */}
@@ -456,6 +459,9 @@ export const NowPlayingView: React.FC = () => {
                             className="w-full h-full object-cover"
                             src={track.artworkUrl || activeTrack.artworkUrl}
                             alt={track.title}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                            }}
                           />
                         </div>
                         <div className="flex flex-col min-w-0">
