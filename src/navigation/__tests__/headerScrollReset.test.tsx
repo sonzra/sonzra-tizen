@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createRoot } from 'react-dom/client';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { createRoot, Root } from 'react-dom/client';
 import { SpatialNavigationProvider, useSpatialNav } from '../SpatialNavigationContext';
 import { Focusable } from '../Focusable';
 
@@ -25,6 +25,7 @@ const TestApp: React.FC = () => {
 
 describe('Dashboard Top Header Scroll Restoration', () => {
   let container: HTMLDivElement;
+  let root: Root | null = null;
 
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -32,21 +33,47 @@ describe('Dashboard Top Header Scroll Restoration', () => {
     document.body.appendChild(container);
   });
 
+  afterEach(() => {
+    if (root) {
+      root.unmount();
+      root = null;
+    }
+    document.body.innerHTML = '';
+  });
+
   it('resets container scrollTop to 0 when top-anchor node is focused', async () => {
-    const root = createRoot(container);
+    root = createRoot(container);
     root.render(
       <SpatialNavigationProvider>
         <TestApp />
       </SpatialNavigationProvider>
     );
 
-    await new Promise((r) => setTimeout(r, 80));
+    // Wait until shelf-item-1 is registered and autoFocus has focused it
+    for (let i = 0; i < 50; i++) {
+      const shelfNode = document.getElementById('tv-node-shelf-item-1');
+      const heroNode = document.getElementById('tv-node-hero-resume');
+      if (shelfNode?.classList.contains('tv-focused') && heroNode) {
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 20));
+    }
 
     const scrollContainer = document.getElementById('tv-main-scroll-container')!;
-    scrollContainer.scrollTop = 320;
+    expect(scrollContainer).not.toBeNull();
+
+    let currentScrollTop = 320;
+    Object.defineProperty(scrollContainer, 'scrollTop', {
+      get: () => currentScrollTop,
+      set: (val) => {
+        currentScrollTop = val;
+      },
+      configurable: true,
+    });
+
     const scrollToSpy = vi.fn((options: any) => {
       if (typeof options === 'object' && options.top !== undefined) {
-        scrollContainer.scrollTop = options.top;
+        currentScrollTop = options.top;
       }
     });
     scrollContainer.scrollTo = scrollToSpy;
@@ -54,7 +81,10 @@ describe('Dashboard Top Header Scroll Restoration', () => {
     const btn = document.getElementById('btn-trigger') as HTMLButtonElement;
     btn.click();
 
-    await new Promise((r) => setTimeout(r, 50));
+    for (let i = 0; i < 50; i++) {
+      if (scrollToSpy.mock.calls.length > 0) break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
 
     expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, behavior: 'instant' });
     expect(scrollContainer.scrollTop).toBe(0);

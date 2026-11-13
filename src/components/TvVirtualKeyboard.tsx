@@ -18,10 +18,14 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
 }) => {
   const [isUppercase, setIsUppercase] = useState<boolean>(false);
 
-  const numberRow = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '.'];
+  const isServerField =
+    activeFieldLabel.toLowerCase().includes('server') ||
+    activeFieldLabel.toLowerCase().includes('url');
+
+  const numberRow = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ':', '.'];
   const row1 = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'];
   const row2 = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '@', '_'];
-  const row3 = ['z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '.com', '.org'];
+  const row3 = ['z', 'x', 'c', 'v', 'b', 'n', 'm', '-', '/', ':', '.com'];
 
   const handleKeyClick = (char: string) => {
     const output = isUppercase ? char.toUpperCase() : char;
@@ -65,7 +69,7 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
         <span>Use Remote D-Pad & [ENTER] to Type</span>
       </div>
 
-      {/* Row 0: Numbers */}
+      {/* Row 0: Numbers + Colon + Dot */}
       <div className="grid grid-cols-12 gap-1.5 w-full">
         {numberRow.map((n, i) =>
           renderKey(`kb-num-${i}`, n, () => handleKeyClick(n), 'w-full text-[16px]')
@@ -88,13 +92,24 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
         })}
       </div>
 
-      {/* Row 3: Z-M + . + domain helpers */}
-      <div className="grid grid-cols-10 gap-1.5 w-full">
+      {/* Row 3: Z-M + - + / + : + .com */}
+      <div className="grid grid-cols-11 gap-1.5 w-full">
         {row3.map((char) => {
           const display = isUppercase ? char.toUpperCase() : char;
           const isDomain = char.startsWith('.');
+          const safeKeyId =
+            char === '.'
+              ? 'dot'
+              : char === ':'
+              ? 'colon'
+              : char === '/'
+              ? 'slash'
+              : char === '-'
+              ? 'dash'
+              : char.replace('.', 'dot-');
+
           return renderKey(
-            `kb-char-${char.replace('.', 'dot-')}`,
+            `kb-char-${safeKeyId}`,
             display,
             () => (isDomain ? onKeyPress(char) : handleKeyClick(display)),
             `w-full text-[15px] ${isDomain ? 'font-sans text-[13px] text-secondary font-semibold' : ''}`
@@ -151,13 +166,13 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
           )}
         </Focusable>
 
-        {/* Quick Email Domain Chip */}
+        {/* Quick Helper Chip: @gmail.com for email OR http:// for server */}
         <Focusable
           focusId="kb-btn-gmail"
           group="tv-keyboard"
           className="flex-1 rounded-xl cursor-pointer"
-          onEnter={() => onKeyPress('@gmail.com')}
-          onClick={() => onKeyPress('@gmail.com')}
+          onEnter={() => onKeyPress(isServerField ? 'http://' : '@gmail.com')}
+          onClick={() => onKeyPress(isServerField ? 'http://' : '@gmail.com')}
         >
           {({ isFocused }) => (
             <div
@@ -167,10 +182,33 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
                   : 'bg-surface-container-high border border-white/[0.04]'
               }`}
             >
-              @gmail.com
+              {isServerField ? 'http://' : '@gmail.com'}
             </div>
           )}
         </Focusable>
+
+        {/* Quick Port 3000 Chip when in Server URL mode */}
+        {isServerField && (
+          <Focusable
+            focusId="kb-btn-port"
+            group="tv-keyboard"
+            className="flex-1 rounded-xl cursor-pointer"
+            onEnter={() => onKeyPress(':3000')}
+            onClick={() => onKeyPress(':3000')}
+          >
+            {({ isFocused }) => (
+              <div
+                className={`h-12 flex items-center justify-center rounded-xl font-mono text-[12px] font-bold text-secondary transition-all ${
+                  isFocused
+                    ? 'bg-secondary text-surface-container-lowest ring-2 ring-secondary shadow-[0_0_20px_rgba(73,220,202,0.85)] scale-105'
+                    : 'bg-surface-container-high border border-white/[0.04]'
+                }`}
+              >
+                :3000
+              </div>
+            )}
+          </Focusable>
+        )}
 
         {/* Backspace */}
         <Focusable

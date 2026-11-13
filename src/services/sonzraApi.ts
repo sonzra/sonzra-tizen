@@ -207,6 +207,56 @@ export class SonzraApiClient {
     return null;
   }
 
+  async fetchRadioTracks(itemId: string, limit = 12): Promise<Track[]> {
+    if (!this.config.serverUrl || !this.config.serverConnectionId) {
+      return [];
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const response = await fetch(
+        `${cleanUrl}/server_connections/${this.config.serverConnectionId}/radio_tracks/${itemId}?limit=${limit}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+          },
+        }
+      );
+      if (!response.ok) {
+        console.warn(`fetchRadioTracks returned HTTP ${response.status}`);
+        return [];
+      }
+      const data = await response.json();
+      const items = data.items || [];
+      return items.map((item: any) => ({
+        id: String(item.item_id || item.id),
+        title: item.title || item.name || 'Unknown Track',
+        artist: item.artist || 'Unknown Artist',
+        album: item.album || 'Radio Mix',
+        duration: typeof item.duration === 'string' ? this.parseDurationString(item.duration) : (item.duration || 180),
+        artworkUrl: this.resolveUrl(item.artwork || item.artwork_url) || './sonzra-mark.svg',
+        audioUrl: this.resolveUrl(item.source || item.audio_url || item.stream_url),
+        fidelity: 'Lossless',
+        isFavorite: Boolean(item.favorite),
+      }));
+    } catch (err) {
+      console.warn('Failed to fetch radio tracks:', err);
+      return [];
+    }
+  }
+
+  private parseDurationString(dur: string): number {
+    if (!dur) return 180;
+    const parts = dur.split(':').map(Number);
+    if (parts.length === 2) {
+      return (parts[0] || 0) * 60 + (parts[1] || 0);
+    }
+    if (parts.length === 3) {
+      return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+    }
+    return Number(dur) || 180;
+  }
+
   async fetchArtists(): Promise<Artist[]> {
     if (!this.config.serverUrl) {
       return [];
