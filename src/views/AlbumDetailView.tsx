@@ -15,7 +15,7 @@ function formatDuration(seconds: number): string {
 export const AlbumDetailView: React.FC = () => {
   const { viewParam, goToView } = useSpatialNav();
   const { apiClient } = useServer();
-  const { playAlbum, playTrack, addToQueue, currentTrack, playbackStatus } = usePlayer();
+  const { playAlbum, playTrack, addToQueue, currentTrack, playbackStatus, startRadio } = usePlayer();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -110,70 +110,31 @@ export const AlbumDetailView: React.FC = () => {
     <div className="w-full flex-1 flex flex-col pb-28">
       {/* TV Main Widescreen Landscape 2-Column Split */}
       <main className="flex-1 grid grid-cols-12 gap-8 items-start pt-2">
-        {/* LEFT COLUMN: Vinyl Sleeve Stage & Album Meta & Action Buttons */}
+        {/* LEFT COLUMN: Clean Album Sleeve & Album Meta & Action Buttons */}
         <section className="col-span-12 lg:col-span-5 flex flex-col justify-start gap-5 pr-2">
-          {/* Vinyl Record & Album Sleeve Mockup */}
-          <div className="relative w-full max-w-[420px] aspect-square flex items-center justify-start group">
-            {/* Ambient Glow under the record */}
-            <div className="absolute inset-0 bg-primary-container/30 rounded-3xl blur-3xl pointer-events-none"></div>
-
-            {/* Vinyl Disc (Partially Slipped Out to the right) */}
-            <div className="absolute right-0 top-2 bottom-2 w-[88%] aspect-square rounded-full bg-[#08080c] shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex items-center justify-center overflow-hidden transition-all duration-700 ease-out transform translate-x-12 group-hover:translate-x-20 border border-white/5">
-              {/* Vinyl Grooves concentric rings */}
-              <svg className="absolute inset-0 w-full h-full opacity-60 text-outline-variant/40" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" fill="none" r="95" stroke="currentColor" strokeWidth="0.5"></circle>
-                <circle cx="100" cy="100" fill="none" r="90" stroke="currentColor" strokeWidth="0.5"></circle>
-                <circle cx="100" cy="100" fill="none" r="85" stroke="currentColor" strokeWidth="0.5"></circle>
-                <circle cx="100" cy="100" fill="none" r="80" stroke="currentColor" strokeWidth="0.75"></circle>
-                <circle cx="100" cy="100" fill="none" r="75" stroke="currentColor" strokeWidth="0.5"></circle>
-                <circle cx="100" cy="100" fill="none" r="70" stroke="currentColor" strokeWidth="0.5"></circle>
-                <circle cx="100" cy="100" fill="none" r="65" stroke="currentColor" strokeWidth="0.75"></circle>
-                <circle cx="100" cy="100" fill="none" r="60" stroke="currentColor" strokeWidth="0.5"></circle>
-              </svg>
-
-              {/* Vinyl Center Label */}
-              <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-primary-container via-tertiary-container to-secondary-container flex flex-col items-center justify-center text-center p-2 shadow-2xl border-2 border-surface-container-lowest">
-                <span className="text-[8px] font-extrabold tracking-widest text-on-primary-container uppercase">
-                  Sonzra Master
-                </span>
-                <div className="w-5 h-5 rounded-full bg-surface-container-lowest my-1 shadow-inner flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#0e0e14]"></div>
-                </div>
-                <span className="text-[7px] font-mono text-on-primary-container/90 tracking-tighter">
-                  {album.codecBadge || '96kHz / 24-bit'}
-                </span>
-              </div>
-            </div>
-
-            {/* Album Front Sleeve Jacket */}
-            <div className="relative z-10 w-[84%] aspect-square rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.95)] bg-surface-container-low border border-white/10">
-              <img
-                src={album.artworkUrl}
-                alt={album.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-surface-container-lowest/20"></div>
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md text-secondary font-bold tracking-widest text-[10px] uppercase border border-secondary/20">
-                  {album.masterBadge || 'Ultra Studio'}
-                </span>
-                <span className="text-surface-tint/90 font-mono text-[11px] font-semibold tracking-wider">
-                  LP-{album.year || 2024}
-                </span>
-              </div>
-            </div>
+          {/* Clean Album Sleeve Stage */}
+          <div className="relative w-full max-w-[360px] aspect-square rounded-2xl overflow-hidden shadow-2xl bg-surface-container-high border border-white/10">
+            <img
+              src={album.artworkUrl}
+              alt={album.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+              }}
+            />
           </div>
 
           {/* Album Metadata */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="px-3 py-1 rounded-full bg-secondary-container/20 text-secondary text-xs font-extrabold tracking-wider uppercase border border-secondary/30 shadow-[0_0_12px_rgba(73,220,202,0.2)]">
-                {album.codecBadge || 'Hi-Res Lossless • 24-bit / 96kHz FLAC'}
-              </span>
-              <span className="text-xs text-on-surface-variant font-mono">• {album.year || 2024}</span>
+              {album.codecBadge && (
+                <span className="px-2.5 py-0.5 rounded bg-surface-container-highest text-secondary text-xs font-mono font-bold tracking-wider uppercase border border-secondary/30">
+                  {album.codecBadge}
+                </span>
+              )}
+              {album.year && (
+                <span className="text-xs text-on-surface-variant font-mono">{album.year}</span>
+              )}
             </div>
 
             <h1 className="text-3xl xl:text-4xl font-extrabold text-on-surface tracking-tight font-serif-title drop-shadow-md">
@@ -182,22 +143,28 @@ export const AlbumDetailView: React.FC = () => {
 
             <div className="flex items-center gap-2 text-base">
               <span className="font-bold text-surface-tint">{album.artist}</span>
-              <span className="text-outline">•</span>
-              <span className="text-sm font-medium text-outline">{album.genre || 'Ambient / Electronic'}</span>
+              {album.genre && (
+                <>
+                  <span className="text-outline">•</span>
+                  <span className="text-sm font-medium text-outline">{album.genre}</span>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-4 text-xs text-on-surface-variant font-medium mt-0.5">
               <span className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-secondary">library_music</span>
-                {tracks.length} tracks
+                {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'}
               </span>
-              <span className="text-outline-variant">•</span>
-              <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
-                {Math.round(totalDuration / 60)} minutes
-              </span>
-              <span className="text-outline-variant">•</span>
-              <span className="font-mono text-outline">Mastered for Spatial Audio</span>
+              {totalDuration > 0 && (
+                <>
+                  <span className="text-outline-variant">•</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
+                    {Math.round(totalDuration / 60)} minutes
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -241,12 +208,34 @@ export const AlbumDetailView: React.FC = () => {
                 <button
                   className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md ${
                     isFocused
-                      ? 'bg-surface-container-high text-secondary'
+                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary'
                       : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
                   }`}
                   title="Shuffle Album"
                 >
                   <span className="material-symbols-outlined text-[24px]">shuffle</span>
+                </button>
+              )}
+            </Focusable>
+
+            {/* Start Radio */}
+            <Focusable
+              focusId="album-btn-radio"
+              group="album-actions"
+              className="rounded-full cursor-pointer"
+              onEnter={() => startRadio(album)}
+              onClick={() => startRadio(album)}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md ${
+                    isFocused
+                      ? 'bg-surface-container-high text-secondary ring-2 ring-secondary'
+                      : 'bg-surface-container-high text-on-surface hover:bg-surface-bright border border-white/5'
+                  }`}
+                  title="Start Radio"
+                >
+                  <span className="material-symbols-outlined text-[24px]">radio</span>
                 </button>
               )}
             </Focusable>

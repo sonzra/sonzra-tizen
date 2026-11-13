@@ -20,12 +20,14 @@ export const NowPlayingView: React.FC = () => {
     duration,
     shuffle,
     repeat,
+    radioEnabled,
     togglePlayPause,
     next,
     prev,
     seek,
     toggleShuffle,
     cycleRepeat,
+    toggleRadio,
     playTracks,
   } = usePlayer();
 
@@ -121,83 +123,43 @@ export const NowPlayingView: React.FC = () => {
               }`}
             ></span>
             <span className="font-label-md text-sm font-bold tracking-wider text-secondary uppercase">
-              Now Playing · 10ft Cinema
-            </span>
-          </div>
-          <div className="flex items-center gap-2 bg-surface-container/70 border border-outline-variant/20 backdrop-blur-md px-4 py-1.5 rounded-full text-on-surface-variant font-label-md text-sm">
-            <span className="material-symbols-outlined text-lg text-primary">cast_connected</span>
-            <span className="font-medium text-on-surface">Living Room Samsung Q90C</span>
-            <span className="text-xs text-outline bg-surface-container-highest px-2 py-0.5 rounded-md font-mono">
-              eARC
+              Now Playing
             </span>
           </div>
         </div>
 
-        {/* Right Audio Fidelity Badges */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-2 bg-surface-container-high/90 border border-secondary/30 px-3.5 py-1.5 rounded-full text-secondary font-label-md text-xs font-semibold shadow-sm">
-            <span className="material-symbols-outlined text-base">graphic_eq</span>
-            <span>{activeTrack.fidelity || 'FLAC 96kHz / 24-bit'}</span>
+        {/* Right Audio Fidelity Badges (Real metadata) */}
+        {activeTrack.fidelity && (
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 bg-surface-container-high/90 border border-secondary/30 px-3.5 py-1.5 rounded-full text-secondary font-label-md text-xs font-semibold shadow-sm">
+              <span className="material-symbols-outlined text-base">graphic_eq</span>
+              <span>{activeTrack.fidelity}</span>
+            </div>
           </div>
-          <div className="bg-surface-container-high/80 border border-outline-variant/30 px-3 py-1.5 rounded-full text-on-surface font-label-md text-xs font-semibold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-primary">verified</span>
-            <span>Master Audio</span>
-          </div>
-          <div className="bg-surface-container/70 border border-outline-variant/20 px-3 py-1.5 rounded-full text-on-surface-variant font-label-md text-xs">
-            Stereo PCM
-          </div>
-        </div>
+        )}
       </header>
 
       {/* Center Stage 3-Column 16:9 Landscape Layout */}
       <main className="relative z-10 grid grid-cols-12 gap-8 items-center flex-1 my-auto w-full min-h-0 py-6">
-        {/* Column 1 (Left 5 cols): Vinyl Sleeve Stage & Real-time Visualizer */}
+        {/* Column 1 (Left 5 cols): Clean Album Sleeve & Real-time Visualizer */}
         <div className="col-span-12 lg:col-span-5 flex flex-col items-center justify-center relative">
-          <div className="relative w-[340px] h-[340px] xl:w-[400px] xl:h-[400px] flex items-center justify-center">
-            {/* Back Vinyl Record with Grooves and Label */}
-            <div
-              className={`absolute -right-10 xl:-right-12 w-[320px] h-[320px] xl:w-[370px] xl:h-[370px] rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.85)] flex items-center justify-center border border-white/5 ${
-                isPlaying ? 'animate-spin-vinyl' : ''
-              }`}
-              style={{
-                background:
-                  'radial-gradient(circle, #2a2930 0%, #0e0e14 42%, #1b1b21 50%, #0e0e14 62%, #1b1b21 72%, #0e0e14 100%)',
+          <div className="relative w-[310px] h-[310px] xl:w-[360px] xl:h-[360px] rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] bg-surface-container-high border border-outline-variant/30">
+            <img
+              className="w-full h-full object-cover"
+              src={activeTrack.artworkUrl || './sonzra-mark.svg'}
+              alt={activeTrack.title}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = './sonzra-mark.svg';
               }}
-            >
-              {/* Grooves */}
-              <div className="absolute inset-3 rounded-full border border-outline-variant/15 pointer-events-none"></div>
-              <div className="absolute inset-8 rounded-full border border-outline-variant/20 pointer-events-none"></div>
-              <div className="absolute inset-16 rounded-full border border-outline-variant/15 pointer-events-none"></div>
-              <div className="absolute inset-24 rounded-full border border-outline-variant/20 pointer-events-none"></div>
-
-              {/* Center Vinyl Label */}
-              <div className="w-32 h-32 xl:w-36 xl:h-36 rounded-full overflow-hidden shadow-inner flex items-center justify-center relative border-4 border-surface-container-lowest bg-gradient-to-tr from-primary-container to-secondary">
-                <span className="text-[9px] font-extrabold text-surface-container-lowest uppercase tracking-wider font-mono">
-                  SIDE A · 96kHz
-                </span>
-                <div className="absolute w-5 h-5 bg-surface-container-lowest rounded-full shadow-inner border border-surface-variant"></div>
-              </div>
-            </div>
-
-            {/* Front Sleeve Album Art */}
-            <div className="relative z-10 w-[310px] h-[310px] xl:w-[360px] xl:h-[360px] rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] bg-surface-container-high border border-outline-variant/30">
-              <img
-                className="w-full h-full object-cover"
-                src={activeTrack.artworkUrl || './sonzra-mark.svg'}
-                alt={activeTrack.title}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-surface-container-lowest/80 via-transparent to-primary/20 pointer-events-none"></div>
-              {/* Sleek Tag Badge */}
+            />
+            {activeTrack.codec && (
               <div className="absolute bottom-4 left-4 bg-surface-container-lowest/85 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-outline-variant/30 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_#49dcca]"></span>
                 <span className="text-xs font-mono font-bold tracking-widest text-on-surface uppercase">
-                  Studio Master · FLAC
+                  {activeTrack.codec}
                 </span>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Animated Audio Spectrum Visualizer */}
@@ -427,6 +389,30 @@ export const NowPlayingView: React.FC = () => {
                   <span className="material-symbols-outlined text-2xl">
                     {repeat === 'one' ? 'repeat_one' : 'repeat'}
                   </span>
+                </button>
+              )}
+            </Focusable>
+
+            {/* Radio Mode Toggle */}
+            <Focusable
+              focusId="np-ctrl-radio"
+              group="now-playing-controls"
+              className="rounded-full cursor-pointer"
+              onEnter={toggleRadio}
+              onClick={toggleRadio}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center transition-all shadow-md cursor-pointer ${
+                    isFocused
+                      ? 'bg-surface-container-high ring-2 ring-secondary text-secondary scale-110 shadow-[0_0_16px_rgba(73,220,202,0.6)]'
+                      : radioEnabled
+                      ? 'bg-surface-container-high text-secondary border-secondary/40 shadow-[0_0_10px_rgba(73,220,202,0.4)]'
+                      : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                  }`}
+                  title="Track Radio"
+                >
+                  <span className="material-symbols-outlined text-2xl">radio</span>
                 </button>
               )}
             </Focusable>

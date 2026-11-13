@@ -14,6 +14,7 @@ interface PlayerContextType {
   duration: number;
   shuffle: boolean;
   repeat: RepeatMode;
+  radioEnabled: boolean;
   volume: number;
   isMuted: boolean;
   playTrack: (track: Track, newQueue?: Track[]) => void;
@@ -28,6 +29,8 @@ interface PlayerContextType {
   seek: (seconds: number) => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
+  toggleRadio: () => void;
+  startRadio: (seed: Track | Album) => Promise<void>;
   setVolume: (vol: number) => void;
   toggleMute: () => void;
 }
@@ -47,11 +50,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [duration, setDuration] = useState<number>(0);
   const [shuffle, setShuffle] = useState<boolean>(false);
   const [repeat, setRepeat] = useState<RepeatMode>('off');
+  const [radioEnabled, setRadioEnabled] = useState<boolean>(false);
   const [volume, setVolumeState] = useState<number>(1.0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const apiClientRef = useRef(new SonzraApiClient(config));
+  const isExtendingRadioRef = useRef<boolean>(false);
 
   // Sync API client with server configuration changes
   useEffect(() => {
@@ -322,6 +327,95 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, []);
 
+  const toggleRadio = useCallback(() => {
+    setRadioEnabled((prev) => {
+      const nextVal = !prev;
+      if (nextVal && currentTrack && queue.length - currentIndex <= 2) {
+        apiClientRef.current
+          .fetchRadioTracks(currentTrack.id, 12)
+          .then((tracks) => {
+            setQueue((curQueue) => {
+              const existingIds = new Set(curQueue.map((t) => t.id));
+              const newTracks = tracks.filter((t) => !existingIds.has(t.id));
+              return newTracks.length > 0 ? [...curQueue, ...newTracks] : curQueue;
+            });
+          })
+          .catch(console.warn);
+      }
+      return nextVal;
+    });
+  }, [currentTrack, queue.length, currentIndex]);
+
+  const startRadio = useCallback(
+    async (seed: Track | Album) => {
+      setRadioEnabled(true);
+      let seedTrack: Track | undefined;
+      let seedId = seed.id;
+
+      if ('trackCount' in seed) {
+        const alb = seed as Album;
+        let tracks = alb.tracks;
+        if (!tracks || tracks.length === 0) {
+          try {
+            const fullAlbum = await apiClientRef.current.fetchAlbum(alb.id);
+            tracks = fullAlbum?.tracks || [];
+          } catch (e) {
+            console.warn('Failed to fetch album for radio:', e);
+          }
+        }
+        if (tracks && tracks.length > 0) {
+          seedTrack = tracks[0];
+          seedId = seedTrack.id;
+        }
+      } else {
+        seedTrack = seed as Track;
+        seedId = seedTrack.id;
+      }
+
+      if (!seedTrack) return;
+
+      const initialQueue = [seedTrack];
+      setQueue(initialQueue);
+      playIndex(0, initialQueue);
+
+      try {
+        const radioTracks = await apiClientRef.current.fetchRadioTracks(seedId, 12);
+        const filtered = radioTracks.filter((t) => t.id !== seedId);
+        if (filtered.length > 0) {
+          setQueue((prev) => {
+            const existingIds = new Set(prev.map((t) => t.id));
+            const newTracks = filtered.filter((t) => !existingIds.has(t.id));
+            return [...prev, ...newTracks];
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch initial radio tracks:', err);
+      }
+    },
+    [playIndex]
+  );
+
+  // Auto-extend queue when radio is enabled and approaching queue end
+  useEffect(() => {
+    if (!radioEnabled || !currentTrack || isExtendingRadioRef.current) return;
+    if (queue.length > 0 && currentIndex >= queue.length - 2) {
+      isExtendingRadioRef.current = true;
+      apiClientRef.current
+        .fetchRadioTracks(currentTrack.id, 12)
+        .then((tracks) => {
+          setQueue((curQueue) => {
+            const existingIds = new Set(curQueue.map((t) => t.id));
+            const newTracks = tracks.filter((t) => !existingIds.has(t.id));
+            return newTracks.length > 0 ? [...curQueue, ...newTracks] : curQueue;
+          });
+        })
+        .catch(console.warn)
+        .finally(() => {
+          isExtendingRadioRef.current = false;
+        });
+    }
+  }, [radioEnabled, currentTrack, currentIndex, queue.length]);
+
   const setVolume = useCallback((vol: number) => {
     const clamped = Math.max(0, Math.min(1, vol));
     setVolumeState(clamped);
@@ -380,6 +474,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         duration,
         shuffle,
         repeat,
+        radioEnabled,
         volume,
         isMuted,
         playTrack,
@@ -394,6 +489,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         seek,
         toggleShuffle,
         cycleRepeat,
+        toggleRadio,
+        startRadio,
         setVolume,
         toggleMute,
       }}
