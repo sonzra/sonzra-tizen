@@ -7,6 +7,7 @@ describe('TvVirtualKeyboard Component', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
+    document.body.innerHTML = '';
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -52,5 +53,52 @@ describe('TvVirtualKeyboard Component', () => {
     expect(gmailBtn).not.toBeNull();
     gmailBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onKeyPress).toHaveBeenCalledWith('@gmail.com');
+  });
+
+  it('provides colon (:) and slash (/) keys for typing URL and IP address with port', async () => {
+    const onKeyPress = vi.fn();
+    const root = createRoot(container);
+    root.render(
+      <SpatialNavigationProvider>
+        <TvVirtualKeyboard
+          onKeyPress={onKeyPress}
+          onBackspace={() => {}}
+          onClear={() => {}}
+          activeFieldLabel="Server URL"
+        />
+      </SpatialNavigationProvider>
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Colon in numbers row (kb-num-10)
+    const colonInNum = document.querySelector('[data-focus-id="kb-num-10"]');
+    expect(colonInNum).not.toBeNull();
+    colonInNum?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onKeyPress).toHaveBeenCalledWith(':');
+
+    // Colon in row 3 (kb-char-colon)
+    const colonInRow3 = document.querySelector('[data-focus-id="kb-char-colon"]');
+    expect(colonInRow3).not.toBeNull();
+    colonInRow3?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onKeyPress).toHaveBeenCalledWith(':');
+
+    // Slash in row 3 (kb-char-slash)
+    const slashInRow3 = document.querySelector('[data-focus-id="kb-char-slash"]');
+    expect(slashInRow3).not.toBeNull();
+    slashInRow3?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onKeyPress).toHaveBeenCalledWith('/');
+
+    // Quick port helper :3000 (kb-btn-port)
+    const portBtn = document.querySelector('[data-focus-id="kb-btn-port"]');
+    expect(portBtn).not.toBeNull();
+    portBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onKeyPress).toHaveBeenCalledWith(':3000');
+
+    // Quick http:// helper (kb-btn-gmail in server mode)
+    const httpBtn = document.querySelector('[data-focus-id="kb-btn-gmail"]');
+    expect(httpBtn).not.toBeNull();
+    httpBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onKeyPress).toHaveBeenCalledWith('http://');
   });
 });
