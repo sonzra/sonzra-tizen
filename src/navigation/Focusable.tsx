@@ -15,6 +15,7 @@ export interface FocusableProps extends Omit<React.HTMLAttributes<HTMLDivElement
   className?: string;
   children: React.ReactNode | ((props: { isFocused: boolean }) => React.ReactNode);
   disabled?: boolean;
+  focusVariant?: 'cyan' | 'primary' | 'none';
 }
 
 export const Focusable: React.FC<FocusableProps> = ({
@@ -30,6 +31,7 @@ export const Focusable: React.FC<FocusableProps> = ({
   className = '',
   children,
   disabled = false,
+  focusVariant = 'cyan',
   onClick,
   ...rest
 }) => {
@@ -123,13 +125,21 @@ export const Focusable: React.FC<FocusableProps> = ({
     }
   };
 
+  const focusClass = !isFocused
+    ? ''
+    : focusVariant === 'primary'
+    ? 'tv-focused-primary'
+    : focusVariant === 'none'
+    ? ''
+    : 'tv-focused';
+
   return (
     <div
       ref={elementRef}
       id={`tv-node-${focusId}`}
       data-focus-id={focusId}
       tabIndex={-1}
-      className={`tv-focusable ${isFocused ? 'tv-focused' : ''} ${className}`}
+      className={`tv-focusable ${focusClass} ${className}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       {...rest}

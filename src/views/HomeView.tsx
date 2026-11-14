@@ -1,4 +1,5 @@
 import React from 'react';
+import { Activity, Music, LayoutGrid, Play, Pause, ListMusic, Info, Heart, ArrowRight, ChevronRight } from 'lucide-react';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { usePlayer } from '../context/PlayerContext';
@@ -56,7 +57,7 @@ export const HomeView: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2 bg-surface-container-high/60 px-4 py-1.5 rounded-full border border-white/[0.03]">
-            <span className="material-symbols-outlined text-primary text-[18px]">graphic_eq</span>
+            <Activity className="w-4 h-4 text-primary" />
             <span className="font-label-md text-label-md text-on-surface-variant text-[13px]">
               Hi-Res Audio 96kHz / 24-bit
             </span>
@@ -79,7 +80,7 @@ export const HomeView: React.FC = () => {
         <section className="relative w-full rounded-2xl bg-gradient-to-r from-surface-container-lowest via-surface-container-low to-surface-container/60 p-10 overflow-hidden shadow-2xl mb-12 border border-white/[0.04]">
           <div className="flex flex-col items-center justify-center text-center py-12 gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary/20 text-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-[36px]">library_music</span>
+              <Music className="w-9 h-9" />
             </div>
             <h2 className="text-2xl font-bold text-on-surface">No Albums in Library Yet</h2>
             <p className="text-on-surface-variant max-w-md text-sm">
@@ -101,7 +102,7 @@ export const HomeView: React.FC = () => {
                       : 'bg-surface-container-high text-on-surface'
                   }`}
                 >
-                  <span className="material-symbols-outlined">grid_view</span>
+                  <LayoutGrid className="w-5 h-5" />
                   <span>Open Library</span>
                 </button>
               )}
@@ -190,7 +191,7 @@ export const HomeView: React.FC = () => {
                         : 'bg-primary-container/90 text-on-primary-container shadow-md'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[26px]">play_arrow</span>
+                    <Play className="w-6 h-6 fill-current" />
                     <span className="font-bold">Resume Playback</span>
                     <span className="text-[12px] opacity-80 font-mono ml-1">[SELECT]</span>
                   </button>
@@ -213,7 +214,7 @@ export const HomeView: React.FC = () => {
                         : 'bg-surface-container-high text-on-surface shadow-md'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">queue_music</span>
+                    <ListMusic className="w-5 h-5" />
                     <span>Add to Queue</span>
                   </button>
                 )}
@@ -235,7 +236,7 @@ export const HomeView: React.FC = () => {
                         : 'bg-surface-container-high text-on-surface shadow-md'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">info</span>
+                    <Info className="w-5 h-5" />
                     <span>Album Details</span>
                   </button>
                 )}
@@ -255,12 +256,7 @@ export const HomeView: React.FC = () => {
                         : 'bg-surface-container-high'
                     }`}
                   >
-                    <span
-                      className="material-symbols-outlined text-[24px]"
-                      style={{ fontVariationSettings: '"FILL" 1' }}
-                    >
-                      favorite
-                    </span>
+                    <Heart className="w-6 h-6 fill-current" />
                   </button>
                 )}
               </Focusable>
@@ -348,7 +344,7 @@ export const HomeView: React.FC = () => {
             <span>Shelf 1 of 2</span>
             <span>•</span>
             <span className="text-primary flex items-center gap-1 font-semibold">
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span> D-PAD RIGHT to browse
+              <ArrowRight className="w-4 h-4" /> D-PAD RIGHT to browse
             </span>
           </div>
         </div>
@@ -401,12 +397,11 @@ export const HomeView: React.FC = () => {
                       {(isFocused || isPlayingThisAlbum) && (
                         <div className="absolute inset-0 bg-surface-dim/40 backdrop-blur-[1px] flex items-center justify-center">
                           <div className="w-13 h-13 p-3 rounded-full bg-secondary text-surface-container-lowest flex items-center justify-center shadow-[0_0_20px_rgba(73,220,202,0.9)]">
-                            <span
-                              className="material-symbols-outlined text-[32px]"
-                              style={{ fontVariationSettings: '"FILL" 1' }}
-                            >
-                              {isPlayingThisAlbum ? 'pause' : 'play_arrow'}
-                            </span>
+                            {isPlayingThisAlbum ? (
+                              <Pause className="w-8 h-8 fill-current" />
+                            ) : (
+                              <Play className="w-8 h-8 fill-current ml-1" />
+                            )}
                           </div>
                         </div>
                       )}
@@ -457,7 +452,7 @@ export const HomeView: React.FC = () => {
             className="font-label-lg text-label-lg text-primary hover:text-secondary flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>Added this week · View All</span>
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 

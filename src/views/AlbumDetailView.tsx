@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Disc, ArrowLeft, Music, Clock, Play, Shuffle, ListPlus, Heart } from 'lucide-react';
 import { useServer } from '../context/ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { usePlayer } from '../context/PlayerContext';
@@ -64,7 +65,7 @@ export const AlbumDetailView: React.FC = () => {
   if (!album) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] text-center gap-6 my-12">
-        <span className="material-symbols-outlined text-[64px] text-outline">album</span>
+        <Disc className="w-16 h-16 text-outline" />
         <h2 className="text-2xl font-bold text-on-surface">Album Not Found</h2>
         <p className="text-on-surface-variant max-w-md text-sm">
           The requested album could not be loaded from your Sonzra server.
@@ -84,7 +85,7 @@ export const AlbumDetailView: React.FC = () => {
                   : 'bg-surface-container-high text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              <ArrowLeft className="w-5 h-5" />
               Return to Library
             </button>
           )}
@@ -188,12 +189,12 @@ export const AlbumDetailView: React.FC = () => {
 
             <div className="flex items-center gap-4 text-xs text-on-surface-variant font-medium mt-0.5">
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-secondary">library_music</span>
+                <Music className="w-4 h-4 text-secondary" />
                 {tracks.length} tracks
               </span>
               <span className="text-outline-variant">•</span>
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
+                <Clock className="w-4 h-4 text-primary" />
                 {Math.round(totalDuration / 60)} minutes
               </span>
               <span className="text-outline-variant">•</span>
@@ -220,7 +221,7 @@ export const AlbumDetailView: React.FC = () => {
                       : 'bg-primary-container text-on-primary-container shadow-md hover:bg-tertiary-container'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[26px]">play_arrow</span>
+                  <Play className="w-6 h-6 fill-current" />
                   <span>Play Album</span>
                   <span className="ml-1 px-1.5 py-0.5 rounded bg-black/30 text-[10px] font-mono uppercase">
                     SELECT
@@ -246,7 +247,7 @@ export const AlbumDetailView: React.FC = () => {
                   }`}
                   title="Shuffle Album"
                 >
-                  <span className="material-symbols-outlined text-[24px]">shuffle</span>
+                  <Shuffle className="w-5 h-5" />
                 </button>
               )}
             </Focusable>
@@ -268,7 +269,7 @@ export const AlbumDetailView: React.FC = () => {
                   }`}
                   title="Add to Queue"
                 >
-                  <span className="material-symbols-outlined text-[24px]">playlist_add</span>
+                  <ListPlus className="w-5 h-5" />
                 </button>
               )}
             </Focusable>
@@ -292,12 +293,9 @@ export const AlbumDetailView: React.FC = () => {
                   }`}
                   title="Favorite Album"
                 >
-                  <span
-                    className="material-symbols-outlined text-[24px]"
-                    style={{ fontVariationSettings: isFavorite ? '"FILL" 1' : undefined }}
-                  >
-                    {isFavorite ? 'favorite' : 'favorite_border'}
-                  </span>
+                  <Heart
+                    className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`}
+                  />
                 </button>
               )}
             </Focusable>

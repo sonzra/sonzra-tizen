@@ -1,4 +1,20 @@
 import React, { useState } from 'react';
+import {
+  Music,
+  ArrowLeft,
+  Cast,
+  Activity,
+  ShieldCheck,
+  Shuffle,
+  SkipBack,
+  Play,
+  Pause,
+  SkipForward,
+  Repeat,
+  Repeat1,
+  Heart,
+  ListMusic,
+} from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -37,7 +53,7 @@ export const NowPlayingView: React.FC = () => {
     return (
       <div className="relative w-full flex-1 flex flex-col items-center justify-center text-center p-8 select-none my-12">
         <div className="w-24 h-24 rounded-full bg-surface-container-high flex items-center justify-center mb-6 shadow-2xl border border-white/5">
-          <span className="material-symbols-outlined text-[48px] text-secondary">music_note</span>
+          <Music className="w-12 h-12 text-secondary" />
         </div>
         <h2 className="text-3xl font-bold font-serif-title text-on-surface mb-2">No Music Playing</h2>
         <p className="text-on-surface-variant max-w-md text-base mb-8">
@@ -59,7 +75,7 @@ export const NowPlayingView: React.FC = () => {
                   : 'bg-primary-container text-on-primary-container hover:bg-tertiary-container'
               }`}
             >
-              <span className="material-symbols-outlined text-[24px]">library_music</span>
+              <Music className="w-6 h-6" />
               <span>Browse Library</span>
             </button>
           )}
@@ -109,7 +125,7 @@ export const NowPlayingView: React.FC = () => {
                 }`}
                 title="Back"
               >
-                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                <ArrowLeft className="w-5 h-5" />
               </button>
             )}
           </Focusable>
@@ -125,7 +141,7 @@ export const NowPlayingView: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2 bg-surface-container/70 border border-outline-variant/20 backdrop-blur-md px-4 py-1.5 rounded-full text-on-surface-variant font-label-md text-sm">
-            <span className="material-symbols-outlined text-lg text-primary">cast_connected</span>
+            <Cast className="w-4 h-4 text-primary" />
             <span className="font-medium text-on-surface">Living Room Samsung Q90C</span>
             <span className="text-xs text-outline bg-surface-container-highest px-2 py-0.5 rounded-md font-mono">
               eARC
@@ -136,11 +152,11 @@ export const NowPlayingView: React.FC = () => {
         {/* Right Audio Fidelity Badges */}
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-2 bg-surface-container-high/90 border border-secondary/30 px-3.5 py-1.5 rounded-full text-secondary font-label-md text-xs font-semibold shadow-sm">
-            <span className="material-symbols-outlined text-base">graphic_eq</span>
+            <Activity className="w-4 h-4" />
             <span>{activeTrack.fidelity || 'FLAC 96kHz / 24-bit'}</span>
           </div>
           <div className="bg-surface-container-high/80 border border-outline-variant/30 px-3 py-1.5 rounded-full text-on-surface font-label-md text-xs font-semibold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-primary">verified</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
             <span>Master Audio</span>
           </div>
           <div className="bg-surface-container/70 border border-outline-variant/20 px-3 py-1.5 rounded-full text-on-surface-variant font-label-md text-xs">
@@ -331,7 +347,7 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title="Shuffle"
                 >
-                  <span className="material-symbols-outlined text-2xl">shuffle</span>
+                  <Shuffle className="w-5 h-5" />
                 </button>
               )}
             </Focusable>
@@ -353,7 +369,7 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title="Previous"
                 >
-                  <span className="material-symbols-outlined text-3xl">skip_previous</span>
+                  <SkipBack className="w-6 h-6" />
                 </button>
               )}
             </Focusable>
@@ -373,12 +389,11 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
-                  <span
-                    className="material-symbols-outlined text-4xl text-on-primary-container"
-                    style={{ fontVariationSettings: '"FILL" 1' }}
-                  >
-                    {isPlaying ? 'pause' : 'play_arrow'}
-                  </span>
+                  {isPlaying ? (
+                    <Pause className="w-8 h-8 fill-current text-on-primary-container" />
+                  ) : (
+                    <Play className="w-8 h-8 fill-current text-on-primary-container ml-1" />
+                  )}
                 </button>
               )}
             </Focusable>
@@ -400,7 +415,7 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title="Next"
                 >
-                  <span className="material-symbols-outlined text-3xl">skip_next</span>
+                  <SkipForward className="w-6 h-6" />
                 </button>
               )}
             </Focusable>
@@ -424,9 +439,11 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title="Repeat"
                 >
-                  <span className="material-symbols-outlined text-2xl">
-                    {repeat === 'one' ? 'repeat_one' : 'repeat'}
-                  </span>
+                  {repeat === 'one' ? (
+                    <Repeat1 className="w-5 h-5" />
+                  ) : (
+                    <Repeat className="w-5 h-5" />
+                  )}
                 </button>
               )}
             </Focusable>
@@ -450,12 +467,9 @@ export const NowPlayingView: React.FC = () => {
                   }`}
                   title="Favorite"
                 >
-                  <span
-                    className="material-symbols-outlined text-2xl"
-                    style={{ fontVariationSettings: isFavorite ? '"FILL" 1' : undefined }}
-                  >
-                    {isFavorite ? 'favorite' : 'favorite_border'}
-                  </span>
+                  <Heart
+                    className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`}
+                  />
                 </button>
               )}
             </Focusable>
@@ -468,7 +482,7 @@ export const NowPlayingView: React.FC = () => {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary text-2xl">queue_music</span>
+                <ListMusic className="w-6 h-6 text-secondary" />
                 <h2 className="text-xl font-bold text-on-surface">Up Next</h2>
               </div>
               <span className="bg-surface-container-highest text-secondary text-xs font-semibold px-2.5 py-0.5 rounded-full border border-secondary/20">
@@ -482,7 +496,7 @@ export const NowPlayingView: React.FC = () => {
           <div className="flex flex-col gap-2.5 overflow-y-auto max-h-[380px]">
             {upcomingTracks.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-2 my-auto">
-                <span className="material-symbols-outlined text-[32px] text-outline">queue_music</span>
+                <ListMusic className="w-8 h-8 text-outline" />
                 <span className="text-xs text-on-surface-variant font-medium">No more tracks in queue</span>
               </div>
             ) : (

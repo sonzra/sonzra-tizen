@@ -1,4 +1,5 @@
 import React from 'react';
+import { Home, LayoutGrid, Music, Search, Settings, User, Activity, LucideIcon } from 'lucide-react';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { ActiveView } from '../types/navigation';
@@ -6,11 +7,11 @@ import { ActiveView } from '../types/navigation';
 export const Sidebar: React.FC = () => {
   const { activeView, goToView, setFocus } = useSpatialNav();
 
-  const navItems: Array<{ id: string; view: ActiveView; label: string; icon: string }> = [
-    { id: 'sidebar-home', view: 'home', label: 'Home', icon: 'home' },
-    { id: 'sidebar-library', view: 'library', label: 'Library', icon: 'grid_view' },
-    { id: 'sidebar-now-playing', view: 'now-playing', label: 'Now Playing', icon: 'music_note' },
-    { id: 'sidebar-search', view: 'search', label: 'Search', icon: 'search' },
+  const navItems: Array<{ id: string; view: ActiveView; label: string; icon: LucideIcon }> = [
+    { id: 'sidebar-home', view: 'home', label: 'Home', icon: Home },
+    { id: 'sidebar-library', view: 'library', label: 'Library', icon: LayoutGrid },
+    { id: 'sidebar-now-playing', view: 'now-playing', label: 'Now Playing', icon: Music },
+    { id: 'sidebar-search', view: 'search', label: 'Search', icon: Search },
   ];
 
   return (
@@ -37,9 +38,7 @@ export const Sidebar: React.FC = () => {
               }`}
               title="Sonzra TV Home"
             >
-              <span className="material-symbols-outlined text-surface-container-lowest text-[28px] font-bold">
-                graphic_eq
-              </span>
+              <Activity className="w-7 h-7 text-surface-container-lowest stroke-[2.5]" />
             </div>
           )}
         </Focusable>
@@ -50,6 +49,8 @@ export const Sidebar: React.FC = () => {
             const isActive =
               activeView === item.view ||
               (item.view === 'library' && (activeView === 'albums' || activeView === 'album-detail' || activeView === 'artists' || activeView === 'artist-detail'));
+
+            const IconComponent = item.icon;
 
             return (
               <Focusable
@@ -71,9 +72,7 @@ export const Sidebar: React.FC = () => {
                     }`}
                     title={item.label}
                   >
-                    <span className="material-symbols-outlined text-[28px]">
-                      {item.icon}
-                    </span>
+                    <IconComponent className="w-7 h-7" />
                   </div>
                 )}
               </Focusable>
@@ -104,7 +103,7 @@ export const Sidebar: React.FC = () => {
                 }`}
                 title="Settings"
               >
-                <span className="material-symbols-outlined text-[26px]">settings</span>
+                <Settings className="w-6 h-6" />
               </div>
             );
           }}
@@ -126,7 +125,7 @@ export const Sidebar: React.FC = () => {
               }`}
               title="User Account & Settings"
             >
-              <span className="material-symbols-outlined text-on-primary text-[20px]">person</span>
+              <User className="w-5 h-5 text-on-primary" />
             </div>
           )}
         </Focusable>
@@ -148,7 +147,7 @@ export const Sidebar: React.FC = () => {
               }`}
               title="Jump to Player Dock (Down to Enter)"
             >
-              <span className="material-symbols-outlined text-[24px]">graphic_eq</span>
+              <Activity className="w-6 h-6" />
             </div>
           )}
         </Focusable>

@@ -1,4 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Tv,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  CheckCircle,
+  Rewind,
+  Play,
+  Square,
+  FastForward,
+} from 'lucide-react';
 import { TIZEN_KEYS } from '../navigation/tizenKeys';
 
 export const TvRemoteSimulator: React.FC = () => {
@@ -50,7 +63,7 @@ export const TvRemoteSimulator: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-highest/90 text-secondary border border-secondary/40 shadow-[0_0_20px_rgba(73,220,202,0.35)] hover:scale-105 active:scale-95 transition-all text-xs font-mono font-bold backdrop-blur-md cursor-pointer"
           title="Open Samsung TV Remote Controller Simulator"
         >
-          <span className="material-symbols-outlined text-[18px]">settings_remote</span>
+          <Tv className="w-4 h-4 text-secondary" />
           <span>TV REMOTE SIMULATOR</span>
         </button>
       ) : (
@@ -58,7 +71,7 @@ export const TvRemoteSimulator: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary text-[20px]">settings_remote</span>
+              <Tv className="w-5 h-5 text-secondary" />
               <span className="text-[12px] font-mono font-bold uppercase tracking-wider text-secondary">
                 Samsung TV Remote
               </span>
@@ -86,7 +99,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="absolute top-2 w-14 h-11 rounded-t-full bg-surface-container-high hover:bg-secondary/20 active:bg-secondary/40 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
               title="D-Pad Up (ArrowUp)"
             >
-              <span className="material-symbols-outlined text-[20px]">expand_less</span>
+              <ChevronUp className="w-5 h-5" />
             </button>
 
             {/* Down Button */}
@@ -95,7 +108,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="absolute bottom-2 w-14 h-11 rounded-b-full bg-surface-container-high hover:bg-secondary/20 active:bg-secondary/40 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
               title="D-Pad Down (ArrowDown)"
             >
-              <span className="material-symbols-outlined text-[20px]">expand_more</span>
+              <ChevronDown className="w-5 h-5" />
             </button>
 
             {/* Left Button */}
@@ -104,7 +117,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="absolute left-2 w-11 h-14 rounded-l-full bg-surface-container-high hover:bg-secondary/20 active:bg-secondary/40 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
               title="D-Pad Left (ArrowLeft)"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
             {/* Right Button */}
@@ -113,7 +126,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="absolute right-2 w-11 h-14 rounded-r-full bg-surface-container-high hover:bg-secondary/20 active:bg-secondary/40 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
               title="D-Pad Right (ArrowRight)"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <ChevronRight className="w-5 h-5" />
             </button>
 
             {/* Center Enter / OK Button */}
@@ -133,7 +146,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 text-xs font-mono font-semibold transition-all border border-white/5 cursor-pointer"
               title="Tizen Hardware Return Key (10009)"
             >
-              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              <ArrowLeft className="w-4 h-4" />
               <span>RETURN</span>
             </button>
 
@@ -142,7 +155,7 @@ export const TvRemoteSimulator: React.FC = () => {
               className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 text-xs font-mono font-semibold transition-all border border-white/5 cursor-pointer"
               title="Select / Enter (13)"
             >
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              <CheckCircle className="w-4 h-4" />
               <span>SELECT</span>
             </button>
           </div>
@@ -158,28 +171,28 @@ export const TvRemoteSimulator: React.FC = () => {
                 className="py-2 rounded-lg bg-surface-container-high hover:bg-secondary/20 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
                 title="Rewind (412)"
               >
-                <span className="material-symbols-outlined text-[18px]">fast_rewind</span>
+                <Rewind className="w-4 h-4" />
               </button>
               <button
                 onClick={() => sendKey(TIZEN_KEYS.MEDIA_PLAY_PAUSE, 'MediaPlayPause')}
                 className="py-2 rounded-lg bg-surface-container-high hover:bg-secondary/20 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
                 title="Play / Pause (10252)"
               >
-                <span className="material-symbols-outlined text-[18px]">play_pause</span>
+                <Play className="w-4 h-4 fill-current" />
               </button>
               <button
                 onClick={() => sendKey(TIZEN_KEYS.MEDIA_STOP, 'MediaStop')}
                 className="py-2 rounded-lg bg-surface-container-high hover:bg-secondary/20 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
                 title="Stop (413)"
               >
-                <span className="material-symbols-outlined text-[18px]">stop</span>
+                <Square className="w-4 h-4 fill-current" />
               </button>
               <button
                 onClick={() => sendKey(TIZEN_KEYS.MEDIA_FAST_FORWARD, 'MediaFastForward')}
                 className="py-2 rounded-lg bg-surface-container-high hover:bg-secondary/20 flex items-center justify-center text-on-surface hover:text-secondary transition-all cursor-pointer"
                 title="Fast Forward (417)"
               >
-                <span className="material-symbols-outlined text-[18px]">fast_forward</span>
+                <FastForward className="w-4 h-4" />
               </button>
             </div>
           </div>
