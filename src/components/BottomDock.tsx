@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Heart, ListMusic } from 'lucide-react';
+import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Heart, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -19,11 +19,13 @@ export const BottomDock: React.FC = () => {
     duration,
     shuffle,
     repeat,
+    radioEnabled,
     togglePlayPause,
     next,
     prev,
     toggleShuffle,
     cycleRepeat,
+    toggleRadio,
   } = usePlayer();
 
   const { activeView, goToView } = useSpatialNav();
@@ -202,6 +204,30 @@ export const BottomDock: React.FC = () => {
               </button>
             )}
           </Focusable>
+
+          {/* Radio Toggle */}
+          <Focusable
+            focusId="dock-btn-radio"
+            group="bottom-dock"
+            className="rounded-full cursor-pointer"
+            onEnter={toggleRadio}
+            onClick={toggleRadio}
+          >
+            {({ isFocused }) => (
+              <button
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  isFocused
+                    ? 'ring-2 ring-secondary text-secondary scale-110 shadow-[0_0_12px_rgba(73,220,202,0.6)]'
+                    : radioEnabled
+                    ? 'text-secondary'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+                title="Radio Mode"
+              >
+                <Radio className="w-4 h-4" />
+              </button>
+            )}
+          </Focusable>
         </div>
 
         {/* Scrub line with timestamps */}
@@ -223,9 +249,11 @@ export const BottomDock: React.FC = () => {
 
       {/* Right Badges and Buttons */}
       <div className="flex items-center gap-3 min-w-[200px] justify-end">
-        <div className="px-2.5 py-0.5 rounded border border-secondary text-secondary font-label-md text-xs font-bold tracking-wider">
-          Hi-Res FLAC
-        </div>
+        {currentTrack && (currentTrack.codec || currentTrack.fidelity) && (
+          <div className="px-2.5 py-0.5 rounded border border-secondary text-secondary font-label-md text-xs font-bold tracking-wider">
+            {currentTrack.codec || currentTrack.fidelity}
+          </div>
+        )}
 
         {/* Favorite */}
         <Focusable

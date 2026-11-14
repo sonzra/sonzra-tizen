@@ -137,6 +137,10 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'album-btn-shuffle');
 
+    // Right to Radio
+    await pressRemote(page, 'ArrowRight');
+    await expectFocused(page, 'album-btn-radio');
+
     // Right to Queue
     await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'album-btn-queue');
