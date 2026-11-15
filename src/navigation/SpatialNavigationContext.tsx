@@ -122,9 +122,13 @@ export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> 
             nextNode.group === 'hero-actions' ||
             nextNode.group === 'library-tabs' ||
             nextNode.group === 'album-actions' ||
+            nextNode.group === 'artist-actions' ||
+            nextNode.group === 'artist-hero' ||
             nextNode.id === 'hero-resume' ||
             nextNode.id === 'library-tab-albums' ||
             nextNode.id === 'album-btn-play' ||
+            nextNode.id === 'artist-btn-play-top' ||
+            nextNode.id === 'artist-detail-back' ||
             nextNode.id === 'settings-card-profile' ||
             nextNode.id === 'input-server-url';
 

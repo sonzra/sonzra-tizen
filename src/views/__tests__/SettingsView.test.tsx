@@ -68,15 +68,20 @@ describe('SettingsView Redesign & Virtual Keyboard Integration', () => {
       </SpatialNavigationProvider>
     );
 
-    await new Promise((r) => setTimeout(r, 80));
+    // Wait for initial render to settle
+    let serverUrlInput: HTMLElement | null = null;
+    for (let i = 0; i < 25; i++) {
+      serverUrlInput = container.querySelector('[data-focus-id="input-server-url"]') as HTMLElement;
+      if (serverUrlInput) break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
 
     // Initially keyboard drawer is closed
     expect(container.textContent).not.toContain('TV KEYBOARD · EDITING:');
 
     // Click server URL focusable
-    const serverUrlInput = container.querySelector('[data-focus-id="input-server-url"]') as HTMLElement;
     expect(serverUrlInput).toBeTruthy();
-    serverUrlInput.click();
+    serverUrlInput!.click();
 
     await new Promise((r) => setTimeout(r, 80));
 
@@ -85,7 +90,7 @@ describe('SettingsView Redesign & Virtual Keyboard Integration', () => {
     expect(container.textContent).toContain('Sonzra Host / Server URL');
 
     // Click again to close
-    serverUrlInput.click();
+    serverUrlInput!.click();
     await new Promise((r) => setTimeout(r, 80));
     expect(container.textContent).not.toContain('TV KEYBOARD · EDITING:');
   });

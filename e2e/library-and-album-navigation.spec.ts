@@ -121,6 +121,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
 
     // Enter opens Album Detail View
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
 
     // Initial focus on Play Album button
     await expectFocused(page, 'album-btn-play');
@@ -131,6 +132,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await expectFocused(page, 'library-tab-albums');
     await pressRemote(page, 'ArrowDown');
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
     await expectFocused(page, 'album-btn-play');
 
     // Right to Shuffle
@@ -158,6 +160,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await expectFocused(page, 'library-tab-albums');
     await pressRemote(page, 'ArrowDown');
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
     await expectFocused(page, 'album-btn-play');
 
     // Left escapes from Play Album directly into Sidebar rail
@@ -173,6 +176,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await expectFocused(page, 'library-tab-albums');
     await pressRemote(page, 'ArrowDown');
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
     await expectFocused(page, 'album-btn-play');
 
     // Down into tracklist
@@ -205,6 +209,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
 
     // Enter opens album
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
     await expectFocused(page, 'album-btn-play');
 
     // Remote Return / Back key (Escape in browser)
@@ -223,6 +228,7 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
 
     // 3. Enter album detail
     await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-album-btn-play', { timeout: 15000 });
     await expectFocused(page, 'album-btn-play');
 
     // 4. Down to track
@@ -243,5 +249,44 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     // 8. Press Enter to switch to Home view and focus entry point
     await pressRemote(page, 'Enter');
     await expectFocused(page, 'hero-resume');
+  });
+
+  test('Flow 3.10: Navigate to ArtistsView, open ArtistDetailView and Back navigation', async ({ page }) => {
+    // 1. From tab-albums, right to tab-artists
+    await expectFocused(page, 'library-tab-albums');
+    await pressRemote(page, 'ArrowRight');
+    await expectFocused(page, 'library-tab-artists');
+
+    // 2. Press Enter to enter ArtistsView
+    await pressRemote(page, 'Enter');
+    await page.waitForSelector('[id^="tv-node-artist-card-"]', { timeout: 15000 });
+
+    // Wait for focus to settle on the first artist card
+    const focusedCard = page.locator('[id^="tv-node-artist-card-"].tv-focused');
+    await expect(focusedCard).toBeVisible({ timeout: 5000 });
+    const artistCardId = (await focusedCard.getAttribute('id'))!.replace('tv-node-', '');
+
+    // 3. Press Enter to open ArtistDetailView
+    await pressRemote(page, 'Enter');
+    await page.waitForSelector('#tv-node-artist-btn-play-top', { timeout: 15000 });
+    await expectFocused(page, 'artist-btn-play-top');
+
+    // 4. Down moves to Top Songs or Discography
+    await pressRemote(page, 'ArrowDown');
+    const focusedContent = page.locator('.tv-focused');
+    await expect(focusedContent).toBeVisible();
+
+    // 5. Left escapes to sidebar
+    await pressRemote(page, 'ArrowLeft');
+    await expectFocused(page, 'sidebar-library');
+
+    // 6. Right returns into content
+    await pressRemote(page, 'ArrowRight');
+    const returnedContent = page.locator('.tv-focused');
+    await expect(returnedContent).toBeVisible();
+
+    // 7. Back/Return (Escape in browser) returns to ArtistsView and restores focus
+    await pressRemote(page, 'Escape');
+    await expectFocused(page, artistCardId);
   });
 });

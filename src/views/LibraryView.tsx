@@ -104,7 +104,7 @@ export const LibraryView: React.FC = () => {
   const handleTabSelect = (tab: LibraryTab) => {
     setActiveTab(tab);
     if (tab === 'artists') {
-      goToView('artists');
+      goToView('artists', undefined, true);
     }
   };
 

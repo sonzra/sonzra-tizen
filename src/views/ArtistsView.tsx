@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useRef, useCallback } from 'react';
-import { Users } from 'lucide-react';
+import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
+import { Users, Play } from 'lucide-react';
 import { useServer } from '../context/ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -21,6 +21,15 @@ export const ArtistsView: React.FC = () => {
   const artists = useMemo(() => {
     return [...(serverArtists || [])].sort((a, b) => a.name.localeCompare(b.name));
   }, [serverArtists]);
+
+  // Ensure first artist card is focused once when artists populate
+  const initialFocusRef = useRef(false);
+  useEffect(() => {
+    if (!initialFocusRef.current && artists.length > 0) {
+      initialFocusRef.current = true;
+      setFocus(`artist-card-${artists[0].id}`);
+    }
+  }, [artists, setFocus]);
 
   // Group artists by first letter
   const groupedArtists = useMemo(() => {
@@ -91,7 +100,7 @@ export const ArtistsView: React.FC = () => {
         <div className="w-full grid grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
           {/* Main Content: Grouped Artists Grid */}
           <section className="flex flex-col gap-8 min-w-0" aria-label="Artists Grid">
-            {Object.entries(groupedArtists).map(([letter, letterArtists]) => (
+            {Object.entries(groupedArtists).map(([letter, letterArtists], groupIndex) => (
               <div
                 key={letter}
                 ref={(el) => {
@@ -109,18 +118,20 @@ export const ArtistsView: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Unified Square Card Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+                {/* Polished Circular Artist Card Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 w-full">
                   {letterArtists.map((artist, idx) => {
                     const focusId = `artist-card-${artist.id}`;
                     const isRightEdge = (idx + 1) % 5 === 0 || idx === letterArtists.length - 1;
+                    const isFirstCard = groupIndex === 0 && idx === 0;
 
                     return (
                       <Focusable
                         key={artist.id}
                         focusId={focusId}
                         group="artists-grid"
-                        className="rounded-xl cursor-pointer relative"
+                        autoFocus={isFirstCard}
+                        className="rounded-2xl cursor-pointer relative"
                         onEnter={() => openArtist(artist.id)}
                         onClick={() => openArtist(artist.id)}
                         onArrow={(direction) => {
@@ -133,14 +144,20 @@ export const ArtistsView: React.FC = () => {
                       >
                         {({ isFocused }) => (
                           <article
-                            className={`group relative flex flex-col rounded-xl p-2.5 cursor-pointer h-full ${
+                            className={`group relative flex flex-col items-center text-center rounded-2xl p-3 cursor-pointer h-full transition-colors ${
                               isFocused
                                 ? 'bg-surface-container-high z-10'
-                                : 'bg-surface-container-low hover:bg-surface-container-high'
+                                : 'bg-surface-container-low/60 hover:bg-surface-container-high'
                             }`}
                           >
-                            {/* Square aspect ratio cover */}
-                            <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-lowest mb-2 shadow-md">
+                            {/* Circular avatar with radiant focus ring and border glow */}
+                            <div
+                              className={`relative w-full aspect-square rounded-full overflow-hidden bg-surface-container-lowest mb-3 shadow-lg border-2 transition-all ${
+                                isFocused
+                                  ? 'border-secondary shadow-[0_0_24px_rgba(67,215,198,0.45)] ring-4 ring-secondary/30'
+                                  : 'border-white/10 ring-2 ring-white/[0.04]'
+                              }`}
+                            >
                               <img
                                 alt={artist.name}
                                 className="w-full h-full object-cover"
@@ -149,17 +166,26 @@ export const ArtistsView: React.FC = () => {
                                   (e.target as HTMLImageElement).src = './sonzra-mark.svg';
                                 }}
                               />
+
+                              {/* TV Quick Play Overlay on Focus */}
+                              {isFocused && (
+                                <div className="absolute inset-0 bg-surface-dim/30 backdrop-blur-[1px] flex items-center justify-center">
+                                  <div className="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_20px_rgba(73,220,202,0.9)]">
+                                    <Play className="w-6 h-6 fill-current ml-0.5" />
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
-                            <div className="relative flex flex-col pt-1 px-1">
+                            <div className="relative flex flex-col items-center w-full px-1">
                               <h2
-                                className={`text-[15px] font-bold truncate transition-colors ${
+                                className={`text-base font-bold truncate w-full text-center tracking-tight transition-colors ${
                                   isFocused ? 'text-secondary' : 'text-on-surface group-hover:text-primary'
                                 }`}
                               >
                                 {artist.name}
                               </h2>
-                              <div className="flex items-center justify-between text-outline text-[12px] mt-0.5">
+                              <div className="flex items-center justify-center text-outline text-[13px] font-mono mt-1">
                                 <span className="text-on-surface-variant font-mono">
                                   {artist.albumCount} {artist.albumCount === 1 ? 'Album' : 'Albums'}
                                 </span>
