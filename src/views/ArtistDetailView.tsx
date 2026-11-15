@@ -176,7 +176,7 @@ export const ArtistDetailView: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-on-surface tracking-tight font-serif-title drop-shadow-md mb-3 leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-on-surface tracking-tight font-sans drop-shadow-md mb-3 leading-tight">
               {artist.name}
             </h1>
 
@@ -255,7 +255,7 @@ export const ArtistDetailView: React.FC = () => {
         <section className="flex flex-col w-full mb-12" aria-label="Top Songs">
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b border-white/[0.06]">
             <div className="flex items-baseline gap-3">
-              <h2 className="font-serif-title text-2xl font-bold text-on-surface tracking-tight">
+              <h2 className="font-sans text-2xl font-bold text-on-surface tracking-tight">
                 Top Songs
               </h2>
               <span className="text-xs font-mono text-outline font-medium">
@@ -369,7 +369,7 @@ export const ArtistDetailView: React.FC = () => {
         <section className="flex flex-col w-full mb-12" aria-label="Discography">
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b border-white/[0.06]">
             <div className="flex items-baseline gap-3">
-              <h2 className="font-serif-title text-2xl font-bold text-on-surface tracking-tight">
+              <h2 className="font-sans text-2xl font-bold text-on-surface tracking-tight">
                 Discography
               </h2>
               <span className="text-xs font-mono text-outline font-medium">

@@ -231,7 +231,7 @@ export const AlbumDetailView: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-3xl xl:text-4xl font-extrabold text-on-surface tracking-tight font-serif-title drop-shadow-md">
+            <h1 className="text-3xl xl:text-4xl font-extrabold text-on-surface tracking-tight font-sans drop-shadow-md">
               {album.title}
             </h1>
 

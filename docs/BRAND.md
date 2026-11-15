@@ -32,8 +32,8 @@ Deep Space Background        Card & Shelf Surfaces        Radiant Accents
 
 ## 3. Typography System
 
-* **Display & Master Headings:** `Cinzel` / `serif-title` (Roman stone engraving style with classical majesty).
-* **UI Controls & Body Text:** `Manrope` (Clean, geometric neo-grotesque sans-serif with high legibility at 10ft viewing distances).
+* **Display, Master Headings & UI Controls:** `Manrope` (Clean, geometric neo-grotesque sans-serif with high legibility at 10ft viewing distances, weights 400-800).
+* **UI Controls & Body Text:** `Manrope` (Clean, geometric sans-serif matching Sonzra Web).
 * **Telemetry & Bit-Perfect Badges:** `JetBrains Mono` / `font-mono` (Tabular numbers for timers, bitrates, sample rates, and kHz indicators).
 
 ---
