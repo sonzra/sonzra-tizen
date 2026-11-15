@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Square, Activity, ListPlus } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Square, Activity, ListPlus, Heart } from 'lucide-react';
 import { useSpatialNav, MediaAction } from '../navigation/SpatialNavigationContext';
 import { usePlayer } from '../context/PlayerContext';
+
+export interface ToastEventDetail {
+  label: string;
+  title?: string;
+  icon?: 'play' | 'pause' | 'next' | 'prev' | 'stop' | 'queue' | 'play-next' | 'heart' | 'activity';
+}
+
+export function showOsdToast(detail: ToastEventDetail) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('sonzra:toast', { detail }));
+  }
+}
 
 export const MediaOsdToast: React.FC = () => {
   const { registerMediaHandler } = useSpatialNav();
@@ -14,6 +26,7 @@ export const MediaOsdToast: React.FC = () => {
   const [actionLabel, setActionLabel] = useState<string>('');
   const [actionDetail, setActionDetail] = useState<string>('');
   const [actionIcon, setActionIcon] = useState<string>('activity');
+  const [customTitle, setCustomTitle] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const playbackStatusRef = useRef<string>(playbackStatus || 'idle');
   const currentTrackRef = useRef(currentTrack);
@@ -46,7 +59,7 @@ export const MediaOsdToast: React.FC = () => {
     }, toastMessage.duration || 2800);
   }, [toastMessage]);
 
-  // Handle hardware remote media keys
+  // Handle hardware remote media keys and custom sonzra:toast events
   useEffect(() => {
     const unregister = registerMediaHandler((action: MediaAction) => {
       let label = '';
@@ -82,6 +95,7 @@ export const MediaOsdToast: React.FC = () => {
       setActionLabel(label);
       setActionDetail(currentTrackRef.current ? currentTrackRef.current.title : 'Sonzra Master Audio');
       setActionIcon(icon);
+      setCustomTitle(null);
       setVisible(true);
 
       if (timerRef.current) {
@@ -92,8 +106,29 @@ export const MediaOsdToast: React.FC = () => {
       }, 1600);
     });
 
+    const handleCustomToast = (e: Event) => {
+      const customEvent = e as CustomEvent<ToastEventDetail>;
+      if (!customEvent.detail) return;
+      const { label, title, icon } = customEvent.detail;
+      setActionLabel(label);
+      setActionIcon(icon || 'activity');
+      setCustomTitle(title || null);
+      setActionDetail(title || '');
+      setVisible(true);
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
+        setVisible(false);
+      }, 1600);
+    };
+
+    window.addEventListener('sonzra:toast', handleCustomToast);
+
     return () => {
       unregister();
+      window.removeEventListener('sonzra:toast', handleCustomToast);
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
@@ -105,6 +140,7 @@ export const MediaOsdToast: React.FC = () => {
   const renderIcon = () => {
     switch (actionIcon) {
       case 'play':
+      case 'play-next':
         return <Play className="w-6 h-6 fill-current ml-0.5" />;
       case 'pause':
         return <Pause className="w-6 h-6 fill-current" />;
@@ -116,6 +152,8 @@ export const MediaOsdToast: React.FC = () => {
         return <Square className="w-5 h-5 fill-current" />;
       case 'queue':
         return <ListPlus className="w-6 h-6" />;
+      case 'heart':
+        return <Heart className="w-6 h-6 fill-current text-error" />;
       default:
         return <Activity className="w-6 h-6" />;
     }
@@ -139,7 +177,7 @@ export const MediaOsdToast: React.FC = () => {
             </span>
           </div>
           <span className="text-[14px] font-semibold text-on-surface truncate max-w-[340px]">
-            {actionDetail || (currentTrack ? currentTrack.title : 'Sonzra Master Audio')}
+            {actionDetail || customTitle || (currentTrack ? currentTrack.title : 'Sonzra Master Audio')}
           </span>
         </div>
       </div>

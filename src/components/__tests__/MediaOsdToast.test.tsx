@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
 import { SpatialNavigationProvider } from '../../navigation/SpatialNavigationContext';
-import { MediaOsdToast } from '../MediaOsdToast';
+import { MediaOsdToast, showOsdToast } from '../MediaOsdToast';
 import * as PlayerContextModule from '../../context/PlayerContext';
 
 describe('MediaOsdToast Component', () => {
@@ -174,5 +174,75 @@ describe('MediaOsdToast Component', () => {
     expect(toast).not.toBeNull();
     expect(toast?.textContent).toContain('ADDED TO QUEUE');
     expect(toast?.textContent).toContain('Added "Starlight Serenades" to queue');
+  });
+
+  it('renders custom queue/favorite notifications via showOsdToast and auto-dismisses', async () => {
+    vi.spyOn(PlayerContextModule, 'usePlayer').mockImplementation(() => ({
+      currentTrack: null,
+      queue: [],
+      history: [],
+      currentIndex: -1,
+      playbackStatus: 'idle',
+      currentTime: 0,
+      duration: 0,
+      shuffle: false,
+      repeat: 'off',
+      radioEnabled: false,
+      volume: 1,
+      isMuted: false,
+      playTrack: vi.fn(),
+      playAlbum: vi.fn(),
+      playTracks: vi.fn(),
+      playNext: vi.fn(),
+      addToQueue: vi.fn(),
+      togglePlayPause: vi.fn(),
+      play: vi.fn(),
+      pause: vi.fn(),
+      next: vi.fn(),
+      prev: vi.fn(),
+      seek: vi.fn(),
+      toggleShuffle: vi.fn(),
+      cycleRepeat: vi.fn(),
+      toggleRadio: vi.fn(),
+      startRadio: vi.fn(),
+      setVolume: vi.fn(),
+      toggleMute: vi.fn(),
+      lyrics: null,
+      lyricsLoading: false,
+      lyricsFollowing: true,
+      setLyricsFollowing: vi.fn(),
+      loadLyrics: vi.fn(),
+    } as any));
+
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <SpatialNavigationProvider>
+          <MediaOsdToast />
+        </SpatialNavigationProvider>
+      );
+    });
+
+    // Trigger custom queue toast
+    await act(async () => {
+      showOsdToast({
+        label: 'ADDED TO QUEUE',
+        title: 'Song of the Wind',
+        icon: 'queue',
+      });
+      vi.advanceTimersByTime(50);
+    });
+
+    const toast = document.querySelector('[role="status"]');
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).toContain('ADDED TO QUEUE');
+    expect(toast?.textContent).toContain('Song of the Wind');
+
+    // Advance timers past 1600ms
+    await act(async () => {
+      vi.advanceTimersByTime(1600);
+    });
+
+    expect(document.querySelector('[role="status"]')).toBeNull();
   });
 });

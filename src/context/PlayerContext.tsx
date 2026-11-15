@@ -28,6 +28,7 @@ interface PlayerContextType {
   playTrack: (track: Track, newQueue?: Track[]) => void;
   playAlbum: (album: Album, startTrackId?: string, shuffle?: boolean) => void;
   playTracks: (tracks: Track[], startIndex?: number, shuffle?: boolean) => void;
+  playNext: (trackOrTracks: Track | Track[]) => void;
   addToQueue: (trackOrTracks: Track | Track[], options?: { albumTitle?: string }) => void;
   toastMessage?: OsdToast | null;
   showToast?: (toast: { label: string; message: string; icon?: string; duration?: number }) => void;
@@ -234,12 +235,56 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const playTrack = useCallback(
     (track: Track, newQueue?: Track[]) => {
-      const q = newQueue || [track];
-      const idx = q.findIndex((t) => t.id === track.id);
-      setQueue(q);
-      playIndex(idx >= 0 ? idx : 0, q);
+      if (newQueue) {
+        const idx = newQueue.findIndex((t) => t.id === track.id);
+        setQueue(newQueue);
+        playIndex(idx >= 0 ? idx : 0, newQueue);
+        return;
+      }
+
+      // Single-track playback: preserve existing queue if present
+      if (queue.length > 0) {
+        const existingIdx = queue.findIndex((t) => t.id === track.id);
+        if (existingIdx >= 0) {
+          playIndex(existingIdx, queue);
+        } else {
+          const insertIdx = currentIndex >= 0 ? currentIndex + 1 : 0;
+          const nextQueue = [
+            ...queue.slice(0, insertIdx),
+            track,
+            ...queue.slice(insertIdx),
+          ];
+          setQueue(nextQueue);
+          playIndex(insertIdx, nextQueue);
+        }
+      } else {
+        const q = [track];
+        setQueue(q);
+        playIndex(0, q);
+      }
     },
-    [playIndex]
+    [currentIndex, playIndex, queue]
+  );
+
+  const playNext = useCallback(
+    (trackOrTracks: Track | Track[]) => {
+      const items = Array.isArray(trackOrTracks) ? trackOrTracks : [trackOrTracks];
+      if (items.length === 0) return;
+
+      if (queue.length === 0 || !currentTrack) {
+        setQueue(items);
+        playIndex(0, items);
+        return;
+      }
+
+      const insertIdx = currentIndex >= 0 ? currentIndex + 1 : 0;
+      setQueue((prev) => [
+        ...prev.slice(0, insertIdx),
+        ...items,
+        ...prev.slice(insertIdx),
+      ]);
+    },
+    [currentIndex, currentTrack, playIndex, queue.length]
   );
 
   const playTracks = useCallback(
@@ -572,6 +617,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         playTrack,
         playAlbum,
         playTracks,
+        playNext,
         addToQueue,
         toastMessage,
         showToast,
