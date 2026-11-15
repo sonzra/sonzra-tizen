@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Music,
   ArrowLeft,
@@ -13,6 +13,8 @@ import {
   Heart,
   ListMusic,
   Radio,
+  Mic2,
+  RotateCcw,
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
@@ -44,11 +46,16 @@ export const NowPlayingView: React.FC = () => {
     cycleRepeat,
     toggleRadio,
     playTracks,
+    lyrics,
+    lyricsLoading,
+    lyricsFollowing,
+    setLyricsFollowing,
   } = usePlayer();
 
   const { goBack, goToView } = useSpatialNav();
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'queue' | 'lyrics'>('queue');
 
   if (!currentTrack) {
     return (
@@ -95,6 +102,24 @@ export const NowPlayingView: React.FC = () => {
     queue.length > 0 && currentIndex >= 0
       ? queue.slice(currentIndex + 1)
       : [];
+
+  // Synchronized active lyric calculation
+  const activeLyricIndex =
+    lyrics?.synchronized && lyrics.lines && lyrics.lines.length > 0
+      ? lyrics.lines.reduce((activeIdx, line, idx) => {
+          return line.start !== null && line.start !== undefined && line.start <= currentTime
+            ? idx
+            : activeIdx;
+        }, -1)
+      : -1;
+
+  // Auto-follow scrolling effect for synchronized lyrics
+  useEffect(() => {
+    if (activeTab === 'lyrics' && lyricsFollowing && activeLyricIndex >= 0) {
+      const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
+      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [activeTab, lyricsFollowing, activeLyricIndex]);
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between overflow-hidden select-none pb-28">
@@ -433,6 +458,30 @@ export const NowPlayingView: React.FC = () => {
               )}
             </Focusable>
 
+            {/* Lyrics Mode Toggle */}
+            <Focusable
+              focusId="np-ctrl-lyrics"
+              group="now-playing-controls"
+              className="rounded-full cursor-pointer"
+              onEnter={() => setActiveTab((prev) => (prev === 'lyrics' ? 'queue' : 'lyrics'))}
+              onClick={() => setActiveTab((prev) => (prev === 'lyrics' ? 'queue' : 'lyrics'))}
+            >
+              {({ isFocused }) => (
+                <button
+                  className={`w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center transition-all shadow-md cursor-pointer ${
+                    isFocused
+                      ? 'bg-surface-container-high ring-2 ring-secondary text-secondary scale-110 shadow-[0_0_16px_rgba(73,220,202,0.6)]'
+                      : activeTab === 'lyrics'
+                      ? 'bg-surface-container-high text-secondary border-secondary/40 shadow-[0_0_10px_rgba(73,220,202,0.4)]'
+                      : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                  }`}
+                  title="Lyrics"
+                >
+                  <Mic2 className="w-5 h-5" />
+                </button>
+              )}
+            </Focusable>
+
             {/* Favorite */}
             <Focusable
               focusId="np-ctrl-fav"
@@ -461,97 +510,267 @@ export const NowPlayingView: React.FC = () => {
           </div>
         </div>
 
-        {/* Column 3 (Right 3 cols): Expansive 'Up Next' Queue Shelf */}
-        <div className="col-span-12 lg:col-span-3 h-full flex flex-col justify-start bg-surface-container-low/75 border border-outline-variant/30 backdrop-blur-2xl p-5 rounded-3xl shadow-2xl">
-          {/* Shelf Header */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <ListMusic className="w-6 h-6 text-secondary" />
-                <h2 className="text-xl font-bold text-on-surface">Up Next</h2>
-              </div>
-              <span className="bg-surface-container-highest text-secondary text-xs font-semibold px-2.5 py-0.5 rounded-full border border-secondary/20">
-                {upcomingTracks.length} in Queue
-              </span>
-            </div>
-            <p className="text-xs text-on-surface-variant">Continuous playback from album shelf</p>
-          </div>
-
-          {/* Queue Track List */}
-          <div className="flex flex-col gap-2.5 overflow-y-auto max-h-[380px]">
-            {upcomingTracks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-2 my-auto">
-                <ListMusic className="w-8 h-8 text-outline" />
-                <span className="text-xs text-on-surface-variant font-medium">No more tracks in queue</span>
-              </div>
-            ) : (
-              upcomingTracks.map((track) => {
-                const focusId = `np-queue-${track.id}`;
-
-                const handleSelectQueueTrack = () => {
-                  if (queue.length > 0) {
-                    const targetIdx = queue.findIndex((t) => t.id === track.id);
-                    if (targetIdx >= 0) {
-                      playTracks(queue, targetIdx);
-                      return;
-                    }
-                  }
-                  const fullList = [activeTrack, ...upcomingTracks];
-                  const targetIdx = fullList.findIndex((t) => t.id === track.id);
-                  playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
-                };
-
-                return (
-                  <Focusable
-                    key={track.id}
-                    focusId={focusId}
-                    group="now-playing-queue"
-                    className="rounded-2xl cursor-pointer"
-                    onEnter={handleSelectQueueTrack}
-                    onClick={handleSelectQueueTrack}
+        {/* Column 3 (Right 3 cols): Expansive 'Up Next' Queue Shelf & Synced Lyrics */}
+        <div
+          data-testid="now-playing-right-panel"
+          className="col-span-12 lg:col-span-3 h-full flex flex-col justify-start bg-surface-container-lowest/30 backdrop-blur-3xl p-5 rounded-3xl border border-white/5 shadow-2xl relative"
+        >
+          {/* Panel Switcher Header */}
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5 shrink-0">
+            <div className="flex items-center gap-2">
+              <Focusable
+                focusId="np-tab-queue"
+                group="now-playing-tabs"
+                className="rounded-full cursor-pointer"
+                onEnter={() => setActiveTab('queue')}
+                onClick={() => setActiveTab('queue')}
+              >
+                {({ isFocused }) => (
+                  <button
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      isFocused
+                        ? 'bg-secondary text-on-secondary shadow-[0_0_14px_rgba(73,220,202,0.7)] scale-105'
+                        : activeTab === 'queue'
+                        ? 'bg-surface-container-high text-secondary border border-secondary/30'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
                   >
-                    {({ isFocused }) => (
-                      <div
-                        className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
-                          isFocused
-                            ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
-                            : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
-                            <img
-                              className="w-full h-full object-cover"
-                              src={track.artworkUrl || activeTrack.artworkUrl}
-                              alt={track.title}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-                              }}
-                            />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span
-                              className={`font-bold text-xs truncate ${
-                                isFocused ? 'text-secondary' : 'text-on-surface'
-                              }`}
-                            >
-                              {track.title}
-                            </span>
-                            <span className="text-[11px] text-on-surface-variant truncate">
-                              {track.artist}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
-                          {formatTime(track.duration)}
-                        </span>
-                      </div>
-                    )}
-                  </Focusable>
-                );
-              })
+                    <ListMusic className="w-4 h-4" />
+                    <span>Queue ({upcomingTracks.length})</span>
+                  </button>
+                )}
+              </Focusable>
+
+              <Focusable
+                focusId="np-tab-lyrics"
+                group="now-playing-tabs"
+                className="rounded-full cursor-pointer"
+                onEnter={() => setActiveTab('lyrics')}
+                onClick={() => setActiveTab('lyrics')}
+              >
+                {({ isFocused }) => (
+                  <button
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      isFocused
+                        ? 'bg-secondary text-on-secondary shadow-[0_0_14px_rgba(73,220,202,0.7)] scale-105'
+                        : activeTab === 'lyrics'
+                        ? 'bg-surface-container-high text-secondary border border-secondary/30'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    <Mic2 className="w-4 h-4" />
+                    <span>Lyrics</span>
+                  </button>
+                )}
+              </Focusable>
+            </div>
+
+            {activeTab === 'lyrics' && lyrics?.synchronized && (
+              <span className="text-[10px] font-mono tracking-wider uppercase text-secondary/90 bg-secondary/10 px-2 py-0.5 rounded-full border border-secondary/20">
+                Synced
+              </span>
             )}
           </div>
+
+          {/* Tab 1: Up Next Queue */}
+          {activeTab === 'queue' && (
+            <div className="flex flex-col gap-2.5 overflow-y-auto max-h-[380px] pr-1">
+              {upcomingTracks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-2 my-auto">
+                  <ListMusic className="w-8 h-8 text-outline" />
+                  <span className="text-xs text-on-surface-variant font-medium">No more tracks in queue</span>
+                </div>
+              ) : (
+                upcomingTracks.map((track) => {
+                  const focusId = `np-queue-${track.id}`;
+
+                  const handleSelectQueueTrack = () => {
+                    if (queue.length > 0) {
+                      const targetIdx = queue.findIndex((t) => t.id === track.id);
+                      if (targetIdx >= 0) {
+                        playTracks(queue, targetIdx);
+                        return;
+                      }
+                    }
+                    const fullList = [activeTrack, ...upcomingTracks];
+                    const targetIdx = fullList.findIndex((t) => t.id === track.id);
+                    playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
+                  };
+
+                  return (
+                    <Focusable
+                      key={track.id}
+                      focusId={focusId}
+                      group="now-playing-queue"
+                      className="rounded-2xl cursor-pointer"
+                      onFocus={(el) => {
+                        (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                      }}
+                      onEnter={handleSelectQueueTrack}
+                      onClick={handleSelectQueueTrack}
+                    >
+                      {({ isFocused }) => (
+                        <div
+                          className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
+                            isFocused
+                              ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
+                              : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
+                              <img
+                                className="w-full h-full object-cover"
+                                src={track.artworkUrl || activeTrack.artworkUrl}
+                                alt={track.title}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                                }}
+                              />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span
+                                className={`font-bold text-xs truncate ${
+                                  isFocused ? 'text-secondary' : 'text-on-surface'
+                                }`}
+                              >
+                                {track.title}
+                              </span>
+                              <span className="text-[11px] text-on-surface-variant truncate">
+                                {track.artist}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
+                            {formatTime(track.duration)}
+                          </span>
+                        </div>
+                      )}
+                    </Focusable>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Tab 2: Synchronized Lyrics */}
+          {activeTab === 'lyrics' && (
+            <div className="flex flex-col h-[380px] relative">
+              {/* Resume Auto-Follow Pill when user navigated manually */}
+              {!lyricsFollowing && lyrics?.synchronized && lyrics.lines && lyrics.lines.length > 0 && (
+                <div className="mb-2.5 flex justify-center shrink-0">
+                  <Focusable
+                    focusId="np-lyrics-resume-follow"
+                    group="now-playing-lyrics"
+                    className="rounded-full cursor-pointer"
+                    onEnter={() => {
+                      setLyricsFollowing(true);
+                      if (activeLyricIndex >= 0) {
+                        const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
+                        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                      }
+                    }}
+                    onClick={() => {
+                      setLyricsFollowing(true);
+                      if (activeLyricIndex >= 0) {
+                        const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
+                        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    {({ isFocused }) => (
+                      <button
+                        className={`flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold tracking-wide transition-all shadow-lg cursor-pointer ${
+                          isFocused
+                            ? 'bg-secondary text-on-secondary shadow-[0_0_16px_rgba(73,220,202,0.8)] scale-105'
+                            : 'bg-secondary/20 text-secondary border border-secondary/40 hover:bg-secondary/30'
+                        }`}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Resume Auto-Follow</span>
+                      </button>
+                    )}
+                  </Focusable>
+                </div>
+              )}
+
+              {lyricsLoading ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-3 my-auto">
+                  <Activity className="w-8 h-8 text-secondary animate-pulse" />
+                  <span className="text-xs text-secondary font-mono tracking-wider font-semibold">
+                    Loading lyrics…
+                  </span>
+                </div>
+              ) : !lyrics?.available || !lyrics.lines || lyrics.lines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-3 my-auto">
+                  <Mic2 className="w-10 h-10 text-outline-variant/60" />
+                  <span className="text-sm font-semibold text-on-surface">No Lyrics Available</span>
+                  <span className="text-xs text-on-surface-variant max-w-[200px]">
+                    Lyrics could not be loaded for this track.
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[380px] pr-1">
+                  {lyrics.lines.map((line, idx) => {
+                    const isCurrent = idx === activeLyricIndex;
+                    const isTimed = line.start !== null && line.start !== undefined;
+                    const focusId = `np-lyric-${idx}`;
+
+                    const handleSelectLyric = () => {
+                      if (isTimed && line.start !== null && line.start !== undefined) {
+                        seek(line.start);
+                        setLyricsFollowing(true);
+                      }
+                    };
+
+                    return (
+                      <Focusable
+                        key={idx}
+                        focusId={focusId}
+                        group="now-playing-lyrics"
+                        className="rounded-xl cursor-pointer transition-all"
+                        onFocus={(el) => {
+                          setLyricsFollowing(false);
+                          (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        }}
+                        onEnter={handleSelectLyric}
+                        onClick={handleSelectLyric}
+                      >
+                        {({ isFocused }) => (
+                          <div
+                            className={`px-3.5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+                              isFocused
+                                ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_16px_rgba(73,220,202,0.4)] scale-102'
+                                : isCurrent
+                                ? 'bg-secondary/15 border-l-4 border-secondary pl-3.5 shadow-sm'
+                                : 'hover:bg-white/5'
+                            }`}
+                          >
+                            <p
+                              className={`text-base leading-relaxed transition-all ${
+                                isCurrent
+                                  ? 'text-secondary font-bold text-lg drop-shadow-[0_0_10px_rgba(73,220,202,0.5)]'
+                                  : isFocused
+                                  ? 'text-on-surface font-semibold'
+                                  : 'text-on-surface-variant/75 font-normal'
+                              }`}
+                            >
+                              {line.text}
+                            </p>
+                            {typeof line.start === 'number' && (
+                              <span className="text-[10px] font-mono text-outline/60 mt-0.5 block">
+                                {formatTime(line.start)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </Focusable>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>

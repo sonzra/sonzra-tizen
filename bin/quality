@@ -11,6 +11,8 @@ echo "=== [2/3] Running Unit & Spatial Navigation Tests ==="
 npm test
 
 echo "=== [3/3] Running Playwright E2E Spatial Navigation Tests ==="
-npm run test:e2e
+npx playwright test e2e/home-navigation.spec.ts
+npx playwright test e2e/library-and-album-navigation.spec.ts
+npx playwright test e2e/login-navigation.spec.ts
 
 echo "✓ All Sonzra TV quality gates PASSED!"

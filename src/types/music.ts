@@ -54,6 +54,17 @@ export interface Artist {
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 export type RepeatMode = 'off' | 'all' | 'one';
 
+export interface LyricLine {
+  text: string;
+  start?: number | null; // seconds timestamp
+}
+
+export interface LyricsData {
+  available: boolean;
+  synchronized: boolean;
+  lines: LyricLine[];
+}
+
 export interface ServerConfig {
   serverUrl: string;
   serverConnectionId: string;

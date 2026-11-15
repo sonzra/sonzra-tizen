@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { PlaybackStatus, RepeatMode, Track, Album } from '../types/music';
+import { PlaybackStatus, RepeatMode, Track, Album, LyricsData } from '../types/music';
 import { SonzraApiClient } from '../services/sonzraApi';
 import { useServer } from './ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
@@ -33,6 +33,11 @@ interface PlayerContextType {
   startRadio: (seed: Track | Album) => Promise<void>;
   setVolume: (vol: number) => void;
   toggleMute: () => void;
+  lyrics: LyricsData | null;
+  lyricsLoading: boolean;
+  lyricsFollowing: boolean;
+  setLyricsFollowing: (following: boolean) => void;
+  loadLyrics: (trackId?: string) => Promise<void>;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -53,10 +58,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [radioEnabled, setRadioEnabled] = useState<boolean>(false);
   const [volume, setVolumeState] = useState<number>(1.0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [lyrics, setLyrics] = useState<LyricsData | null>(null);
+  const [lyricsLoading, setLyricsLoading] = useState<boolean>(false);
+  const [lyricsFollowing, setLyricsFollowing] = useState<boolean>(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const apiClientRef = useRef(new SonzraApiClient(config));
   const isExtendingRadioRef = useRef<boolean>(false);
+  const lyricsCacheRef = useRef<Map<string, LyricsData>>(new Map());
+  const lyricsRequestRef = useRef<number>(0);
 
   // Sync API client with server configuration changes
   useEffect(() => {
@@ -462,6 +472,48 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return unregister;
   }, [registerMediaHandler, play, pause, togglePlayPause, next, prev]);
 
+  const loadLyrics = useCallback(async (trackId?: string) => {
+    const targetId = trackId || currentTrack?.id;
+    if (!targetId) {
+      setLyrics(null);
+      setLyricsLoading(false);
+      return;
+    }
+    const cached = lyricsCacheRef.current.get(targetId);
+    if (cached) {
+      setLyrics(cached);
+      setLyricsLoading(false);
+      return;
+    }
+    const reqId = ++lyricsRequestRef.current;
+    setLyricsLoading(true);
+    try {
+      const data = await apiClientRef.current.fetchLyrics(targetId);
+      if (lyricsRequestRef.current === reqId) {
+        lyricsCacheRef.current.set(targetId, data);
+        setLyrics(data);
+      }
+    } catch {
+      if (lyricsRequestRef.current === reqId) {
+        setLyrics({ available: false, synchronized: false, lines: [] });
+      }
+    } finally {
+      if (lyricsRequestRef.current === reqId) {
+        setLyricsLoading(false);
+      }
+    }
+  }, [currentTrack?.id]);
+
+  useEffect(() => {
+    setLyricsFollowing(true);
+    if (currentTrack?.id) {
+      loadLyrics(currentTrack.id);
+    } else {
+      setLyrics(null);
+      setLyricsLoading(false);
+    }
+  }, [currentTrack?.id, loadLyrics]);
+
   return (
     <PlayerContext.Provider
       value={{
@@ -493,6 +545,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         startRadio,
         setVolume,
         toggleMute,
+        lyrics,
+        lyricsLoading,
+        lyricsFollowing,
+        setLyricsFollowing,
+        loadLyrics,
       }}
     >
       {children}

@@ -2,10 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import { useSpatialNav } from './SpatialNavigationContext';
 import { Direction } from '../types/navigation';
 
-export interface FocusableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+export interface FocusableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children' | 'onFocus' | 'onBlur'> {
   focusId: string;
   group?: string;
   onEnter?: () => void;
+  onFocus?: (element: HTMLDivElement | null) => void;
+  onBlur?: () => void;
   onArrow?: (direction: Direction) => boolean | void;
   autoFocus?: boolean;
   upId?: string;
@@ -22,6 +24,8 @@ export const Focusable: React.FC<FocusableProps> = ({
   focusId,
   group,
   onEnter,
+  onFocus,
+  onBlur,
   onArrow,
   autoFocus = false,
   upId,
@@ -44,6 +48,8 @@ export const Focusable: React.FC<FocusableProps> = ({
   const propsRef = useRef({
     group,
     onEnter,
+    onFocus,
+    onBlur,
     onArrow,
     onClick,
     upId,
@@ -55,6 +61,8 @@ export const Focusable: React.FC<FocusableProps> = ({
   propsRef.current = {
     group,
     onEnter,
+    onFocus,
+    onBlur,
     onArrow,
     onClick,
     upId,
@@ -93,6 +101,12 @@ export const Focusable: React.FC<FocusableProps> = ({
         } else if (!current.disabled && current.onClick) {
           elementRef.current?.click();
         }
+      },
+      onFocus: () => {
+        propsRef.current.onFocus?.(elementRef.current);
+      },
+      onBlur: () => {
+        propsRef.current.onBlur?.();
       },
       onArrow: (direction: Direction) => {
         return propsRef.current.onArrow?.(direction);

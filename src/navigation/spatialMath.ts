@@ -380,8 +380,21 @@ export function findNextFocusableNode(
       }
     }
 
-    // Now Playing view: moving left from queue returns to transport controls
-    if (activeView === 'now-playing' && currentGroup === 'now-playing-queue') {
+    // Now Playing view: moving left from right panel (queue/lyrics/tabs) returns to transport controls
+    if (activeView === 'now-playing' && (currentGroup === 'now-playing-queue' || currentGroup === 'now-playing-lyrics' || currentGroup === 'now-playing-tabs')) {
+      const sameGroupToLeft = validCandidates.filter((c) => {
+        if (c.group !== currentGroup) return false;
+        const rect = getRect(c.element);
+        return rect.centerX < currentRect.centerX - 4 && Math.abs(rect.centerY - currentRect.centerY) <= 45;
+      });
+      if (sameGroupToLeft.length > 0) {
+        return sameGroupToLeft.reduce((best, c) => {
+          const dist = currentRect.centerX - getRect(c.element).centerX;
+          const bestDist = currentRect.centerX - getRect(best.element).centerX;
+          return dist < bestDist ? c : best;
+        });
+      }
+
       const lastId = lastFocusedByGroup?.get('now-playing-controls');
       if (lastId) {
         const remembered = validCandidates.find((c) => c.id === lastId);
@@ -456,11 +469,24 @@ export function findNextFocusableNode(
       }
     }
 
-    // Now Playing view: moving right from controls enters queue shelf
+    // Now Playing view: moving right from controls enters tabs or active right panel
     if (activeView === 'now-playing' && currentGroup === 'now-playing-controls') {
+      const tabs = validCandidates.filter((c) => c.group === 'now-playing-tabs');
+      if (tabs.length > 0) {
+        const lastTabId = lastFocusedByGroup?.get('now-playing-tabs');
+        if (lastTabId) {
+          const rememberedTab = tabs.find((t) => t.id === lastTabId);
+          if (rememberedTab) return rememberedTab;
+        }
+        return tabs[0];
+      }
       const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
       if (queueNodes.length > 0) {
         return queueNodes[0];
+      }
+      const lyricsNodes = validCandidates.filter((c) => c.group === 'now-playing-lyrics');
+      if (lyricsNodes.length > 0) {
+        return lyricsNodes[0];
       }
     }
   }
@@ -593,9 +619,15 @@ export function findNextFocusableNode(
         const playBtn = validCandidates.find((c) => c.id === 'np-ctrl-play');
         if (playBtn) return playBtn;
       }
-      if (currentGroup === 'now-playing-queue') {
+      if (currentGroup === 'now-playing-tabs') {
         const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
-        const below = queueNodes.filter((c) => getRect(c.element).centerY > currentRect.centerY + 4);
+        if (queueNodes.length > 0) return queueNodes[0];
+        const lyricsNodes = validCandidates.filter((c) => c.group === 'now-playing-lyrics');
+        if (lyricsNodes.length > 0) return lyricsNodes[0];
+      }
+      if (currentGroup === 'now-playing-queue' || currentGroup === 'now-playing-lyrics') {
+        const sameGroupNodes = validCandidates.filter((c) => c.group === currentGroup);
+        const below = sameGroupNodes.filter((c) => getRect(c.element).centerY > currentRect.centerY + 4);
         if (below.length > 0) {
           return below.reduce((best, c) => {
             const dist = getRect(c.element).centerY - currentRect.centerY;
@@ -713,9 +745,9 @@ export function findNextFocusableNode(
           if (scrub) return scrub;
         }
       }
-      if (currentGroup === 'now-playing-queue') {
-        const queueNodes = validCandidates.filter((c) => c.group === 'now-playing-queue');
-        const above = queueNodes.filter((c) => getRect(c.element).centerY < currentRect.centerY - 4);
+      if (currentGroup === 'now-playing-queue' || currentGroup === 'now-playing-lyrics') {
+        const sameGroupNodes = validCandidates.filter((c) => c.group === currentGroup);
+        const above = sameGroupNodes.filter((c) => getRect(c.element).centerY < currentRect.centerY - 4);
         if (above.length > 0) {
           return above.reduce((best, c) => {
             const dist = currentRect.centerY - getRect(c.element).centerY;
@@ -723,6 +755,20 @@ export function findNextFocusableNode(
             return dist < bestDist ? c : best;
           });
         }
+        // At top of queue or lyrics: reach tabs if present, otherwise back button
+        const tabs = validCandidates.filter((c) => c.group === 'now-playing-tabs');
+        if (tabs.length > 0) {
+          const lastTabId = lastFocusedByGroup?.get('now-playing-tabs');
+          if (lastTabId) {
+            const rememberedTab = tabs.find((t) => t.id === lastTabId);
+            if (rememberedTab) return rememberedTab;
+          }
+          return tabs[0];
+        }
+        const backBtn = validCandidates.find((c) => c.id === 'np-btn-back');
+        if (backBtn) return backBtn;
+      }
+      if (currentGroup === 'now-playing-tabs') {
         const backBtn = validCandidates.find((c) => c.id === 'np-btn-back');
         if (backBtn) return backBtn;
       }
