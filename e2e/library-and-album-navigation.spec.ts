@@ -67,12 +67,9 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
   test('Flow 3.2: Horizontal navigation across category tabs to sort selector', async ({ page }) => {
     await expectFocused(page, 'library-tab-albums');
 
-    // Right across filter tabs
+    // Right across filter tabs (tracks tab removed per Issue #32)
     await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'library-tab-artists');
-
-    await pressRemote(page, 'ArrowRight');
-    await expectFocused(page, 'library-tab-tracks');
 
     await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'library-tab-playlists');
@@ -293,17 +290,28 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await expectFocused(page, artistCardId);
   });
 
-  test('Flow 3.11: Navigate into Playlists tab and verify playlist cards', async ({ page }) => {
+  test('Flow 3.11: Navigate into Playlists tab and verify playlist cards or empty state', async ({ page }) => {
     await expectFocused(page, 'library-tab-albums');
-    await pressRemote(page, 'ArrowRight', 3);
+    // Move Right across tabs (tracks removed: Albums -> Artists -> Playlists)
+    await pressRemote(page, 'ArrowRight');
+    await expectFocused(page, 'library-tab-artists');
+    await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'library-tab-playlists');
 
     await pressRemote(page, 'Enter');
-    await pressRemote(page, 'ArrowDown');
+    await page.waitForTimeout(100);
 
-    const focusedCard = page.locator('.tv-focused');
-    await expect(focusedCard).toBeVisible();
-    const cardId = await focusedCard.getAttribute('id');
-    expect(cardId).toMatch(/^tv-node-library-playlist-/);
+    const playlistCard = page.locator('[id^="tv-node-library-playlist-"]').first();
+    const hasCards = (await playlistCard.count()) > 0;
+
+    if (hasCards) {
+      await pressRemote(page, 'ArrowDown');
+      const focusedCard = page.locator('.tv-focused');
+      await expect(focusedCard).toBeVisible();
+      const cardId = await focusedCard.getAttribute('id');
+      expect(cardId).toMatch(/^tv-node-library-playlist-/);
+    } else {
+      await expect(page.locator('section[aria-label="Playlists Empty Grid"]')).toBeVisible();
+    }
   });
 });

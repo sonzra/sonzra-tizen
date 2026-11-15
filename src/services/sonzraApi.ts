@@ -510,8 +510,11 @@ export class SonzraApiClient {
   }
 
   async fetchPlaylists(): Promise<Playlist[]> {
-    if (this.config.demoMode || !this.config.serverUrl) {
+    if (this.config.demoMode) {
       return MOCK_PLAYLISTS;
+    }
+    if (!this.config.serverUrl) {
+      return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -526,12 +529,12 @@ export class SonzraApiClient {
       });
       if (!response.ok) {
         console.warn(`fetchPlaylists returned HTTP ${response.status}`);
-        return MOCK_PLAYLISTS;
+        return this.config.demoMode ? MOCK_PLAYLISTS : [];
       }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.items || raw.playlists || []);
       if (!items.length) {
-        return MOCK_PLAYLISTS;
+        return this.config.demoMode ? MOCK_PLAYLISTS : [];
       }
       return items.map((item: any) => {
         const isCollab =
@@ -574,14 +577,14 @@ export class SonzraApiClient {
       });
     } catch (err) {
       console.warn('Failed to fetch playlists from server:', err);
-      return MOCK_PLAYLISTS;
+      return this.config.demoMode ? MOCK_PLAYLISTS : [];
     }
   }
 
   async fetchPlaylistDetails(playlistId: string): Promise<Playlist | null> {
-    const fallback = MOCK_PLAYLISTS.find((p) => p.id === playlistId);
+    const fallback = this.config.demoMode ? MOCK_PLAYLISTS.find((p) => p.id === playlistId) || null : null;
     if (!this.config.serverUrl) {
-      return fallback || null;
+      return fallback;
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -609,12 +612,15 @@ export class SonzraApiClient {
     } catch (e) {
       console.warn(`Failed to fetch playlist details ${playlistId}:`, e);
     }
-    return fallback || null;
+    return fallback;
   }
 
   async fetchAudiobooks(): Promise<Audiobook[]> {
-    if (this.config.demoMode || !this.config.serverUrl) {
+    if (this.config.demoMode) {
       return MOCK_AUDIOBOOKS;
+    }
+    if (!this.config.serverUrl) {
+      return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -629,12 +635,12 @@ export class SonzraApiClient {
       });
       if (!response.ok) {
         console.warn(`fetchAudiobooks returned HTTP ${response.status}`);
-        return MOCK_AUDIOBOOKS;
+        return this.config.demoMode ? MOCK_AUDIOBOOKS : [];
       }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.items || raw.audiobooks || []);
       if (!items.length) {
-        return MOCK_AUDIOBOOKS;
+        return this.config.demoMode ? MOCK_AUDIOBOOKS : [];
       }
       return items.map((item: any) => {
         const durationSec =
@@ -671,13 +677,16 @@ export class SonzraApiClient {
       });
     } catch (err) {
       console.warn('Failed to fetch audiobooks from server:', err);
-      return MOCK_AUDIOBOOKS;
+      return this.config.demoMode ? MOCK_AUDIOBOOKS : [];
     }
   }
 
   async fetchPodcasts(): Promise<PodcastShow[]> {
-    if (this.config.demoMode || !this.config.serverUrl) {
+    if (this.config.demoMode) {
       return MOCK_PODCASTS;
+    }
+    if (!this.config.serverUrl) {
+      return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
@@ -692,12 +701,12 @@ export class SonzraApiClient {
       });
       if (!response.ok) {
         console.warn(`fetchPodcasts returned HTTP ${response.status}`);
-        return MOCK_PODCASTS;
+        return this.config.demoMode ? MOCK_PODCASTS : [];
       }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.items || raw.podcasts || []);
       if (!items.length) {
-        return MOCK_PODCASTS;
+        return this.config.demoMode ? MOCK_PODCASTS : [];
       }
       return items.map((item: any) => {
         const episodes = (item.episodes || item.tracks || item.Items || []).map((ep: any, idx: number) => ({
@@ -723,7 +732,7 @@ export class SonzraApiClient {
       });
     } catch (err) {
       console.warn('Failed to fetch podcasts from server:', err);
-      return MOCK_PODCASTS;
+      return this.config.demoMode ? MOCK_PODCASTS : [];
     }
   }
 

@@ -58,10 +58,10 @@ describe('Library Expansion Parity (Issues #5, #14, #15)', () => {
   it('renders all core library category tabs including Audiobooks and Playlists', async () => {
     await renderComponent();
 
-    // Invariant: Core tabs exist
+    // Invariant: Core tabs exist, and redundant tracks tab is removed (Issue #32)
     expect(document.getElementById('tv-node-library-tab-albums')).not.toBeNull();
     expect(document.getElementById('tv-node-library-tab-artists')).not.toBeNull();
-    expect(document.getElementById('tv-node-library-tab-tracks')).not.toBeNull();
+    expect(document.getElementById('tv-node-library-tab-tracks')).toBeNull();
     expect(document.getElementById('tv-node-library-tab-playlists')).not.toBeNull();
     expect(document.getElementById('tv-node-library-tab-audiobooks')).not.toBeNull();
     expect(document.getElementById('tv-node-library-tab-podcasts')).not.toBeNull();

@@ -37,9 +37,10 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setConfig((prev) => {
       const updated = { ...prev, ...newConfig };
       saveServerConfig(updated);
+      apiClient.updateConfig(updated);
       return updated;
     });
-  }, []);
+  }, [apiClient]);
 
   const refreshPlaylists = useCallback(async () => {
     try {
