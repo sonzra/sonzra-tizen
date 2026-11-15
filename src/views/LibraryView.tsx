@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { Disc, User, Music, ListMusic, Radio, ArrowUpDown, ChevronDown, Play, Pause, LucideIcon } from 'lucide-react';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
 import { usePlayer } from '../context/PlayerContext';
@@ -92,12 +93,12 @@ export const LibraryView: React.FC = () => {
     [groupedAlbums, sortedAlbums, setFocus]
   );
 
-  const tabs: Array<{ id: LibraryTab; label: string; icon: string }> = [
-    { id: 'albums', label: 'Albums', icon: 'album' },
-    { id: 'artists', label: 'Artists', icon: 'person' },
-    { id: 'tracks', label: 'Tracks', icon: 'music_note' },
-    { id: 'playlists', label: 'Playlists', icon: 'queue_music' },
-    { id: 'podcasts', label: 'Podcasts', icon: 'podcasts' },
+  const tabs: Array<{ id: LibraryTab; label: string; icon: LucideIcon }> = [
+    { id: 'albums', label: 'Albums', icon: Disc },
+    { id: 'artists', label: 'Artists', icon: User },
+    { id: 'tracks', label: 'Tracks', icon: Music },
+    { id: 'playlists', label: 'Playlists', icon: ListMusic },
+    { id: 'podcasts', label: 'Podcasts', icon: Radio },
   ];
 
   const handleTabSelect = (tab: LibraryTab) => {
@@ -123,17 +124,17 @@ export const LibraryView: React.FC = () => {
         {/* Server Stats Pill Badges (Authentic server metadata only) */}
         <div className="flex items-center gap-2 bg-surface-container-low/90 px-3 py-1.5 rounded-xl border border-white/[0.04] text-[13px]">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
-            <span className="material-symbols-outlined text-[16px] text-primary">album</span>
+            <Disc className="w-4 h-4 text-primary" />
             <span className="font-bold text-on-surface">{albums.length}</span>
             <span className="text-outline">Albums</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
-            <span className="material-symbols-outlined text-[16px] text-tertiary">person</span>
+            <User className="w-4 h-4 text-tertiary" />
             <span className="font-bold text-on-surface">{artists.length}</span>
             <span className="text-outline">Artists</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high/60">
-            <span className="material-symbols-outlined text-[16px] text-secondary">audiotrack</span>
+            <Music className="w-4 h-4 text-secondary" />
             <span className="font-bold text-on-surface">{totalTracks.toLocaleString()}</span>
             <span className="text-outline">Tracks</span>
           </div>
@@ -146,6 +147,7 @@ export const LibraryView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
+            const TabIcon = tab.icon;
             return (
               <Focusable
                 key={tab.id}
@@ -165,12 +167,7 @@ export const LibraryView: React.FC = () => {
                         : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium'
                     }`}
                   >
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      style={{ fontVariationSettings: isActive ? '"FILL" 1' : undefined }}
-                    >
-                      {tab.icon}
-                    </span>
+                    <TabIcon className="w-4 h-4" />
                     <span>{tab.label}</span>
                     {isActive && (
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_6px_rgba(108,248,230,0.9)]"></span>
@@ -203,10 +200,10 @@ export const LibraryView: React.FC = () => {
                     : 'bg-surface-container-high/80 text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px] text-primary">swap_vert</span>
+                <ArrowUpDown className="w-4 h-4 text-primary" />
                 <span className="text-on-surface-variant">Sort:</span>
                 <span className="font-bold">{sortOption}</span>
-                <span className="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+                <ChevronDown className="w-4 h-4 text-outline" />
               </div>
             )}
           </Focusable>
@@ -217,7 +214,7 @@ export const LibraryView: React.FC = () => {
       {sortedAlbums.length === 0 ? (
         <section className="w-full" aria-label="Library Empty Grid">
           <div className="flex flex-col items-center justify-center p-16 rounded-2xl bg-surface-container-low/60 border border-white/[0.04] text-center gap-4 my-8">
-            <span className="material-symbols-outlined text-[48px] text-outline">album</span>
+            <Disc className="w-12 h-12 text-outline" />
             <h2 className="text-xl font-bold text-on-surface">No Albums Found</h2>
             <p className="text-sm text-on-surface-variant max-w-md">
               Your Sonzra server library does not contain any albums yet, or the server is still indexing.
@@ -305,12 +302,11 @@ export const LibraryView: React.FC = () => {
                                     className="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_24px_rgba(73,220,202,0.9)] cursor-pointer"
                                     title="Play Album"
                                   >
-                                    <span
-                                      className="material-symbols-outlined text-[28px]"
-                                      style={{ fontVariationSettings: '"FILL" 1' }}
-                                    >
-                                      {isPlayingThisAlbum ? 'pause' : 'play_arrow'}
-                                    </span>
+                                    {isPlayingThisAlbum ? (
+                                      <Pause className="w-7 h-7 fill-current" />
+                                    ) : (
+                                      <Play className="w-7 h-7 fill-current ml-0.5" />
+                                    )}
                                   </button>
                                 </div>
                               )}

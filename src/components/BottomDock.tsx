@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Heart, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -103,7 +104,7 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title="Shuffle"
               >
-                <span className="material-symbols-outlined text-[22px]">shuffle</span>
+                <Shuffle className="w-5 h-5" />
               </button>
             )}
           </Focusable>
@@ -125,7 +126,7 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title="Previous"
               >
-                <span className="material-symbols-outlined text-[24px]">skip_previous</span>
+                <SkipBack className="w-5 h-5" />
               </button>
             )}
           </Focusable>
@@ -145,12 +146,11 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title={isPlaying ? 'Pause' : 'Play'}
               >
-                <span
-                  className="material-symbols-outlined text-[28px]"
-                  style={{ fontVariationSettings: '"FILL" 1' }}
-                >
-                  {isPlaying ? 'pause' : 'play_arrow'}
-                </span>
+                {isPlaying ? (
+                  <Pause className="w-6 h-6 fill-current" />
+                ) : (
+                  <Play className="w-6 h-6 fill-current ml-0.5" />
+                )}
               </button>
             )}
           </Focusable>
@@ -172,7 +172,7 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title="Next"
               >
-                <span className="material-symbols-outlined text-[24px]">skip_next</span>
+                <SkipForward className="w-5 h-5" />
               </button>
             )}
           </Focusable>
@@ -196,9 +196,11 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title="Repeat"
               >
-                <span className="material-symbols-outlined text-[22px]">
-                  {repeat === 'one' ? 'repeat_one' : 'repeat'}
-                </span>
+                {repeat === 'one' ? (
+                  <Repeat1 className="w-5 h-5" />
+                ) : (
+                  <Repeat className="w-5 h-5" />
+                )}
               </button>
             )}
           </Focusable>
@@ -222,7 +224,7 @@ export const BottomDock: React.FC = () => {
                 }`}
                 title="Radio Mode"
               >
-                <span className="material-symbols-outlined text-[22px]">radio</span>
+                <Radio className="w-4 h-4" />
               </button>
             )}
           </Focusable>
@@ -272,12 +274,9 @@ export const BottomDock: React.FC = () => {
               }`}
               title="Favorite"
             >
-              <span
-                className="material-symbols-outlined text-[22px]"
-                style={{ fontVariationSettings: isFavorite ? '"FILL" 1' : undefined }}
-              >
-                {isFavorite ? 'favorite' : 'favorite_border'}
-              </span>
+              <Heart
+                className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`}
+              />
             </button>
           )}
         </Focusable>
@@ -299,7 +298,7 @@ export const BottomDock: React.FC = () => {
               }`}
               title="Now Playing Cinema"
             >
-              <span className="material-symbols-outlined text-[22px]">queue_music</span>
+              <ListMusic className="w-5 h-5" />
             </button>
           )}
         </Focusable>

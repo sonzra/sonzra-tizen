@@ -75,6 +75,12 @@ export default {
         serif: ['Cinzel', 'serif', 'system-ui'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
+      boxShadow: {
+        'focus-halo': '0 0 0 2px #43D7C6, 0 4px 18px rgba(67, 215, 198, 0.35)',
+        'focus-halo-primary': '0 0 0 2px #9B82FF, 0 4px 18px rgba(122, 90, 248, 0.35)',
+        'glow-cyan': '0 0 16px rgba(67, 215, 198, 0.35)',
+        'glow-primary': '0 0 16px rgba(122, 90, 248, 0.35)',
+      },
       keyframes: {
         spinVinyl: {
           '0%': { transform: 'rotate(0deg)' },

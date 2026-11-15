@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronUp, Delete, Check } from 'lucide-react';
 import { Focusable } from '../navigation/Focusable';
 
 interface TvVirtualKeyboardProps {
@@ -137,9 +138,7 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
                   : 'bg-surface-container-high text-on-surface border border-white/[0.04]'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {isUppercase ? 'keyboard_capslock_badge' : 'keyboard_capslock'}
-              </span>
+              <ChevronUp className={`w-4 h-4 stroke-[2.5] ${isUppercase ? 'text-secondary' : ''}`} />
               <span>{isUppercase ? 'CAPS ON' : 'CAPS'}</span>
             </div>
           )}
@@ -226,7 +225,7 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
                   : 'bg-surface-container-high text-on-surface border border-white/[0.04]'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">backspace</span>
+              <Delete className="w-4 h-4" />
               <span>DEL</span>
             </div>
           )}
@@ -270,7 +269,7 @@ export const TvVirtualKeyboard: React.FC<TvVirtualKeyboardProps> = ({
                     : 'bg-primary-container/80 text-on-primary-container'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">done</span>
+                <Check className="w-4 h-4 stroke-[2.5]" />
                 <span>DONE</span>
               </div>
             )}

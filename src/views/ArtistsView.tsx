@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useRef, useCallback } from 'react';
+import { Users } from 'lucide-react';
 import { useServer } from '../context/ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -79,7 +80,7 @@ export const ArtistsView: React.FC = () => {
       {artists.length === 0 ? (
         <section className="w-full" aria-label="Empty Artists Grid">
           <div className="flex flex-col items-center justify-center p-16 rounded-2xl bg-surface-container-low/60 border border-white/[0.04] text-center gap-4 my-8">
-            <span className="material-symbols-outlined text-[48px] text-outline">group</span>
+            <Users className="w-12 h-12 text-outline" />
             <h2 className="text-xl font-bold text-on-surface">No Artists Found</h2>
             <p className="text-sm text-on-surface-variant max-w-md">
               Your Sonzra server library does not contain any artists yet, or the server is still indexing.

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Activity } from 'lucide-react';
 import { SpatialNavigationProvider, useSpatialNav } from './navigation/SpatialNavigationContext';
 import { ServerProvider } from './context/ServerContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -54,19 +55,13 @@ const MainLayout: React.FC = () => {
       {!isNowPlaying && <Sidebar />}
 
       {/* Persistent Top Header (Hidden in full cinema mode) */}
-      {!isNowPlaying && (
-        <TopHeader
-          zoneName="Living Room"
-          subhead="TIZEN MASTER HUB • 10FT MODE"
-          showBitPerfect={false}
-        />
-      )}
+      {!isNowPlaying && <TopHeader />}
 
       {/* Main Viewport Container */}
       <div
         id="tv-main-scroll-container"
         className={`relative z-10 w-full h-full overflow-y-auto ${
-          isNowPlaying ? 'p-8 xl:p-12' : 'pl-24 pt-20 px-10 pb-64'
+          isNowPlaying ? 'p-8 xl:p-12' : 'pl-36 pr-12 pt-20 pb-64'
         }`}
         style={{ scrollPaddingBottom: '180px', scrollPaddingTop: '90px' }}
       >
@@ -90,9 +85,7 @@ const AppContent: React.FC = () => {
       {initialLoading ? (
         <div className="w-screen h-screen bg-background flex flex-col items-center justify-center gap-4 text-on-surface">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.7)] animate-pulse">
-            <span className="material-symbols-outlined text-[36px] text-surface-container-lowest font-bold">
-              graphic_eq
-            </span>
+            <Activity className="w-9 h-9 text-surface-container-lowest stroke-[2.5]" />
           </div>
           <div className="flex items-center gap-2 text-secondary text-[13px] font-mono uppercase tracking-widest">
             <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>

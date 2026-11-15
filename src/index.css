@@ -25,27 +25,6 @@
   font-family: 'Cinzel', serif, system-ui;
 }
 
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-.material-symbols-outlined.fill {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
 /* TV Spatial Navigation Focus Halo & Elevate */
 .tv-focusable {
   transition: transform 0.09s cubic-bezier(0, 0, 0.2, 1), box-shadow 0.09s ease-out;
@@ -55,14 +34,14 @@
 }
 
 .tv-focusable.tv-focused {
-  transform: scale(1.04) translateZ(0);
-  box-shadow: 0 0 0 3px #43D7C6, 0 8px 24px rgba(67, 215, 198, 0.45);
+  transform: scale(1.03) translateZ(0);
+  box-shadow: 0 0 0 2px #43D7C6, 0 4px 18px rgba(67, 215, 198, 0.35);
   z-index: 40;
 }
 
 .tv-focusable.tv-focused-primary {
-  transform: scale(1.04) translateZ(0);
-  box-shadow: 0 0 0 3px #9B82FF, 0 8px 24px rgba(122, 90, 248, 0.45);
+  transform: scale(1.03) translateZ(0);
+  box-shadow: 0 0 0 2px #9B82FF, 0 4px 18px rgba(122, 90, 248, 0.35);
   z-index: 40;
 }
 

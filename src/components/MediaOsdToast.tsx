@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Square, Activity } from 'lucide-react';
 import { useSpatialNav, MediaAction } from '../navigation/SpatialNavigationContext';
 import { usePlayer } from '../context/PlayerContext';
 
@@ -7,7 +8,7 @@ export const MediaOsdToast: React.FC = () => {
   const { currentTrack, playbackStatus } = usePlayer();
   const [visible, setVisible] = useState<boolean>(false);
   const [actionLabel, setActionLabel] = useState<string>('');
-  const [actionIcon, setActionIcon] = useState<string>('graphic_eq');
+  const [actionIcon, setActionIcon] = useState<string>('activity');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export const MediaOsdToast: React.FC = () => {
       switch (action) {
         case 'play':
           label = 'PLAY';
-          icon = 'play_arrow';
+          icon = 'play';
           break;
         case 'pause':
           label = 'PAUSED';
@@ -26,15 +27,15 @@ export const MediaOsdToast: React.FC = () => {
           break;
         case 'playpause':
           label = playbackStatus === 'playing' ? 'PAUSED' : 'PLAYING';
-          icon = playbackStatus === 'playing' ? 'pause' : 'play_arrow';
+          icon = playbackStatus === 'playing' ? 'pause' : 'play';
           break;
         case 'next':
           label = 'NEXT TRACK';
-          icon = 'skip_next';
+          icon = 'next';
           break;
         case 'prev':
           label = 'PREVIOUS TRACK';
-          icon = 'skip_previous';
+          icon = 'prev';
           break;
         case 'stop':
           label = 'STOPPED';
@@ -64,6 +65,23 @@ export const MediaOsdToast: React.FC = () => {
 
   if (!visible) return null;
 
+  const renderIcon = () => {
+    switch (actionIcon) {
+      case 'play':
+        return <Play className="w-6 h-6 fill-current ml-0.5" />;
+      case 'pause':
+        return <Pause className="w-6 h-6 fill-current" />;
+      case 'next':
+        return <SkipForward className="w-6 h-6" />;
+      case 'prev':
+        return <SkipBack className="w-6 h-6" />;
+      case 'stop':
+        return <Square className="w-5 h-5 fill-current" />;
+      default:
+        return <Activity className="w-6 h-6" />;
+    }
+  };
+
   return (
     <aside
       className="fixed top-8 right-10 z-[100] pointer-events-none transition-all duration-300 ease-out"
@@ -73,7 +91,7 @@ export const MediaOsdToast: React.FC = () => {
     >
       <div className="flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-surface-container-high/95 backdrop-blur-2xl border border-secondary/40 shadow-[0_0_28px_rgba(73,220,202,0.45)] text-on-surface">
         <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary shadow-[0_0_12px_rgba(73,220,202,0.6)]">
-          <span className="material-symbols-outlined text-[24px]">{actionIcon}</span>
+          {renderIcon()}
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-2">

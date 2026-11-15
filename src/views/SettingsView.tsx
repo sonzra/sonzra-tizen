@@ -3,7 +3,7 @@ import { useServer } from '../context/ServerContext';
 import { useAuth } from '../context/AuthContext';
 import { Focusable } from '../navigation/Focusable';
 import { TvVirtualKeyboard } from '../components/TvVirtualKeyboard';
-import { Server, Wifi, CheckCircle2, AlertCircle, RefreshCw, Tv, HelpCircle, LogOut } from 'lucide-react';
+import { Server, Wifi, CheckCircle2, AlertCircle, RefreshCw, Tv, HelpCircle, LogOut, Network, Key } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { config, updateConfig, testConnection, refreshLibrary } = useServer();
@@ -156,7 +156,7 @@ export const SettingsView: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="material-symbols-outlined text-outline text-[20px]">dns</span>
+                      <Server className="w-5 h-5 text-outline shrink-0" />
                       <span className="font-mono text-sm text-on-surface truncate">
                         {serverUrl || 'http://192.168.1.100:3000'}
                       </span>
@@ -190,7 +190,7 @@ export const SettingsView: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="material-symbols-outlined text-outline text-[20px]">hub</span>
+                      <Network className="w-5 h-5 text-outline shrink-0" />
                       <span className="font-mono text-sm text-on-surface truncate">
                         {serverConnectionId || '1'}
                       </span>
@@ -224,7 +224,7 @@ export const SettingsView: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="material-symbols-outlined text-outline text-[20px]">vpn_key</span>
+                      <Key className="w-5 h-5 text-outline shrink-0" />
                       <span className="font-mono text-sm text-on-surface truncate">
                         {authToken ? '••••••••••••••••••••' : 'No token set (Default Cookie Auth)'}
                       </span>

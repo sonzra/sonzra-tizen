@@ -1,4 +1,16 @@
 import React, { useState } from 'react';
+import {
+  Activity,
+  ShieldCheck,
+  Play,
+  AlertCircle,
+  ChevronUp,
+  Server,
+  Eye,
+  EyeOff,
+  Loader2,
+  LogIn,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useServer } from '../context/ServerContext';
 import { Focusable } from '../navigation/Focusable';
@@ -81,9 +93,7 @@ export const SignInView: React.FC = () => {
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-center gap-6 pr-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.65)] ring-1 ring-white/10">
-              <span className="material-symbols-outlined text-surface-container-lowest text-[36px] font-bold">
-                graphic_eq
-              </span>
+              <Activity className="w-9 h-9 text-surface-container-lowest stroke-[2.5]" />
             </div>
             <div>
               <span className="text-[12px] font-bold uppercase tracking-[0.25em] text-secondary font-mono">
@@ -105,7 +115,7 @@ export const SignInView: React.FC = () => {
               <span>HOST: {serverUrl}</span>
             </div>
             <div className="flex items-center gap-2 text-on-surface-variant text-[13px]">
-              <span className="material-symbols-outlined text-[18px] text-primary">verified_user</span>
+              <ShieldCheck className="w-4 h-4 text-primary" />
               <span>User-scoped sessions and persistent Tizen token caching.</span>
             </div>
           </div>
@@ -131,9 +141,7 @@ export const SignInView: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[24px] text-secondary">
-                      play_circle
-                    </span>
+                    <Play className="w-6 h-6 text-secondary fill-current ml-0.5" />
                     <div className="flex flex-col text-left">
                       <span className="font-semibold text-[15px]">Quick Connect (Demo Account)</span>
                       <span className="text-[12px] text-on-surface-variant font-mono">
@@ -156,7 +164,7 @@ export const SignInView: React.FC = () => {
               className="flex items-center gap-3 p-4 rounded-xl bg-error/20 border border-error/50 text-error text-[14px] font-semibold animate-in fade-in"
               role="alert"
             >
-              <span className="material-symbols-outlined text-[20px]">error</span>
+              <AlertCircle className="w-5 h-5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -271,9 +279,11 @@ export const SignInView: React.FC = () => {
                       : 'text-outline hover:text-on-surface'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {showAdvancedServer ? 'unfold_less' : 'dns'}
-                  </span>
+                  {showAdvancedServer ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <Server className="w-4 h-4" />
+                  )}
                   <span>{showAdvancedServer ? 'Hide Server URL' : 'Change Sonzra Server URL'}</span>
                 </div>
               )}
@@ -298,9 +308,11 @@ export const SignInView: React.FC = () => {
                       : 'text-outline hover:text-on-surface'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {showPassword ? 'visibility_off' : 'visibility'}
-                  </span>
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                   <span>{showPassword ? 'Hide Password' : 'Show Password'}</span>
                 </div>
               )}
@@ -383,14 +395,12 @@ export const SignInView: React.FC = () => {
                 >
                   {authLoading ? (
                     <>
-                      <span className="material-symbols-outlined animate-spin text-[22px]">
-                        progress_activity
-                      </span>
+                      <Loader2 className="w-5 h-5 animate-spin" />
                       <span>Authenticating...</span>
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-[24px]">login</span>
+                      <LogIn className="w-6 h-6" />
                       <span>Sign In to Sonzra</span>
                       <span className="text-[12px] font-mono opacity-80">[ENTER]</span>
                     </>
