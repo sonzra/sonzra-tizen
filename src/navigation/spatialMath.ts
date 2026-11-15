@@ -510,6 +510,17 @@ export function findNextFocusableNode(
       }
 
       if (currentGroup === 'continue-shelf') {
+        const headerNodes = validCandidates.filter((c) => c.group === 'recent-shelf-header');
+        if (headerNodes.length > 0) {
+          const closestHeader = findClosestByX(currentRect.centerX, headerNodes);
+          if (closestHeader) {
+            const hRect = getRect(closestHeader.element);
+            if (Math.abs(currentRect.centerX - hRect.centerX) <= 180) {
+              return closestHeader;
+            }
+          }
+        }
+
         const recentNodes = validCandidates.filter((c) => c.group === 'recent-shelf');
         if (recentNodes.length > 0) {
           const lastId = lastFocusedByGroup?.get('recent-shelf');
@@ -519,6 +530,15 @@ export function findNextFocusableNode(
           }
           return findClosestByX(currentRect.centerX, recentNodes) || recentNodes[0];
         }
+      }
+
+      if (currentGroup === 'recent-shelf-header') {
+        const recentNodes = validCandidates.filter((c) => c.group === 'recent-shelf');
+        if (recentNodes.length > 0) {
+          return findClosestByX(currentRect.centerX, recentNodes) || recentNodes[0];
+        }
+        const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
+        if (dockPlay) return dockPlay;
       }
 
       if (currentGroup === 'recent-shelf') {
@@ -647,6 +667,17 @@ export function findNextFocusableNode(
     // --- HOME VIEW SHELVES ---
     if (activeView === 'home') {
       if (currentGroup === 'recent-shelf') {
+        const headerNodes = validCandidates.filter((c) => c.group === 'recent-shelf-header');
+        if (headerNodes.length > 0) {
+          const closestHeader = findClosestByX(currentRect.centerX, headerNodes);
+          if (closestHeader) {
+            const hRect = getRect(closestHeader.element);
+            if (Math.abs(currentRect.centerX - hRect.centerX) <= 180) {
+              return closestHeader;
+            }
+          }
+        }
+
         const continueNodes = validCandidates.filter((c) => c.group === 'continue-shelf');
         if (continueNodes.length > 0) {
           const lastId = lastFocusedByGroup?.get('continue-shelf');
@@ -655,6 +686,27 @@ export function findNextFocusableNode(
             if (remembered) return remembered;
           }
           return findClosestByX(currentRect.centerX, continueNodes) || continueNodes[0];
+        }
+
+        const heroNodes = validCandidates.filter((c) => c.group === 'hero-actions');
+        if (heroNodes.length > 0) {
+          return findClosestByX(currentRect.centerX, heroNodes) || heroNodes[0];
+        }
+      }
+
+      if (currentGroup === 'recent-shelf-header') {
+        const continueNodes = validCandidates.filter((c) => c.group === 'continue-shelf');
+        if (continueNodes.length > 0) {
+          const lastId = lastFocusedByGroup?.get('continue-shelf');
+          if (lastId) {
+            const remembered = continueNodes.find((c) => c.id === lastId);
+            if (remembered) return remembered;
+          }
+          return findClosestByX(currentRect.centerX, continueNodes) || continueNodes[0];
+        }
+        const heroNodes = validCandidates.filter((c) => c.group === 'hero-actions');
+        if (heroNodes.length > 0) {
+          return findClosestByX(currentRect.centerX, heroNodes) || heroNodes[0];
         }
       }
 

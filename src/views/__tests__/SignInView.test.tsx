@@ -107,7 +107,10 @@ describe('SignInView & Auth Flow Integration', () => {
     expect(demoBtn).not.toBeNull();
     demoBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    for (let i = 0; i < 20; i++) {
+      if (document.getElementById('authenticated-view')) break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
 
     const authView = document.getElementById('authenticated-view');
     expect(authView).not.toBeNull();

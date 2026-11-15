@@ -260,4 +260,25 @@ test.describe('Home Sanctuary & TV Remote Spatial Navigation E2E Suite', () => {
     const allFocused = page.locator('.tv-focused');
     await expect(allFocused).toHaveCount(1);
   });
+
+  test('Flow 2.13: Navigate to shelf View All button and open Library on Enter', async ({ page }) => {
+    await expectFocused(page, 'hero-resume');
+
+    // Down to continue shelf, then down to recent shelf
+    await pressRemote(page, 'ArrowDown');
+    await pressRemote(page, 'ArrowDown');
+    const firstRecentId = await page.locator('.tv-focused').getAttribute('data-focus-id');
+    expect(firstRecentId).toMatch(/^recent-card-/);
+
+    // Navigate right across recent cards towards View All column
+    await pressRemote(page, 'ArrowRight', 7);
+
+    // Press Up from rightmost recent shelf card to focus View All button
+    await pressRemote(page, 'ArrowUp');
+    await expectFocused(page, 'recent-view-all');
+
+    // Press Enter to open Library view
+    await pressRemote(page, 'Enter');
+    await expectFocused(page, 'library-tab-albums');
+  });
 });
