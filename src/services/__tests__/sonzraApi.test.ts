@@ -92,6 +92,55 @@ describe('SonzraApiClient Media & Token URLs', () => {
     expect(lyrics.lines[0]).toEqual({ text: 'First line of lyrics', start: 0.5 });
   });
 
+  it('correctly parses raw LRC timestamped lyrics string', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      headers: { get: () => 'application/json' },
+      json: async () => ({
+        lyrics: '[00:04.50] Into the cosmic expanse\n[00:12.00] Echoes of a distant sun\n[01:05.25] Reaching for eternity',
+      }),
+    } as any);
+
+    const client = new SonzraApiClient({
+      serverUrl: 'http://192.168.31.10:3000',
+      serverConnectionId: '11',
+      authToken: 'test-token',
+      demoMode: false,
+    });
+
+    const lyrics = await client.fetchLyrics('track-lrc');
+    expect(lyrics.available).toBe(true);
+    expect(lyrics.synchronized).toBe(true);
+    expect(lyrics.lines).toHaveLength(3);
+    expect(lyrics.lines[0]).toEqual({ text: 'Into the cosmic expanse', start: 4.5 });
+    expect(lyrics.lines[1]).toEqual({ text: 'Echoes of a distant sun', start: 12 });
+    expect(lyrics.lines[2]).toEqual({ text: 'Reaching for eternity', start: 65.25 });
+  });
+
+  it('correctly parses plain text non-synchronized lyrics', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      headers: { get: () => 'application/json' },
+      json: async () => ({
+        plainLyrics: 'Just an ordinary day\nWalking down the quiet avenue\nNo timestamps here',
+      }),
+    } as any);
+
+    const client = new SonzraApiClient({
+      serverUrl: 'http://192.168.31.10:3000',
+      serverConnectionId: '11',
+      authToken: 'test-token',
+      demoMode: false,
+    });
+
+    const lyrics = await client.fetchLyrics('track-plain');
+    expect(lyrics.available).toBe(true);
+    expect(lyrics.synchronized).toBe(false);
+    expect(lyrics.lines).toHaveLength(3);
+    expect(lyrics.lines[0]).toEqual({ text: 'Just an ordinary day', start: null });
+    expect(lyrics.lines[1]).toEqual({ text: 'Walking down the quiet avenue', start: null });
+  });
+
   it('handles lyrics 404 or network error gracefully', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,

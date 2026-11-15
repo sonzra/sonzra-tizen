@@ -4,6 +4,14 @@ import { SonzraApiClient } from '../services/sonzraApi';
 import { useServer } from './ServerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 
+export interface OsdToast {
+  id: number;
+  label: string;
+  message: string;
+  icon?: 'queue' | 'play' | 'pause' | 'next' | 'prev' | 'stop' | 'activity';
+  duration?: number;
+}
+
 interface PlayerContextType {
   currentTrack: Track | null;
   queue: Track[];
@@ -20,7 +28,9 @@ interface PlayerContextType {
   playTrack: (track: Track, newQueue?: Track[]) => void;
   playAlbum: (album: Album, startTrackId?: string, shuffle?: boolean) => void;
   playTracks: (tracks: Track[], startIndex?: number, shuffle?: boolean) => void;
-  addToQueue: (trackOrTracks: Track | Track[]) => void;
+  addToQueue: (trackOrTracks: Track | Track[], options?: { albumTitle?: string }) => void;
+  toastMessage?: OsdToast | null;
+  showToast?: (toast: { label: string; message: string; icon?: string; duration?: number }) => void;
   togglePlayPause: () => void;
   play: () => void;
   pause: () => void;
@@ -61,6 +71,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [lyrics, setLyrics] = useState<LyricsData | null>(null);
   const [lyricsLoading, setLyricsLoading] = useState<boolean>(false);
   const [lyricsFollowing, setLyricsFollowing] = useState<boolean>(true);
+  const [toastMessage, setToastMessage] = useState<OsdToast | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const apiClientRef = useRef(new SonzraApiClient(config));
@@ -276,10 +287,39 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [playTracks]
   );
 
-  const addToQueue = useCallback((trackOrTracks: Track | Track[]) => {
-    const items = Array.isArray(trackOrTracks) ? trackOrTracks : [trackOrTracks];
-    setQueue((prev) => [...prev, ...items]);
+  const showToast = useCallback((toast: { label: string; message: string; icon?: string; duration?: number }) => {
+    setToastMessage({
+      id: Date.now(),
+      label: toast.label,
+      message: toast.message,
+      icon: (toast.icon as any) || 'queue',
+      duration: toast.duration || 2800,
+    });
   }, []);
+
+  const addToQueue = useCallback((trackOrTracks: Track | Track[], options?: { albumTitle?: string }) => {
+    const items = Array.isArray(trackOrTracks) ? trackOrTracks : [trackOrTracks];
+    if (items.length === 0) return;
+    setQueue((prev) => [...prev, ...items]);
+
+    if (items.length === 1) {
+      const track = items[0];
+      showToast({
+        label: 'ADDED TO QUEUE',
+        message: `Added "${track.title}" to queue`,
+        icon: 'queue',
+        duration: 2800,
+      });
+    } else {
+      const albumTitle = options?.albumTitle || items[0].album || 'Album';
+      showToast({
+        label: 'ADDED TO QUEUE',
+        message: `Added ${items.length} tracks from "${albumTitle}" to queue`,
+        icon: 'queue',
+        duration: 2800,
+      });
+    }
+  }, [showToast]);
 
   const play = useCallback(() => {
     if (audioRef.current && currentTrack) {
@@ -533,6 +573,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         playAlbum,
         playTracks,
         addToQueue,
+        toastMessage,
+        showToast,
         togglePlayPause,
         play,
         pause,

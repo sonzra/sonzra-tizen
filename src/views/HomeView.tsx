@@ -43,12 +43,12 @@ export const HomeView: React.FC = () => {
   const handleAddHeroToQueue = async () => {
     if (!heroAlbum) return;
     if (heroAlbum.tracks && heroAlbum.tracks.length > 0) {
-      addToQueue(heroAlbum.tracks);
+      addToQueue(heroAlbum.tracks, { albumTitle: heroAlbum.title });
     } else {
       try {
         const full = await apiClient.fetchAlbum(heroAlbum.id);
         if (full?.tracks && full.tracks.length > 0) {
-          addToQueue(full.tracks);
+          addToQueue(full.tracks, { albumTitle: heroAlbum.title });
         }
       } catch (e) {
         console.warn('Failed to load hero album tracks for queue:', e);

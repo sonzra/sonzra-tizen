@@ -100,6 +100,9 @@ describe('NowPlayingView Queue & Synchronized Lyrics', () => {
     expect(queuePanel).not.toBeNull();
     expect(queuePanel?.className).toContain('bg-surface-container-lowest/30');
 
+    // Verify dummy spectrum visualizer box is completely removed
+    expect(container.textContent).not.toContain('Animated Audio Spectrum Visualizer');
+
     // Find queue track 6 (beyond 5 items)
     const track6 = document.querySelector('[data-focus-id="np-queue-queue-track-7"]');
     expect(track6).not.toBeNull();
@@ -111,6 +114,10 @@ describe('NowPlayingView Queue & Synchronized Lyrics', () => {
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith(
       expect.objectContaining({ block: 'nearest' })
+    );
+    // Verify smooth scroll behavior is completely bypassed to prevent ARM CPU choke
+    expect(scrollIntoViewMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'smooth' })
     );
   });
 
@@ -176,8 +183,13 @@ describe('NowPlayingView Queue & Synchronized Lyrics', () => {
     expect(lyricLine1).not.toBeNull();
     expect(lyricLine1?.textContent).toContain('A beacon guides us onward');
 
-    // Line 1 is active (current)
+    // Line 1 is active (current) with >=24px font and radiant cyan
     expect(lyricLine1?.innerHTML).toContain('text-secondary');
+    expect(lyricLine1?.innerHTML).toContain('text-2xl');
+
+    // Line 0 is inactive with >=24px font and high-contrast #E2E1E6
+    expect(lyricLine0?.innerHTML).toContain('text-2xl');
+    expect(lyricLine0?.innerHTML).toContain('text-[#E2E1E6]/75');
 
     // Click line 2 to seek to timestamp 25
     const lyricLine2 = document.querySelector('[data-focus-id="np-lyric-2"]');

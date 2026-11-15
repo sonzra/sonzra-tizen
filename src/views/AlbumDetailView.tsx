@@ -103,7 +103,7 @@ export const AlbumDetailView: React.FC = () => {
 
   const handleAddQueue = () => {
     if (tracks.length > 0) {
-      addToQueue(tracks);
+      addToQueue(tracks, { albumTitle: album.title });
     }
   };
 

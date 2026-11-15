@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Music,
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   Mic2,
   RotateCcw,
 } from 'lucide-react';
+import { Track } from '../types/music';
 import { usePlayer } from '../context/PlayerContext';
 import { useSpatialNav } from '../navigation/SpatialNavigationContext';
 import { Focusable } from '../navigation/Focusable';
@@ -26,6 +27,71 @@ function formatTime(seconds: number): string {
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
+
+interface QueueItemRowProps {
+  track: Track;
+  focusId: string;
+  fallbackArtwork?: string;
+  onSelect: (trackId: string) => void;
+}
+
+const QueueItemRow = React.memo<QueueItemRowProps>(({ track, focusId, fallbackArtwork, onSelect }) => {
+  const handleEnterOrClick = useCallback(() => {
+    onSelect(track.id);
+  }, [onSelect, track.id]);
+
+  return (
+    <Focusable
+      focusId={focusId}
+      group="now-playing-queue"
+      className="rounded-2xl cursor-pointer"
+      onFocus={(el) => {
+        (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest' });
+      }}
+      onEnter={handleEnterOrClick}
+      onClick={handleEnterOrClick}
+    >
+      {({ isFocused }) => (
+        <div
+          className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
+            isFocused
+              ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
+              : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
+          }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
+              <img
+                className="w-full h-full object-cover"
+                src={track.artworkUrl || fallbackArtwork}
+                alt={track.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
+                }}
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span
+                className={`font-bold text-xs truncate ${
+                  isFocused ? 'text-secondary' : 'text-on-surface'
+                }`}
+              >
+                {track.title}
+              </span>
+              <span className="text-[11px] text-on-surface-variant truncate">
+                {track.artist}
+              </span>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
+            {formatTime(track.duration)}
+          </span>
+        </div>
+      )}
+    </Focusable>
+  );
+});
+QueueItemRow.displayName = 'QueueItemRow';
 
 export const NowPlayingView: React.FC = () => {
   const {
@@ -50,12 +116,40 @@ export const NowPlayingView: React.FC = () => {
     lyricsLoading,
     lyricsFollowing,
     setLyricsFollowing,
+    loadLyrics,
   } = usePlayer();
 
   const { goBack, goToView } = useSpatialNav();
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'queue' | 'lyrics'>('queue');
+
+  const handleSelectQueueTrack = useCallback(
+    (trackId: string) => {
+      if (queue.length > 0) {
+        const targetIdx = queue.findIndex((t) => t.id === trackId);
+        if (targetIdx >= 0) {
+          playTracks(queue, targetIdx);
+          return;
+        }
+      }
+      const fullList = currentTrack ? [currentTrack, ...queue] : queue;
+      const targetIdx = fullList.findIndex((t) => t.id === trackId);
+      playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
+    },
+    [queue, currentTrack, playTracks]
+  );
+
+  const handleSwitchToLyrics = useCallback(() => {
+    setActiveTab('lyrics');
+    if (currentTrack?.id) {
+      loadLyrics(currentTrack.id);
+    }
+  }, [currentTrack?.id, loadLyrics]);
+
+  const handleSwitchToQueue = useCallback(() => {
+    setActiveTab('queue');
+  }, []);
 
   if (!currentTrack) {
     return (
@@ -113,11 +207,11 @@ export const NowPlayingView: React.FC = () => {
         }, -1)
       : -1;
 
-  // Auto-follow scrolling effect for synchronized lyrics
+  // Auto-follow scrolling effect for synchronized lyrics (instant TV positioning, zero lag)
   useEffect(() => {
     if (activeTab === 'lyrics' && lyricsFollowing && activeLyricIndex >= 0) {
       const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      el?.scrollIntoView({ block: 'nearest' });
     }
   }, [activeTab, lyricsFollowing, activeLyricIndex]);
 
@@ -181,9 +275,9 @@ export const NowPlayingView: React.FC = () => {
 
       {/* Center Stage 3-Column 16:9 Landscape Layout */}
       <main className="relative z-10 grid grid-cols-12 gap-8 items-center flex-1 my-auto w-full min-h-0 py-6">
-        {/* Column 1 (Left 5 cols): Clean Album Sleeve & Real-time Visualizer */}
+        {/* Column 1 (Left 5 cols): Clean Album Sleeve (No dummy visualizer) */}
         <div className="col-span-12 lg:col-span-5 flex flex-col items-center justify-center relative">
-          <div className="relative w-[310px] h-[310px] xl:w-[360px] xl:h-[360px] rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] bg-surface-container-high border border-outline-variant/30">
+          <div className="relative w-[340px] h-[340px] xl:w-[400px] xl:h-[400px] rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(67,215,198,0.15)] bg-surface-container-high border border-outline-variant/30">
             <img
               className="w-full h-full object-cover"
               src={activeTrack.artworkUrl || './sonzra-mark.svg'}
@@ -200,21 +294,6 @@ export const NowPlayingView: React.FC = () => {
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Animated Audio Spectrum Visualizer */}
-          <div className="w-[310px] xl:w-[360px] h-12 mt-6 px-4 bg-surface-container-low/60 border border-outline-variant/25 backdrop-blur-md rounded-xl flex items-end justify-between gap-1.5 pb-2.5 pt-2">
-            {[45, 95, 35, 75, 88, 55, 68, 92, 40, 70, 35, 85, 50, 60, 38, 25].map((h, i) => (
-              <div
-                key={i}
-                className="w-2 rounded-full bg-secondary transition-all duration-300"
-                style={{
-                  height: isPlaying ? `${h}%` : `${Math.max(25, Math.round(h * 0.45))}%`,
-                  opacity: isPlaying ? 1 : 0.65,
-                  boxShadow: isPlaying ? '0 0 8px rgba(73,220,202,0.7)' : undefined,
-                }}
-              ></div>
-            ))}
           </div>
         </div>
 
@@ -463,8 +542,8 @@ export const NowPlayingView: React.FC = () => {
               focusId="np-ctrl-lyrics"
               group="now-playing-controls"
               className="rounded-full cursor-pointer"
-              onEnter={() => setActiveTab((prev) => (prev === 'lyrics' ? 'queue' : 'lyrics'))}
-              onClick={() => setActiveTab((prev) => (prev === 'lyrics' ? 'queue' : 'lyrics'))}
+              onEnter={() => (activeTab === 'lyrics' ? handleSwitchToQueue() : handleSwitchToLyrics())}
+              onClick={() => (activeTab === 'lyrics' ? handleSwitchToQueue() : handleSwitchToLyrics())}
             >
               {({ isFocused }) => (
                 <button
@@ -513,7 +592,7 @@ export const NowPlayingView: React.FC = () => {
         {/* Column 3 (Right 3 cols): Expansive 'Up Next' Queue Shelf & Synced Lyrics */}
         <div
           data-testid="now-playing-right-panel"
-          className="col-span-12 lg:col-span-3 h-full flex flex-col justify-start bg-surface-container-lowest/30 backdrop-blur-3xl p-5 rounded-3xl border border-white/5 shadow-2xl relative"
+          className="col-span-12 lg:col-span-3 h-full flex flex-col justify-start bg-surface-container-lowest/30 p-4 relative"
         >
           {/* Panel Switcher Header */}
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5 shrink-0">
@@ -522,8 +601,8 @@ export const NowPlayingView: React.FC = () => {
                 focusId="np-tab-queue"
                 group="now-playing-tabs"
                 className="rounded-full cursor-pointer"
-                onEnter={() => setActiveTab('queue')}
-                onClick={() => setActiveTab('queue')}
+                onEnter={handleSwitchToQueue}
+                onClick={handleSwitchToQueue}
               >
                 {({ isFocused }) => (
                   <button
@@ -545,8 +624,8 @@ export const NowPlayingView: React.FC = () => {
                 focusId="np-tab-lyrics"
                 group="now-playing-tabs"
                 className="rounded-full cursor-pointer"
-                onEnter={() => setActiveTab('lyrics')}
-                onClick={() => setActiveTab('lyrics')}
+                onEnter={handleSwitchToLyrics}
+                onClick={handleSwitchToLyrics}
               >
                 {({ isFocused }) => (
                   <button
@@ -581,79 +660,20 @@ export const NowPlayingView: React.FC = () => {
                   <span className="text-xs text-on-surface-variant font-medium">No more tracks in queue</span>
                 </div>
               ) : (
-                upcomingTracks.map((track) => {
-                  const focusId = `np-queue-${track.id}`;
-
-                  const handleSelectQueueTrack = () => {
-                    if (queue.length > 0) {
-                      const targetIdx = queue.findIndex((t) => t.id === track.id);
-                      if (targetIdx >= 0) {
-                        playTracks(queue, targetIdx);
-                        return;
-                      }
-                    }
-                    const fullList = [activeTrack, ...upcomingTracks];
-                    const targetIdx = fullList.findIndex((t) => t.id === track.id);
-                    playTracks(fullList, targetIdx >= 0 ? targetIdx : 0);
-                  };
-
-                  return (
-                    <Focusable
-                      key={track.id}
-                      focusId={focusId}
-                      group="now-playing-queue"
-                      className="rounded-2xl cursor-pointer"
-                      onFocus={(el) => {
-                        (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                      }}
-                      onEnter={handleSelectQueueTrack}
-                      onClick={handleSelectQueueTrack}
-                    >
-                      {({ isFocused }) => (
-                        <div
-                          className={`flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
-                            isFocused
-                              ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_15px_rgba(73,220,202,0.4)] scale-102'
-                              : 'bg-surface-container/80 border border-outline-variant/20 hover:bg-surface-container-high'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-11 h-11 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-md">
-                              <img
-                                className="w-full h-full object-cover"
-                                src={track.artworkUrl || activeTrack.artworkUrl}
-                                alt={track.title}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = './sonzra-mark.svg';
-                                }}
-                              />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <span
-                                className={`font-bold text-xs truncate ${
-                                  isFocused ? 'text-secondary' : 'text-on-surface'
-                                }`}
-                              >
-                                {track.title}
-                              </span>
-                              <span className="text-[11px] text-on-surface-variant truncate">
-                                {track.artist}
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[11px] font-mono text-outline ml-2 shrink-0">
-                            {formatTime(track.duration)}
-                          </span>
-                        </div>
-                      )}
-                    </Focusable>
-                  );
-                })
+                upcomingTracks.map((track) => (
+                  <QueueItemRow
+                    key={track.id}
+                    track={track}
+                    focusId={`np-queue-${track.id}`}
+                    fallbackArtwork={activeTrack.artworkUrl}
+                    onSelect={handleSelectQueueTrack}
+                  />
+                ))
               )}
             </div>
           )}
 
-          {/* Tab 2: Synchronized Lyrics */}
+          {/* Tab 2: Synchronized & Plain Text Lyrics */}
           {activeTab === 'lyrics' && (
             <div className="flex flex-col h-[380px] relative">
               {/* Resume Auto-Follow Pill when user navigated manually */}
@@ -667,14 +687,14 @@ export const NowPlayingView: React.FC = () => {
                       setLyricsFollowing(true);
                       if (activeLyricIndex >= 0) {
                         const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
-                        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        el?.scrollIntoView({ block: 'nearest' });
                       }
                     }}
                     onClick={() => {
                       setLyricsFollowing(true);
                       if (activeLyricIndex >= 0) {
                         const el = document.getElementById(`tv-node-np-lyric-${activeLyricIndex}`);
-                        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        el?.scrollIntoView({ block: 'nearest' });
                       }
                     }}
                   >
@@ -703,10 +723,10 @@ export const NowPlayingView: React.FC = () => {
                 </div>
               ) : !lyrics?.available || !lyrics.lines || lyrics.lines.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center text-outline gap-3 my-auto">
-                  <Mic2 className="w-10 h-10 text-outline-variant/60" />
-                  <span className="text-sm font-semibold text-on-surface">No Lyrics Available</span>
-                  <span className="text-xs text-on-surface-variant max-w-[200px]">
-                    Lyrics could not be loaded for this track.
+                  <Mic2 className="w-12 h-12 text-outline-variant/60" />
+                  <span className="text-base font-semibold text-on-surface">No Lyrics Available</span>
+                  <span className="text-xs text-on-surface-variant max-w-[240px]">
+                    No lyrics available for this track.
                   </span>
                 </div>
               ) : (
@@ -731,7 +751,7 @@ export const NowPlayingView: React.FC = () => {
                         className="rounded-xl cursor-pointer transition-all"
                         onFocus={(el) => {
                           setLyricsFollowing(false);
-                          (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                          (el || document.getElementById(`tv-node-${focusId}`))?.scrollIntoView({ block: 'nearest' });
                         }}
                         onEnter={handleSelectLyric}
                         onClick={handleSelectLyric}
@@ -747,18 +767,18 @@ export const NowPlayingView: React.FC = () => {
                             }`}
                           >
                             <p
-                              className={`text-base leading-relaxed transition-all ${
+                              className={`leading-relaxed transition-all ${
                                 isCurrent
-                                  ? 'text-secondary font-bold text-lg drop-shadow-[0_0_10px_rgba(73,220,202,0.5)]'
+                                  ? 'text-secondary font-bold text-2xl xl:text-3xl drop-shadow-[0_0_12px_rgba(73,220,202,0.6)]'
                                   : isFocused
-                                  ? 'text-on-surface font-semibold'
-                                  : 'text-on-surface-variant/75 font-normal'
+                                  ? 'text-on-surface font-semibold text-2xl'
+                                  : 'text-[#E2E1E6]/75 font-normal text-2xl'
                               }`}
                             >
                               {line.text}
                             </p>
                             {typeof line.start === 'number' && (
-                              <span className="text-[10px] font-mono text-outline/60 mt-0.5 block">
+                              <span className="text-xs font-mono text-outline/80 mt-1 block">
                                 {formatTime(line.start)}
                               </span>
                             )}

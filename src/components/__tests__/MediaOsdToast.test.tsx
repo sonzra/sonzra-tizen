@@ -105,4 +105,74 @@ describe('MediaOsdToast Component', () => {
     // Toast should now be auto-dismissed (null)
     expect(document.querySelector('[role="status"]')).toBeNull();
   });
+
+  it('renders queue feedback toast with album track count and auto-dismisses after 2.8s', async () => {
+    vi.spyOn(PlayerContextModule, 'usePlayer').mockImplementation(() => ({
+      currentTrack: null,
+      playbackStatus: 'idle',
+      toastMessage: {
+        id: 12345,
+        label: 'ADDED TO QUEUE',
+        message: 'Added 12 tracks from "Echoes of Eternity" to queue',
+        icon: 'queue',
+        duration: 2800,
+      },
+    } as any));
+
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <SpatialNavigationProvider>
+          <MediaOsdToast />
+        </SpatialNavigationProvider>
+      );
+      vi.advanceTimersByTime(50);
+    });
+
+    const toast = document.querySelector('[role="status"]');
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).toContain('ADDED TO QUEUE');
+    expect(toast?.textContent).toContain('Added 12 tracks from "Echoes of Eternity" to queue');
+
+    // Still visible at 2500ms
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+    });
+    expect(document.querySelector('[role="status"]')).not.toBeNull();
+
+    // Dismissed after 2800ms
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(document.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it('renders queue feedback toast for single track addition', async () => {
+    vi.spyOn(PlayerContextModule, 'usePlayer').mockImplementation(() => ({
+      currentTrack: null,
+      playbackStatus: 'idle',
+      toastMessage: {
+        id: 67890,
+        label: 'ADDED TO QUEUE',
+        message: 'Added "Starlight Serenades" to queue',
+        icon: 'queue',
+        duration: 2800,
+      },
+    } as any));
+
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <SpatialNavigationProvider>
+          <MediaOsdToast />
+        </SpatialNavigationProvider>
+      );
+      vi.advanceTimersByTime(50);
+    });
+
+    const toast = document.querySelector('[role="status"]');
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).toContain('ADDED TO QUEUE');
+    expect(toast?.textContent).toContain('Added "Starlight Serenades" to queue');
+  });
 });
