@@ -178,6 +178,13 @@ export function getViewEntryPoint(
       if (actionGroup.length > 0) return actionGroup[0];
       break;
     }
+    case 'artist-detail': {
+      const playBtn = contentCandidates.find((c) => c.id === 'artist-btn-play-top');
+      if (playBtn) return playBtn;
+      const actionGroup = contentCandidates.filter((c) => c.group === 'artist-actions');
+      if (actionGroup.length > 0) return actionGroup[0];
+      break;
+    }
     case 'artists': {
       const artistCards = contentCandidates.filter((c) => c.group === 'artists-grid');
       if (artistCards.length > 0) return artistCards[0];
@@ -339,6 +346,19 @@ export function findNextFocusableNode(
         if (trackNodes.length > 0) {
           return trackNodes[trackNodes.length - 1];
         }
+      } else if (activeView === 'artist-detail') {
+        const albumNodes = validCandidates.filter((c) => c.group === 'artist-albums');
+        if (albumNodes.length > 0) {
+          const rows = getVisualRows(albumNodes);
+          const lastRow = rows[rows.length - 1];
+          return findClosestByX(currentRect.centerX, lastRow) || lastRow[0];
+        }
+        const trackNodes = validCandidates.filter((c) => c.group === 'artist-top-tracks');
+        if (trackNodes.length > 0) {
+          return trackNodes[trackNodes.length - 1];
+        }
+        const actions = validCandidates.filter((c) => c.group === 'artist-actions');
+        if (actions.length > 0) return actions[0];
       }
 
       // Fallback: pick content node with highest Y (lowest on screen)
@@ -357,7 +377,7 @@ export function findNextFocusableNode(
   // =========================================================================
   if (direction === 'left') {
     // Grid row navigation for multi-row collections
-    if (currentGroup === 'library-grid' || currentGroup === 'artists-grid') {
+    if (currentGroup === 'library-grid' || currentGroup === 'artists-grid' || currentGroup === 'artist-albums') {
       const gridNodes = validCandidates.filter((c) => c.group === currentGroup);
       const rows = getVisualRows([...gridNodes, current]);
       const currentRow = rows.find((r) => r.some((n) => n.id === current.id));
@@ -369,6 +389,12 @@ export function findNextFocusableNode(
         // At col 0 of grid -> jump directly to sidebar!
         return getActiveSidebarItem(activeView, validCandidates);
       }
+    }
+
+    // Artist Detail tracklist: moving left escapes cleanly to sidebar
+    if (activeView === 'artist-detail' && currentGroup === 'artist-top-tracks') {
+      const sidebarItem = getActiveSidebarItem(activeView, validCandidates);
+      if (sidebarItem) return sidebarItem;
     }
 
     // Special case for Album Detail tracklist: moving left goes to Album Actions
@@ -627,6 +653,64 @@ export function findNextFocusableNode(
       }
     }
 
+    // --- ARTIST DETAIL VIEW ---
+    if (activeView === 'artist-detail') {
+      if (currentGroup === 'artist-hero') {
+        const actions = validCandidates.filter((c) => c.group === 'artist-actions');
+        if (actions.length > 0) return actions[0];
+      }
+
+      if (currentGroup === 'artist-actions') {
+        const trackNodes = validCandidates.filter((c) => c.group === 'artist-top-tracks');
+        if (trackNodes.length > 0) {
+          return trackNodes[0];
+        }
+        const albumNodes = validCandidates.filter((c) => c.group === 'artist-albums');
+        if (albumNodes.length > 0) {
+          return albumNodes[0];
+        }
+        const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
+        if (dockPlay) return dockPlay;
+      }
+
+      if (currentGroup === 'artist-top-tracks') {
+        const trackNodes = validCandidates.filter((c) => c.group === 'artist-top-tracks');
+        const below = trackNodes.filter((c) => getRect(c.element).centerY > currentRect.centerY + 4);
+        if (below.length > 0) {
+          return below.reduce((best, c) => {
+            const dist = getRect(c.element).centerY - currentRect.centerY;
+            const bestDist = getRect(best.element).centerY - currentRect.centerY;
+            return dist < bestDist ? c : best;
+          });
+        }
+        // Past last track -> transition to first album in discography, or bottom dock
+        const albumNodes = validCandidates.filter((c) => c.group === 'artist-albums');
+        if (albumNodes.length > 0) {
+          return albumNodes[0];
+        }
+        const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
+        if (dockPlay) return dockPlay;
+      }
+
+      if (currentGroup === 'artist-albums') {
+        const albumNodes = validCandidates.filter((c) => c.group === 'artist-albums');
+        const rows = getVisualRows(albumNodes);
+        const currentRow = rows.find((r) => r.some((n) => n.id === current.id));
+        if (currentRow) {
+          const rowIndex = rows.indexOf(currentRow);
+          if (rowIndex < rows.length - 1) {
+            const nextRow = rows[rowIndex + 1];
+            return findClosestByX(currentRect.centerX, nextRow) || nextRow[0];
+          }
+        }
+        // Past bottom row of albums -> transition to Bottom Dock
+        const dockPlay = validCandidates.find((c) => c.id === 'dock-btn-play');
+        if (dockPlay) return dockPlay;
+        const dockNodes = validCandidates.filter((c) => c.group === 'bottom-dock');
+        if (dockNodes.length > 0) return dockNodes[0];
+      }
+    }
+
     // --- NOW PLAYING VIEW ---
     if (activeView === 'now-playing') {
       if (currentGroup === 'now-playing-header') {
@@ -783,6 +867,57 @@ export function findNextFocusableNode(
           return playBtn || actions[0];
         }
         return null;
+      }
+    }
+
+    // --- ARTIST DETAIL VIEW ---
+    if (activeView === 'artist-detail') {
+      if (currentGroup === 'artist-albums') {
+        const albumNodes = validCandidates.filter((c) => c.group === 'artist-albums');
+        const rows = getVisualRows(albumNodes);
+        const currentRow = rows.find((r) => r.some((n) => n.id === current.id));
+        if (currentRow) {
+          const rowIndex = rows.indexOf(currentRow);
+          if (rowIndex > 0) {
+            const prevRow = rows[rowIndex - 1];
+            return findClosestByX(currentRect.centerX, prevRow) || prevRow[0];
+          }
+        }
+        // Top row of albums up -> last track in top tracks, or primary action button
+        const trackNodes = validCandidates.filter((c) => c.group === 'artist-top-tracks');
+        if (trackNodes.length > 0) {
+          return trackNodes[trackNodes.length - 1];
+        }
+        const actions = validCandidates.filter((c) => c.group === 'artist-actions');
+        if (actions.length > 0) {
+          const playBtn = actions.find((c) => c.id === 'artist-btn-play-top');
+          return playBtn || actions[0];
+        }
+      }
+
+      if (currentGroup === 'artist-top-tracks') {
+        const trackNodes = validCandidates.filter((c) => c.group === 'artist-top-tracks');
+        const above = trackNodes.filter((c) => getRect(c.element).centerY < currentRect.centerY - 4);
+        if (above.length > 0) {
+          return above.reduce((best, c) => {
+            const dist = currentRect.centerY - getRect(c.element).centerY;
+            const bestDist = currentRect.centerY - getRect(best.element).centerY;
+            return dist < bestDist ? c : best;
+          });
+        }
+        // Top track up -> primary action button (Play Top Tracks)
+        const actions = validCandidates.filter((c) => c.group === 'artist-actions');
+        if (actions.length > 0) {
+          const playBtn = actions.find((c) => c.id === 'artist-btn-play-top');
+          return playBtn || actions[0];
+        }
+        const heroBack = validCandidates.find((c) => c.id === 'artist-detail-back');
+        if (heroBack) return heroBack;
+      }
+
+      if (currentGroup === 'artist-actions') {
+        const heroBack = validCandidates.find((c) => c.id === 'artist-detail-back');
+        if (heroBack) return heroBack;
       }
     }
 
