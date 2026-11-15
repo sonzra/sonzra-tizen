@@ -8,6 +8,98 @@ import {
   MOCK_PODCASTS,
 } from '../__tests__/fixtures/mockData';
 
+export function parseLyricsContent(raw: string): { synchronized: boolean; lines: { text: string; start: number | null }[] } {
+  if (!raw || typeof raw !== 'string') {
+    return { synchronized: false, lines: [] };
+  }
+  const lrcRegex = /^\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]\s*(.*)$/;
+  const rawLines = raw.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  let hasTimestamp = false;
+  const lines: { text: string; start: number | null }[] = [];
+
+  for (const line of rawLines) {
+    const match = line.match(lrcRegex);
+    if (match) {
+      hasTimestamp = true;
+      const mins = parseInt(match[1], 10);
+      const secs = parseInt(match[2], 10);
+      const msPart = match[3] ? parseFloat(`0.${match[3]}`) : 0;
+      const start = mins * 60 + secs + msPart;
+      lines.push({ text: match[4] || '', start });
+    } else {
+      lines.push({ text: line, start: null });
+    }
+  }
+
+  const validLines = lines.filter((l) => l.text.length > 0);
+  return {
+    synchronized: hasTimestamp && validLines.some((l) => l.start !== null),
+    lines: validLines,
+  };
+}
+
+export function normalizeLyricsPayload(data: any): LyricsData {
+  if (!data) {
+    return { available: false, synchronized: false, lines: [] };
+  }
+
+  if (typeof data === 'string') {
+    const parsed = parseLyricsContent(data);
+    return {
+      available: parsed.lines.length > 0,
+      synchronized: parsed.synchronized,
+      lines: parsed.lines,
+    };
+  }
+
+  if (Array.isArray(data.lines) && data.lines.length > 0) {
+    const lines = data.lines
+      .map((l: any) => {
+        if (typeof l === 'string') {
+          const parsed = parseLyricsContent(l);
+          return parsed.lines[0] || { text: l.trim(), start: null };
+        }
+        const text = String(l.text || l.Text || l.content || l.line || '').trim();
+        let start: number | null = null;
+        const rawStart = l.start ?? l.Start ?? l.time ?? l.timestamp;
+        if (rawStart !== undefined && rawStart !== null) {
+          const num = Number(rawStart);
+          if (!isNaN(num)) {
+            start = num > 100000 ? num / 10000000 : num;
+          }
+        }
+        return { text, start };
+      })
+      .filter((l: any) => l.text.length > 0);
+
+    const isSync = data.synchronized !== undefined
+      ? Boolean(data.synchronized)
+      : lines.length > 0 && lines.some((l: any) => l.start !== null);
+
+    return {
+      available: data.available !== undefined ? Boolean(data.available && lines.length > 0) : lines.length > 0,
+      synchronized: isSync,
+      lines,
+    };
+  }
+
+  const rawText = data.lyrics || data.lrc || data.text || data.plainLyrics || data.content;
+  if (typeof rawText === 'string' && rawText.trim().length > 0) {
+    const parsed = parseLyricsContent(rawText);
+    return {
+      available: parsed.lines.length > 0,
+      synchronized: parsed.synchronized,
+      lines: parsed.lines,
+    };
+  }
+
+  return {
+    available: false,
+    synchronized: false,
+    lines: [],
+  };
+}
+
 export class SonzraApiClient {
   private config: ServerConfig;
 
@@ -265,17 +357,19 @@ export class SonzraApiClient {
         return { available: false, synchronized: false, lines: [] };
       }
 
-      const data = await response.json();
-      return {
-        available: Boolean(data.available),
-        synchronized: Boolean(data.synchronized),
-        lines: Array.isArray(data.lines)
-          ? data.lines.map((l: any) => ({
-              text: String(l.text || l.Text || '').trim(),
-              start: l.start !== undefined && l.start !== null ? Number(l.start) : null,
-            }))
-          : [],
-      };
+      const contentType = response.headers?.get?.('content-type') || '';
+      let data: any;
+      if (contentType.includes('text/plain')) {
+        data = await response.text();
+      } else {
+        try {
+          data = await response.json();
+        } catch {
+          data = await response.text();
+        }
+      }
+
+      return normalizeLyricsPayload(data);
     } catch (err) {
       console.warn(`Failed to fetch lyrics for item ${itemId}:`, err);
       return { available: false, synchronized: false, lines: [] };
