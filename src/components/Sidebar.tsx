@@ -31,14 +31,18 @@ export const Sidebar: React.FC = () => {
         >
           {({ isFocused }) => (
             <div
-              className={`w-12 h-12 rounded-xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center cursor-pointer transition-all duration-200 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 ${
                 isFocused
-                  ? 'ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.8)] scale-110'
-                  : 'shadow-[0_0_24px_rgba(122,90,248,0.55)]'
+                  ? 'bg-surface-container-high ring-2 ring-secondary shadow-[0_0_24px_rgba(73,220,202,0.8)] scale-110'
+                  : 'bg-surface-container-high/80 border border-white/[0.08] shadow-[0_0_20px_rgba(122,90,248,0.35)]'
               }`}
               title="Sonzra TV Home"
             >
-              <Activity className="w-7 h-7 text-surface-container-lowest stroke-[2.5]" />
+              <img
+                src="./sonzra-mark.svg"
+                alt="Sonzra"
+                className="w-7 h-7 object-contain"
+              />
             </div>
           )}
         </Focusable>

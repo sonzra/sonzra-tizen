@@ -225,7 +225,7 @@ export const LibraryView: React.FC = () => {
       {/* Library Title & Server Stats Banner */}
       <div className="w-full flex items-baseline justify-between gap-6 shrink-0 mb-4 pt-1">
         <div className="flex items-baseline gap-4">
-          <h1 className="text-[38px] leading-tight font-serif-title font-bold text-on-surface tracking-tight">
+          <h1 className="text-[38px] leading-tight font-sans font-bold text-on-surface tracking-tight">
             Your Library
           </h1>
           <span className="text-[14px] font-mono text-outline font-medium tracking-wider">

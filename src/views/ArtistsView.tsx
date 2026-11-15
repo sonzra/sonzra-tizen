@@ -77,7 +77,7 @@ export const ArtistsView: React.FC = () => {
       {/* Header */}
       <div className="w-full flex items-baseline justify-between gap-6 shrink-0 mb-6 pt-1">
         <div className="flex items-baseline gap-4">
-          <h1 className="text-[38px] leading-tight font-serif-title font-bold text-on-surface tracking-tight">
+          <h1 className="text-[38px] leading-tight font-sans font-bold text-on-surface tracking-tight">
             Artists
           </h1>
           <span className="text-[14px] font-mono text-outline font-medium tracking-wider">

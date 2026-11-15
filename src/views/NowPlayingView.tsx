@@ -157,7 +157,7 @@ export const NowPlayingView: React.FC = () => {
         <div className="w-24 h-24 rounded-full bg-surface-container-high flex items-center justify-center mb-6 shadow-2xl border border-white/5">
           <Music className="w-12 h-12 text-secondary" />
         </div>
-        <h2 className="text-3xl font-bold font-serif-title text-on-surface mb-2">No Music Playing</h2>
+        <h2 className="text-3xl font-bold font-sans text-on-surface mb-2">No Music Playing</h2>
         <p className="text-on-surface-variant max-w-md text-base mb-8">
           Select an album or track from your Sonzra library to experience Hi-Res audiophile streaming.
         </p>
@@ -309,7 +309,7 @@ export const NowPlayingView: React.FC = () => {
           </div>
 
           {/* Song Title (Widescreen 10ft Scale) */}
-          <h1 className="text-4xl xl:text-5xl font-extrabold text-on-surface tracking-tight mb-2 leading-tight drop-shadow-md font-serif-title">
+          <h1 className="text-4xl xl:text-5xl font-extrabold text-on-surface tracking-tight mb-2 leading-tight drop-shadow-md font-sans">
             {activeTrack.title}
           </h1>
 

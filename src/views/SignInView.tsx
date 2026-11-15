@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Activity,
   ShieldCheck,
   Play,
   AlertCircle,
@@ -92,14 +91,14 @@ export const SignInView: React.FC = () => {
         {/* Left Column: Branding, Mission, Demo CTA */}
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-center gap-6 pr-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.65)] ring-1 ring-white/10">
-              <Activity className="w-9 h-9 text-surface-container-lowest stroke-[2.5]" />
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-high/80 border border-white/10 flex items-center justify-center shadow-[0_0_32px_rgba(122,90,248,0.45)]">
+              <img src="./sonzra-mark.svg" alt="Sonzra" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <span className="text-[12px] font-bold uppercase tracking-[0.25em] text-secondary font-mono">
                 10-FOOT LIVING ROOM EDITION
               </span>
-              <h1 className="text-[38px] font-serif-title font-extrabold tracking-tight text-on-surface leading-tight">
+              <h1 className="text-[38px] font-sans font-extrabold tracking-tight text-on-surface leading-tight">
                 Sonzra Audio
               </h1>
             </div>

@@ -60,7 +60,7 @@ export const HomeView: React.FC = () => {
     <div className="flex flex-col w-full relative pb-32">
       {/* Clean Dashboard Header */}
       <div className="flex items-baseline justify-between w-full mb-6 pt-2">
-        <h1 className="text-[34px] font-serif-title font-bold text-on-surface tracking-tight">
+        <h1 className="text-[34px] font-sans font-bold text-on-surface tracking-tight">
           Home
         </h1>
         {isHeroPlaying && (
@@ -125,7 +125,7 @@ export const HomeView: React.FC = () => {
               )}
 
               {/* Master Album Title */}
-              <h2 className="font-serif-title text-[40px] sm:text-[46px] leading-tight text-on-surface font-extrabold tracking-tight mb-2 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+              <h2 className="font-sans text-[40px] sm:text-[46px] leading-tight text-on-surface font-extrabold tracking-tight mb-2 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
                 {heroAlbum.title}
               </h2>
 
@@ -287,7 +287,7 @@ export const HomeView: React.FC = () => {
         <section className="flex flex-col w-full mb-12">
           <div className="flex items-baseline justify-between mb-4">
             <div className="flex items-baseline gap-3">
-              <h2 className="font-serif-title text-[28px] text-on-surface font-bold tracking-tight">
+              <h2 className="font-sans text-[28px] text-on-surface font-bold tracking-tight">
                 Continue Listening
               </h2>
               <span className="font-label-lg text-label-lg text-on-surface-variant font-medium">
@@ -380,7 +380,7 @@ export const HomeView: React.FC = () => {
         <section className="flex flex-col w-full mb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-baseline gap-3">
-              <h2 className="font-serif-title text-[28px] text-on-surface font-bold tracking-tight">
+              <h2 className="font-sans text-[28px] text-on-surface font-bold tracking-tight">
                 Recently Added
               </h2>
               <span className="text-xs font-mono text-outline">

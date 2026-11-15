@@ -36,7 +36,7 @@ colors: {
 
 ## 2. Typography Rules
 
-* **Headings / Master Titles:** `font-serif-title` (`Cinzel`, serif) — used for master hero album titles and section headers.
+* **Headings / Master Titles:** `font-sans font-bold` / `font-extrabold` (`Manrope`, sans-serif) — used for master hero album titles and section headers matching Sonzra Web.
 * **UI Controls & Labels:** `font-label-lg`, `font-label-md` (`Manrope`, sans-serif) — used for buttons, navigation rail icons, card titles, and artist credits.
 * **Timers & Telemetry:** `font-mono` (`JetBrains Mono`, monospace) — used for track durations, elapsed time counters, sample rates, and bit depths (`tabular-nums`).
 
