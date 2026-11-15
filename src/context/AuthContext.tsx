@@ -99,11 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({ id: 'demo', email_address: 'demo@sonzra.com', name: 'Demo Listener' });
       setIsAuthenticated(true);
       setIsDemoUser(true);
-      refreshLibrary();
+      updateConfig({ demoMode: true });
+      apiClient.updateConfig({ ...config, demoMode: true });
+      await refreshLibrary();
     } finally {
       setLoading(false);
     }
-  }, [signIn, refreshLibrary]);
+  }, [signIn, refreshLibrary, updateConfig, apiClient, config]);
 
   return (
     <AuthContext.Provider
