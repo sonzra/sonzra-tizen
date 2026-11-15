@@ -306,5 +306,4 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     const cardId = await focusedCard.getAttribute('id');
     expect(cardId).toMatch(/^tv-node-library-playlist-/);
   });
-  });
 });
