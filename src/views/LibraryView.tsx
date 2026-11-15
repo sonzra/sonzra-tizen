@@ -243,12 +243,12 @@ export const LibraryView: React.FC = () => {
                   </span>
                 </div>
 
-                {/* 5-Column Widescreen Album Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+                {/* ~8-Column Widescreen TV Album Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3.5 w-full">
                   {letterAlbums.map((album, idx) => {
                     const focusId = `library-card-${album.id}`;
                     const isPlayingThisAlbum = currentTrack?.albumId === album.id && playbackStatus === 'playing';
-                    const isRightEdge = (idx + 1) % 5 === 0 || idx === letterAlbums.length - 1;
+                    const isRightEdge = (idx + 1) % 8 === 0 || idx === letterAlbums.length - 1;
 
                     return (
                       <Focusable
@@ -285,7 +285,7 @@ export const LibraryView: React.FC = () => {
                               />
                               {album.codecBadge && (
                                 <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/85 backdrop-blur-md">
-                                  <span className="font-mono text-secondary text-[11px] font-bold tracking-wider">
+                                  <span className="font-mono text-secondary text-[10px] sm:text-[11px] font-bold tracking-wider">
                                     {album.codecBadge}
                                   </span>
                                 </div>
@@ -299,22 +299,22 @@ export const LibraryView: React.FC = () => {
                                       e.stopPropagation();
                                       playAlbum(album);
                                     }}
-                                    className="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_24px_rgba(73,220,202,0.9)] cursor-pointer"
+                                    className="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-[0_0_18px_rgba(73,220,202,0.9)] cursor-pointer"
                                     title="Play Album"
                                   >
                                     {isPlayingThisAlbum ? (
-                                      <Pause className="w-7 h-7 fill-current" />
+                                      <Pause className="w-6 h-6 fill-current" />
                                     ) : (
-                                      <Play className="w-7 h-7 fill-current ml-0.5" />
+                                      <Play className="w-6 h-6 fill-current ml-0.5" />
                                     )}
                                   </button>
                                 </div>
                               )}
                             </div>
 
-                            <div className="relative flex flex-col pt-1 px-1">
+                            <div className="relative flex flex-col pt-0.5 px-0.5 min-w-0">
                               <h2
-                                className={`text-[15px] font-bold truncate transition-colors ${
+                                className={`text-[15px] font-bold leading-tight truncate transition-colors ${
                                   isFocused ? 'text-secondary' : 'text-on-surface group-hover:text-primary'
                                 }`}
                               >

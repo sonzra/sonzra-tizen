@@ -27,7 +27,7 @@ export const HomeView: React.FC = () => {
   const continueListeningAlbums = hasLiveAlbums
     ? (serverAlbums.filter((a) => a.progressPercent !== undefined && a.progressPercent > 0).length > 0
         ? serverAlbums.filter((a) => a.progressPercent !== undefined && a.progressPercent > 0)
-        : serverAlbums.slice(1, 5))
+        : serverAlbums.slice(1, 9))
     : [];
 
   const recentlyAddedAlbums = hasLiveAlbums ? serverAlbums.slice(0, 8) : [];
@@ -36,7 +36,7 @@ export const HomeView: React.FC = () => {
     if (heroAlbum) {
       playAlbum(heroAlbum);
     } else {
-      goToView('library');
+      goToView('library', undefined, true);
     }
   };
 
@@ -296,8 +296,8 @@ export const HomeView: React.FC = () => {
             </div>
           </div>
 
-          {/* Shelves Grid: 4 Rich Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          {/* Shelves Grid: ~8 High Density Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3.5 w-full">
             {continueListeningAlbums.map((album) => {
               const focusId = `continue-card-${album.id}`;
               const isPlayingThisAlbum = currentTrack?.albumId === album.id && playbackStatus === 'playing';
@@ -313,13 +313,13 @@ export const HomeView: React.FC = () => {
                 >
                   {({ isFocused }) => (
                     <div
-                      className={`flex flex-col rounded-xl p-3 h-full transition-colors duration-75 ${
+                      className={`flex flex-col rounded-xl p-2.5 h-full transition-colors duration-75 ${
                         isFocused
                           ? 'bg-surface-container z-10'
                           : 'bg-surface-container-low shadow-md'
                       }`}
                     >
-                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-3 shadow-md">
+                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-2 shadow-md">
                         <img
                           className="w-full h-full object-cover"
                           src={album.artworkUrl}
@@ -332,29 +332,29 @@ export const HomeView: React.FC = () => {
                         {/* Play overlay on focus or when playing */}
                         {(isFocused || isPlayingThisAlbum) && (
                           <div className="absolute inset-0 bg-surface-dim/40 backdrop-blur-[1px] flex items-center justify-center">
-                            <div className="w-13 h-13 p-3 rounded-full bg-secondary text-surface-container-lowest flex items-center justify-center shadow-[0_0_20px_rgba(73,220,202,0.9)]">
+                            <div className="w-10 h-10 p-2 rounded-full bg-secondary text-surface-container-lowest flex items-center justify-center shadow-[0_0_18px_rgba(73,220,202,0.9)]">
                               {isPlayingThisAlbum ? (
-                                <Pause className="w-8 h-8 fill-current" />
+                                <Pause className="w-6 h-6 fill-current" />
                               ) : (
-                                <Play className="w-8 h-8 fill-current ml-1" />
+                                <Play className="w-6 h-6 fill-current ml-0.5" />
                               )}
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Album and Artist Info */}
-                      <span className="font-headline-sm text-[18px] leading-tight text-on-surface font-bold truncate">
+                      {/* Album and Artist Info (10-Foot Distance Legibility >= 14px for title) */}
+                      <span className="font-headline-sm text-[15px] leading-tight text-on-surface font-bold truncate">
                         {album.title}
                       </span>
-                      <span className="font-label-md text-label-md text-primary truncate mb-2">
+                      <span className="text-[13px] text-primary truncate mb-1">
                         {album.artist}
                       </span>
 
                       {/* Real progress details if present */}
                       {album.progressPercent !== undefined && album.progressPercent > 0 && (
-                        <div className="w-full mt-auto">
-                          <div className="w-full flex items-center justify-between text-[12px] font-mono text-outline mb-1">
+                        <div className="w-full mt-auto pt-1">
+                          <div className="w-full flex items-center justify-between text-[11px] font-mono text-outline mb-1">
                             <span>Track {album.currentTrackIndex || 1} of {album.trackCount}</span>
                             <span className="text-secondary font-bold">{album.progressPercent}%</span>
                           </div>
@@ -378,7 +378,7 @@ export const HomeView: React.FC = () => {
       {/* SHELF 2: RECENTLY ADDED */}
       {recentlyAddedAlbums.length > 0 && (
         <section className="flex flex-col w-full mb-10">
-          <div className="flex items-baseline justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-baseline gap-3">
               <h2 className="font-serif-title text-[28px] text-on-surface font-bold tracking-tight">
                 Recently Added
@@ -387,16 +387,31 @@ export const HomeView: React.FC = () => {
                 {recentlyAddedAlbums.length} albums
               </span>
             </div>
-            <button
-              onClick={() => goToView('library')}
-              className="font-label-lg text-label-lg text-primary hover:text-secondary flex items-center gap-1 transition-colors cursor-pointer"
+            <Focusable
+              focusId="recent-view-all"
+              group="recent-shelf-header"
+              className="rounded-full cursor-pointer"
+              onEnter={() => goToView('library', undefined, true)}
+              onClick={() => goToView('library', undefined, true)}
             >
-              <span>View All</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              {({ isFocused }) => (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors duration-75 cursor-pointer ${
+                    isFocused
+                      ? 'bg-secondary text-surface-container-lowest font-bold ring-2 ring-secondary shadow-[0_0_18px_rgba(73,220,202,0.4)]'
+                      : 'bg-surface-container-high/80 text-primary hover:text-secondary hover:bg-surface-container-high'
+                  }`}
+                >
+                  <span className="font-semibold">View All</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </Focusable>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3.5 w-full">
             {recentlyAddedAlbums.map((album) => {
               const focusId = `recent-card-${album.id}`;
 
@@ -411,13 +426,13 @@ export const HomeView: React.FC = () => {
                 >
                   {({ isFocused }) => (
                     <div
-                      className={`flex flex-col rounded-xl p-3 h-full transition-colors duration-75 ${
+                      className={`flex flex-col rounded-xl p-2.5 h-full transition-colors duration-75 ${
                         isFocused
                           ? 'bg-surface-container z-10'
                           : 'bg-surface-container-low shadow-md'
                       }`}
                     >
-                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-3 shadow-md">
+                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container-high mb-2 shadow-md">
                         <img
                           className="w-full h-full object-cover"
                           src={album.artworkUrl}
@@ -427,19 +442,19 @@ export const HomeView: React.FC = () => {
                           }}
                         />
                         {album.codecBadge && (
-                          <div className="absolute bottom-2.5 right-2.5 bg-surface-container-lowest/90 px-2 py-0.5 rounded text-[11px] font-mono text-secondary font-semibold">
+                          <div className="absolute bottom-2 right-2 bg-surface-container-lowest/90 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono text-secondary font-semibold">
                             {album.codecBadge}
                           </div>
                         )}
                       </div>
 
-                      <span className="font-headline-sm text-[18px] leading-tight text-on-surface font-bold truncate">
+                      <span className="font-headline-sm text-[15px] leading-tight text-on-surface font-bold truncate">
                         {album.title}
                       </span>
-                      <span className="font-label-md text-label-md text-on-surface-variant truncate">
+                      <span className="text-[13px] text-on-surface-variant truncate">
                         {album.artist}
                       </span>
-                      <span className="text-[12px] font-mono text-outline mt-1">
+                      <span className="text-[11px] font-mono text-outline mt-1">
                         {album.trackCount} {album.trackCount === 1 ? 'Track' : 'Tracks'}
                       </span>
                     </div>

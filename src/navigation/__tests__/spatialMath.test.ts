@@ -199,6 +199,77 @@ describe('Spatial Navigation Math', () => {
       const stepUp = findNextFocusableNode(sidebarLib, allNodes, 'up', { activeView: 'home' });
       expect(stepUp?.id).toBe('sidebar-home');
     });
+
+    it('navigates seamlessly to and from shelf View All header button (recent-view-all) with zero focus traps', () => {
+      const sidebarHome = createMockNode('sidebar-home', 0, 100, 96, 50, 'sidebar');
+      // Continue shelf with 8 cards (X: 100 to 1640)
+      const continueCard0 = createMockNode('continue-card-0', 100, 500, 180, 180, 'continue-shelf');
+      const continueCard7 = createMockNode('continue-card-7', 1640, 500, 180, 180, 'continue-shelf');
+      // Shelf header with View All button on the right (X: 1650, Y: 720)
+      const recentViewAll = createMockNode('recent-view-all', 1650, 720, 110, 40, 'recent-shelf-header');
+      // Recent shelf with 8 cards (X: 100 to 1640, Y: 800)
+      const recentCard0 = createMockNode('recent-card-0', 100, 800, 180, 180, 'recent-shelf');
+      const recentCard7 = createMockNode('recent-card-7', 1640, 800, 180, 180, 'recent-shelf');
+      const dockPlay = createMockNode('dock-btn-play', 960, 1020, 50, 50, 'bottom-dock');
+
+      const allNodes = [
+        sidebarHome,
+        continueCard0,
+        continueCard7,
+        recentViewAll,
+        recentCard0,
+        recentCard7,
+        dockPlay,
+      ];
+
+      // 1. Moving Up from recentCard7 (directly underneath View All) targets recent-view-all
+      const upFromRecentCard7 = findNextFocusableNode(recentCard7, allNodes, 'up', { activeView: 'home' });
+      expect(upFromRecentCard7?.id).toBe('recent-view-all');
+
+      // 2. Moving Up from recentCard0 (left side) targets continue-card-0 directly
+      const upFromRecentCard0 = findNextFocusableNode(recentCard0, allNodes, 'up', { activeView: 'home' });
+      expect(upFromRecentCard0?.id).toBe('continue-card-0');
+
+      // 3. Moving Down from recent-view-all targets recentCard7
+      const downFromViewAll = findNextFocusableNode(recentViewAll, allNodes, 'down', { activeView: 'home' });
+      expect(downFromViewAll?.id).toBe('recent-card-7');
+
+      // 4. Moving Up from recent-view-all targets continueCard7
+      const upFromViewAll = findNextFocusableNode(recentViewAll, allNodes, 'up', { activeView: 'home' });
+      expect(upFromViewAll?.id).toBe('continue-card-7');
+
+      // 5. Moving Down from continueCard7 targets recent-view-all
+      const downFromContinue7 = findNextFocusableNode(continueCard7, allNodes, 'down', { activeView: 'home' });
+      expect(downFromContinue7?.id).toBe('recent-view-all');
+
+      // 6. Moving Left from recent-view-all escapes cleanly to sidebar
+      const leftFromViewAll = findNextFocusableNode(recentViewAll, allNodes, 'left', { activeView: 'home' });
+      expect(leftFromViewAll?.id).toBe('sidebar-home');
+    });
+
+    it('navigates seamlessly across an 8-card high density shelf row', () => {
+      const sidebarHome = createMockNode('sidebar-home', 0, 100, 96, 50, 'sidebar');
+      const cards = Array.from({ length: 8 }, (_, i) =>
+        createMockNode(`card-${i}`, 100 + i * 220, 600, 190, 220, 'recent-shelf')
+      );
+      const allNodes = [sidebarHome, ...cards];
+
+      // Traverse Right across all 8 cards
+      for (let i = 0; i < 7; i++) {
+        const next = findNextFocusableNode(cards[i], allNodes, 'right', { activeView: 'home' });
+        expect(next?.id).toBe(`card-${i + 1}`);
+      }
+
+      // Traverse Left back to card 0
+      for (let i = 7; i > 0; i--) {
+        const prev = findNextFocusableNode(cards[i], allNodes, 'left', { activeView: 'home' });
+        expect(prev?.id).toBe(`card-${i - 1}`);
+      }
+
+      // Left from card 0 escapes to sidebar
+      const escapeLeft = findNextFocusableNode(cards[0], allNodes, 'left', { activeView: 'home' });
+      expect(escapeLeft?.id).toBe('sidebar-home');
+    });
   });
 
   describe('Library View Grid 2D Navigation', () => {
