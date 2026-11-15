@@ -1,4 +1,4 @@
-import { Album, Artist, ServerConfig, Track } from '../types/music';
+import { Album, Artist, LyricsData, ServerConfig, Track } from '../types/music';
 import { AuthSession, User } from '../types/auth';
 
 export class SonzraApiClient {
@@ -205,6 +205,61 @@ export class SonzraApiClient {
       console.warn(`Failed to fetch album ${albumId}:`, e);
     }
     return null;
+  }
+
+  async fetchLyrics(itemId: string): Promise<LyricsData> {
+    if (this.config.demoMode || !this.config.serverUrl || !this.config.serverConnectionId) {
+      return {
+        available: true,
+        synchronized: true,
+        lines: [
+          { text: '漂浮在静谧的星海之中', start: 0 },
+          { text: 'Drifting across the quiet celestial sea', start: 4 },
+          { text: '远方的微光 闪烁着永恒的旋律', start: 8 },
+          { text: 'A distant shimmer echoing eternal melody', start: 13 },
+          { text: '时间如水流逝 记忆在此刻停驻', start: 18 },
+          { text: 'Time flows like water, memories anchored here', start: 24 },
+          { text: '纯净的音符 穿越时空的界限', start: 30 },
+          { text: 'Pure acoustic resonance crossing dimensions', start: 36 },
+          { text: '在黑暗中绽放的光辉', start: 42 },
+          { text: 'Radiance blooming in the cosmic dark', start: 48 },
+          { text: '音符随风起舞 直至黎明降临', start: 54 },
+          { text: 'Notes dancing with the wind until the dawn arrives', start: 60 },
+        ],
+      };
+    }
+
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const response = await fetch(
+        `${cleanUrl}/server_connections/${this.config.serverConnectionId}/lyrics/${itemId}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return { available: false, synchronized: false, lines: [] };
+      }
+
+      const data = await response.json();
+      return {
+        available: Boolean(data.available),
+        synchronized: Boolean(data.synchronized),
+        lines: Array.isArray(data.lines)
+          ? data.lines.map((l: any) => ({
+              text: String(l.text || l.Text || '').trim(),
+              start: l.start !== undefined && l.start !== null ? Number(l.start) : null,
+            }))
+          : [],
+      };
+    } catch (err) {
+      console.warn(`Failed to fetch lyrics for item ${itemId}:`, err);
+      return { available: false, synchronized: false, lines: [] };
+    }
   }
 
   async fetchRadioTracks(itemId: string, limit = 12): Promise<Track[]> {

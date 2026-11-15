@@ -10,6 +10,11 @@ export const MediaOsdToast: React.FC = () => {
   const [actionLabel, setActionLabel] = useState<string>('');
   const [actionIcon, setActionIcon] = useState<string>('activity');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playbackStatusRef = useRef<string>(playbackStatus);
+
+  useEffect(() => {
+    playbackStatusRef.current = playbackStatus;
+  }, [playbackStatus]);
 
   useEffect(() => {
     const unregister = registerMediaHandler((action: MediaAction) => {
@@ -26,8 +31,8 @@ export const MediaOsdToast: React.FC = () => {
           icon = 'pause';
           break;
         case 'playpause':
-          label = playbackStatus === 'playing' ? 'PAUSED' : 'PLAYING';
-          icon = playbackStatus === 'playing' ? 'pause' : 'play';
+          label = playbackStatusRef.current === 'playing' ? 'PAUSED' : 'PLAYING';
+          icon = playbackStatusRef.current === 'playing' ? 'pause' : 'play';
           break;
         case 'next':
           label = 'NEXT TRACK';
@@ -61,7 +66,7 @@ export const MediaOsdToast: React.FC = () => {
         clearTimeout(timerRef.current);
       }
     };
-  }, [registerMediaHandler, playbackStatus]);
+  }, [registerMediaHandler]);
 
   if (!visible) return null;
 
@@ -96,7 +101,7 @@ export const MediaOsdToast: React.FC = () => {
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold tracking-widest uppercase text-secondary font-mono">
-              TV REMOTE · {actionLabel}
+              {actionLabel}
             </span>
           </div>
           {currentTrack ? (

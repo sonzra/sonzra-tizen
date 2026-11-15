@@ -20,6 +20,14 @@ export default defineConfig({
     trace: 'on-first-retry',
     viewport: { width: 1920, height: 1080 },
     screenshot: 'only-on-failure',
+    launchOptions: {
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+    },
   },
   projects: [
     {
@@ -31,7 +39,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 5173',
+    command: 'npm run preview -- --host 127.0.0.1 --port 5173',
     port: 5173,
     reuseExistingServer: true,
     timeout: 15 * 1000,
