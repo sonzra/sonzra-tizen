@@ -41,10 +41,14 @@ interface SpatialNavigationContextType {
 
 const SpatialNavigationContext = createContext<SpatialNavigationContextType | null>(null);
 
-export const SpatialNavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SpatialNavigationProvider: React.FC<{
+  children: React.ReactNode;
+  initialView?: ActiveView;
+  initialParam?: string | null;
+}> = ({ children, initialView = 'home', initialParam = null }) => {
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<ActiveView>('home');
-  const [viewParam, setViewParam] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ActiveView>(initialView);
+  const [viewParam, setViewParam] = useState<string | null>(initialParam);
   const [history, setHistory] = useState<NavigationHistoryItem[]>([]);
 
   const nodesRef = useRef<Map<string, FocusableNode>>(new Map());

@@ -159,4 +159,32 @@ describe('SonzraApiClient Media & Token URLs', () => {
     expect(lyrics.synchronized).toBe(false);
     expect(lyrics.lines).toEqual([]);
   });
+
+  it('toggles favorite on server endpoint via PATCH', async () => {
+    const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ favorite: true }),
+    } as any);
+
+    const client = new SonzraApiClient({
+      serverUrl: 'http://192.168.31.10:3000',
+      serverConnectionId: '11',
+      authToken: 'test-token',
+      demoMode: false,
+    });
+
+    const result = await client.toggleFavorite('track-123', true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://192.168.31.10:3000/server_connections/11/favorites/track-123',
+      expect.objectContaining({
+        method: 'PATCH',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test-token',
+        }),
+        body: JSON.stringify({ favorite: true }),
+      })
+    );
+    expect(result).toBe(true);
+  });
 });

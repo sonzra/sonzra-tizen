@@ -397,15 +397,6 @@ export function findNextFocusableNode(
       if (sidebarItem) return sidebarItem;
     }
 
-    // Special case for Album Detail tracklist: moving left goes to Album Actions
-    if (currentGroup === 'album-tracks') {
-      const actions = validCandidates.filter((c) => c.group === 'album-actions');
-      if (actions.length > 0) {
-        const playBtn = actions.find((c) => c.id === 'album-btn-play');
-        return playBtn || actions[0];
-      }
-    }
-
     // Now Playing view: moving left from right panel (queue/lyrics/tabs) returns to transport controls
     if (activeView === 'now-playing' && (currentGroup === 'now-playing-queue' || currentGroup === 'now-playing-lyrics' || currentGroup === 'now-playing-tabs')) {
       const sameGroupToLeft = validCandidates.filter((c) => {
@@ -445,6 +436,15 @@ export function findNextFocusableNode(
         const bestDist = currentRect.centerX - getRect(best.element).centerX;
         return dist < bestDist ? c : best;
       });
+    }
+
+    // Special case for Album Detail tracklist: moving left from leftmost item goes to Album Actions
+    if (currentGroup === 'album-tracks') {
+      const actions = validCandidates.filter((c) => c.group === 'album-actions');
+      if (actions.length > 0) {
+        const playBtn = actions.find((c) => c.id === 'album-btn-play');
+        return playBtn || actions[0];
+      }
     }
 
     // No candidate to the left in content -> handoff to Sidebar rail if present

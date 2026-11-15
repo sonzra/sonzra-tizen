@@ -414,6 +414,44 @@ export class SonzraApiClient {
     }
   }
 
+  async toggleFavorite(itemId: string, favorite: boolean): Promise<boolean> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      return favorite;
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const connId = this.config.serverConnectionId;
+      const url = connId
+        ? `${cleanUrl}/server_connections/${connId}/favorites/${itemId}`
+        : `${cleanUrl}/favorites/${itemId}`;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      if (this.config.authToken) {
+        headers['Authorization'] = `Bearer ${this.config.authToken}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ favorite }),
+      });
+
+      if (!response.ok) {
+        console.warn(`toggleFavorite returned HTTP ${response.status}`);
+        return favorite;
+      }
+
+      const data = await response.json();
+      return typeof data.favorite === 'boolean' ? data.favorite : favorite;
+    } catch (err) {
+      console.warn('Failed to toggle favorite:', err);
+      return favorite;
+    }
+  }
+
   private parseDurationString(dur: string): number {
     if (!dur) return 180;
     const parts = dur.split(':').map(Number);

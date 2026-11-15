@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = process.env.PORT ? Number(process.env.PORT) : 5173;
+
 /**
  * Playwright E2E Configuration for Sonzra Tizen Smart TV Client
  * Simulates standard 1080p TV resolution (1920x1080) and remote controller events.
@@ -16,7 +18,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: `http://127.0.0.1:${port}`,
     trace: 'on-first-retry',
     viewport: { width: 1920, height: 1080 },
     screenshot: 'only-on-failure',
@@ -39,9 +41,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run preview -- --host 127.0.0.1 --port 5173',
-    port: 5173,
+    command: `npm run preview -- --host 127.0.0.1 --port ${port}`,
+    port,
     reuseExistingServer: true,
-    timeout: 15 * 1000,
+    timeout: 30 * 1000,
   },
 });
