@@ -1,4 +1,4 @@
-import { Album, Artist, Track } from '../../types/music';
+import { Album, Artist, Track, Playlist, Audiobook, PodcastShow } from '../../types/music';
 
 // Working royalty-free MP3 streams for reliable TV playback demonstration
 const DEMO_AUDIO_STREAMS = [
@@ -601,3 +601,168 @@ export const getAllMockTracks = (): Track[] => {
   });
   return tracks;
 };
+
+export const MOCK_PLAYLISTS: Playlist[] = [
+  {
+    id: 'playlist-collab-ambient',
+    name: 'Late Night Synthesis',
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjr7RNjVyKRGK0eJ4LmYvA8KpU7R3bwH146Wysmr0c8HQoePZjuDi8ttny1-4iofLVMYDfmXJRy9vAdrhI-iNLvq1TxMdug6Gr6X4wAzikMVaiWMdfRwaWyku3YVyxkCdOm-9invIGiq1j_PFCUU-aPx3zlacQeQyf3oUGcMFAXt-xA08i081RkqJj-FCEv0KjYRyfA3I1hIUS54RCUa0y9S3sHR4GDMMg77tEX6jG',
+    trackCount: 14,
+    duration: 4200,
+    isCollaborative: true,
+    isSharedWithMe: false,
+    isOwner: true,
+    collaboratorName: 'Sarah',
+    collaborators: [
+      { id: 'user-sarah', displayName: 'Sarah Chen', email: 'sarah@sonzra.org' },
+    ],
+    tracks: [
+      {
+        id: 'track-pl-1',
+        title: 'Velvet Horizon',
+        artist: 'The Glass Hours',
+        album: 'Echoes in Violet',
+        duration: 252,
+        audioUrl: DEMO_AUDIO_STREAMS[0],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjr7RNjVyKRGK0eJ4LmYvA8KpU7R3bwH146Wysmr0c8HQoePZjuDi8ttny1-4iofLVMYDfmXJRy9vAdrhI-iNLvq1TxMdug6Gr6X4wAzikMVaiWMdfRwaWyku3YVyxkCdOm-9invIGiq1j_PFCUU-aPx3zlacQeQyf3oUGcMFAXt-xA08i081RkqJj-FCEv0KjYRyfA3I1hIUS54RCUa0y9S3sHR4GDMMg77tEX6jG',
+      },
+      {
+        id: 'track-pl-2',
+        title: 'Static Monolith',
+        artist: 'The Glass Hours',
+        album: 'Echoes in Violet',
+        duration: 348,
+        audioUrl: DEMO_AUDIO_STREAMS[1],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjr7RNjVyKRGK0eJ4LmYvA8KpU7R3bwH146Wysmr0c8HQoePZjuDi8ttny1-4iofLVMYDfmXJRy9vAdrhI-iNLvq1TxMdug6Gr6X4wAzikMVaiWMdfRwaWyku3YVyxkCdOm-9invIGiq1j_PFCUU-aPx3zlacQeQyf3oUGcMFAXt-xA08i081RkqJj-FCEv0KjYRyfA3I1hIUS54RCUa0y9S3sHR4GDMMg77tEX6jG',
+      },
+    ],
+  },
+  {
+    id: 'playlist-focus-piano',
+    name: 'Morning Acoustic Focus',
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzmmKJ_PyP4kKsPGbhNBeLKIgpV4m8Ah940RgFJ_d9J_sZ471z3nFEe4JW1U15LPOzyw0WSpKdEOTeq9vP2u92GifX0ICX5nXK0IOpkpxTiVw0WGGIKb8HOSVxv4Ihitf069O1yWZq2Y7FqmX1uyEKVoBYSmjGes8wq_BhfMQLfRKN0P-iUeuSqyp-xSal8l3KzctVC7y-nRQcRreRYdARv7eCPHL4iP3yXwROJ5Hp',
+    trackCount: 22,
+    duration: 6180,
+    isCollaborative: false,
+    isOwner: true,
+    tracks: [
+      {
+        id: 'track-pl-3',
+        title: 'Dawn Over Copper',
+        artist: 'Nocturne Assembly',
+        album: 'Dusk Architecture',
+        duration: 310,
+        audioUrl: DEMO_AUDIO_STREAMS[2],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzmmKJ_PyP4kKsPGbhNBeLKIgpV4m8Ah940RgFJ_d9J_sZ471z3nFEe4JW1U15LPOzyw0WSpKdEOTeq9vP2u92GifX0ICX5nXK0IOpkpxTiVw0WGGIKb8HOSVxv4Ihitf069O1yWZq2Y7FqmX1uyEKVoBYSmjGes8wq_BhfMQLfRKN0P-iUeuSqyp-xSal8l3KzctVC7y-nRQcRreRYdARv7eCPHL4iP3yXwROJ5Hp',
+      },
+    ],
+  },
+  {
+    id: 'playlist-collab-shared',
+    name: 'Modular Tape Archives',
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAFxRTgzNg9uBjxRT7E89ri4fkT1zasinbfgILiUL_yJzzD8Dapr2hTWRA-qdzOg9y15OVG0wqfkhuBj0degxEh-JLdnemQ_grOsaGYLLBfEcJ2VvNVE0SPUxNW3deqpFtn3nao8-sZCGfH6XyyKR8sjuvk6YTEDKSl1kRQ1yEMZk2DLJNtTtxiyTayMEXa7X0PJLBuR29gIAFmuyoDMKyk3YoAj5Ir2SJTuCrPeAf1',
+    trackCount: 19,
+    duration: 5400,
+    isCollaborative: true,
+    isSharedWithMe: true,
+    isOwner: false,
+    collaboratorName: 'Alex & Marcus',
+    collaborators: [
+      { id: 'user-alex', displayName: 'Alex', email: 'alex@sonzra.org' },
+      { id: 'user-marcus', displayName: 'Marcus', email: 'marcus@sonzra.org' },
+    ],
+  },
+];
+
+export const MOCK_AUDIOBOOKS: Audiobook[] = [
+  {
+    id: 'audiobook-solaris',
+    title: 'Solaris: The Audiophile Edition',
+    author: 'Stanisław Lem',
+    narrator: 'Alessandro Juliani',
+    duration: 32400,
+    playbackPositionSeconds: 7800,
+    progressPercent: 24,
+    year: 2023,
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjr7RNjVyKRGK0eJ4LmYvA8KpU7R3bwH146Wysmr0c8HQoePZjuDi8ttny1-4iofLVMYDfmXJRy9vAdrhI-iNLvq1TxMdug6Gr6X4wAzikMVaiWMdfRwaWyku3YVyxkCdOm-9invIGiq1j_PFCUU-aPx3zlacQeQyf3oUGcMFAXt-xA08i081RkqJj-FCEv0KjYRyfA3I1hIUS54RCUa0y9S3sHR4GDMMg77tEX6jG',
+    audioUrl: DEMO_AUDIO_STREAMS[3],
+    chapters: [
+      { id: 'ch-1', title: 'Chapter 1: The Arrival', startPositionSeconds: 0, duration: 3200 },
+      { id: 'ch-2', title: 'Chapter 2: The Solarists', startPositionSeconds: 3200, duration: 4600 },
+      { id: 'ch-3', title: 'Chapter 3: The Visitors', startPositionSeconds: 7800, duration: 4200 },
+      { id: 'ch-4', title: 'Chapter 4: The Ocean', startPositionSeconds: 12000, duration: 5100 },
+      { id: 'ch-5', title: 'Chapter 5: Liquid Geometry', startPositionSeconds: 17100, duration: 4800 },
+    ],
+  },
+  {
+    id: 'audiobook-neuromancer',
+    title: 'Neuromancer (Unabridged)',
+    author: 'William Gibson',
+    narrator: 'Robertson Dean',
+    duration: 37800,
+    playbackPositionSeconds: 15120,
+    progressPercent: 40,
+    year: 2024,
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJuWjUAxsIfcmMw5c54_IQlWJVGYcJHTxayLq8DnlriQ8YRbWHv7RbEi_eXUbPFu6QLiyFt9B1QZbT5o71iO5vSzEzaLuXNXT-dXHm04fwP6pRCw-Sc1lcpuh9618DEj82KUqNuc6KpbxxKdNqBh2mw2PF-4L3aADltrQRmK4Il83B88KzXDTCDs1L0OTvrTVM11Q3f51sR0KmdhVyPXfWRV_miK3tS39nTivk1OAA',
+    audioUrl: DEMO_AUDIO_STREAMS[4],
+    chapters: [
+      { id: 'ch-nm-1', title: 'Part 1: Chiba City Blues', startPositionSeconds: 0, duration: 4500 },
+      { id: 'ch-nm-2', title: 'Part 2: The Shopping Expedition', startPositionSeconds: 4500, duration: 5200 },
+      { id: 'ch-nm-3', title: 'Part 3: Midnight in the Rue Jules Verne', startPositionSeconds: 9700, duration: 5420 },
+      { id: 'ch-nm-4', title: 'Part 4: The Straylight Run', startPositionSeconds: 15120, duration: 6100 },
+    ],
+  },
+];
+
+export const MOCK_PODCASTS: PodcastShow[] = [
+  {
+    id: 'podcast-audiophile-sanctuary',
+    title: 'Audiophile Sanctuary',
+    author: 'Sonzra Studio Labs',
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzmmKJ_PyP4kKsPGbhNBeLKIgpV4m8Ah940RgFJ_d9J_sZ471z3nFEe4JW1U15LPOzyw0WSpKdEOTeq9vP2u92GifX0ICX5nXK0IOpkpxTiVw0WGGIKb8HOSVxv4Ihitf069O1yWZq2Y7FqmX1uyEKVoBYSmjGes8wq_BhfMQLfRKN0P-iUeuSqyp-xSal8l3KzctVC7y-nRQcRreRYdARv7eCPHL4iP3yXwROJ5Hp',
+    description: 'Deep listening sessions, acoustic engineering analysis, and high-fidelity mastering reviews for home audiophiles.',
+    episodeCount: 16,
+    episodes: [
+      {
+        id: 'ep-as-1',
+        title: 'Episode 16: Analog Tape Compression in Modern DSD Masters',
+        showTitle: 'Audiophile Sanctuary',
+        description: 'Exploring how 2-inch master tape saturation is captured with zero loss in 5.6MHz DSD128 transfers.',
+        duration: 2840,
+        publishDate: 'Nov 12, 2026',
+        audioUrl: DEMO_AUDIO_STREAMS[5],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzmmKJ_PyP4kKsPGbhNBeLKIgpV4m8Ah940RgFJ_d9J_sZ471z3nFEe4JW1U15LPOzyw0WSpKdEOTeq9vP2u92GifX0ICX5nXK0IOpkpxTiVw0WGGIKb8HOSVxv4Ihitf069O1yWZq2Y7FqmX1uyEKVoBYSmjGes8wq_BhfMQLfRKN0P-iUeuSqyp-xSal8l3KzctVC7y-nRQcRreRYdARv7eCPHL4iP3yXwROJ5Hp',
+      },
+      {
+        id: 'ep-as-2',
+        title: 'Episode 15: Spatial Resonance and Nearfield Studio Monitors',
+        showTitle: 'Audiophile Sanctuary',
+        description: 'A comprehensive guide to room modes, bass traps, and loudspeaker boundary interference response.',
+        duration: 3120,
+        publishDate: 'Nov 5, 2026',
+        audioUrl: DEMO_AUDIO_STREAMS[6],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzmmKJ_PyP4kKsPGbhNBeLKIgpV4m8Ah940RgFJ_d9J_sZ471z3nFEe4JW1U15LPOzyw0WSpKdEOTeq9vP2u92GifX0ICX5nXK0IOpkpxTiVw0WGGIKb8HOSVxv4Ihitf069O1yWZq2Y7FqmX1uyEKVoBYSmjGes8wq_BhfMQLfRKN0P-iUeuSqyp-xSal8l3KzctVC7y-nRQcRreRYdARv7eCPHL4iP3yXwROJ5Hp',
+      },
+    ],
+  },
+  {
+    id: 'podcast-modular-synthesis',
+    title: 'Sound Design Guild',
+    author: 'Modular Waves Collective',
+    artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBosoZiICrarIfvV42ejf-7zbYNgnHDQTl9oZfOYO0x7HQ8YCH_tNcPJRIEdGeZeWAItBGL52G0lQlXtKfM4v04xoMXzleOsQpwe6aN6MiMycACCUmkF-LHm_5PP9nQAazhmIUqLkoqih1ZimMcjCsyDaIJLoCd0QnfdNmXvsAx4wBwgKK-rEUnLFkY1Kd8JflP-Xoluv8fDycmBglPpFqM3TfdrTDcqDC6Gzse1dcf',
+    description: 'Interviews with synthesists, patch walkthroughs, and explorations of generative ambient composition.',
+    episodeCount: 11,
+    episodes: [
+      {
+        id: 'ep-sdg-1',
+        title: 'Episode 11: Complex Wavefolding and Buchla Harmonics',
+        showTitle: 'Sound Design Guild',
+        description: 'Deep dive into West Coast synthesis techniques and harmonic generation.',
+        duration: 2540,
+        publishDate: 'Nov 8, 2026',
+        audioUrl: DEMO_AUDIO_STREAMS[0],
+        artworkUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBosoZiICrarIfvV42ejf-7zbYNgnHDQTl9oZfOYO0x7HQ8YCH_tNcPJRIEdGeZeWAItBGL52G0lQlXtKfM4v04xoMXzleOsQpwe6aN6MiMycACCUmkF-LHm_5PP9nQAazhmIUqLkoqih1ZimMcjCsyDaIJLoCd0QnfdNmXvsAx4wBwgKK-rEUnLFkY1Kd8JflP-Xoluv8fDycmBglPpFqM3TfdrTDcqDC6Gzse1dcf',
+      },
+    ],
+  },
+];

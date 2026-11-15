@@ -83,18 +83,24 @@ export const AlphabetRail: React.FC<AlphabetRailProps> = ({
             {({ isFocused }) => (
               <button
                 type="button"
-                className={`w-7 h-5.5 flex items-center justify-center rounded text-[11px] font-mono font-bold transition-all duration-75 cursor-pointer ${
+                className={`relative w-7 h-5.5 flex items-center justify-center rounded text-[11px] font-mono font-bold transition-all duration-75 cursor-pointer ${
                   isFocused
                     ? 'bg-secondary text-surface-container-lowest ring-2 ring-secondary shadow-[0_0_12px_rgba(73,220,202,0.9)] scale-125 z-10'
                     : isActive
-                    ? 'bg-primary-container text-on-primary-container font-extrabold shadow-sm'
+                    ? 'bg-primary-container text-on-primary-container font-extrabold shadow-[0_0_10px_rgba(122,90,248,0.6)] scale-105'
                     : isAvailable
-                    ? 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-                    : 'text-outline/40 opacity-40'
+                    ? 'text-on-surface hover:text-on-surface hover:bg-surface-container-high'
+                    : 'text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-container-high/60'
                 }`}
                 title={`Jump to ${letter}`}
+                aria-label={`Jump to letter ${letter}`}
+                data-active={isActive ? 'true' : 'false'}
+                data-available={isAvailable ? 'true' : 'false'}
               >
                 {letter}
+                {isAvailable && !isFocused && !isActive && (
+                  <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-secondary/80" />
+                )}
               </button>
             )}
           </Focusable>

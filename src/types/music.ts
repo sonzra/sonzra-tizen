@@ -51,6 +51,71 @@ export interface Artist {
   albums?: Album[];
 }
 
+export interface PlaylistCollaborator {
+  id: string;
+  displayName: string;
+  username?: string;
+  email?: string;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  artworkUrl?: string;
+  trackCount?: number;
+  duration?: number; // total in seconds
+  isCollaborative?: boolean;
+  isSharedWithMe?: boolean;
+  isOwner?: boolean;
+  collaboratorName?: string; // e.g. "Sarah" or "Curated with Sarah"
+  collaborators?: PlaylistCollaborator[];
+  tracks?: Track[];
+}
+
+export interface AudiobookChapter {
+  id: string;
+  title: string;
+  startPositionSeconds: number;
+  duration: number; // in seconds
+}
+
+export interface Audiobook {
+  id: string;
+  title: string;
+  author: string;
+  narrator?: string;
+  duration: number; // in seconds
+  playbackPositionSeconds?: number;
+  progressPercent?: number;
+  artworkUrl: string;
+  audioUrl?: string;
+  year?: number;
+  chapters?: AudiobookChapter[];
+}
+
+export interface PodcastEpisode {
+  id: string;
+  title: string;
+  showTitle?: string;
+  description?: string;
+  publishDate?: string;
+  duration: number; // in seconds
+  playbackPositionSeconds?: number;
+  progressPercent?: number;
+  audioUrl?: string;
+  artworkUrl?: string;
+}
+
+export interface PodcastShow {
+  id: string;
+  title: string;
+  author: string;
+  artworkUrl: string;
+  description?: string;
+  episodeCount?: number;
+  episodes?: PodcastEpisode[];
+}
+
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 export type RepeatMode = 'off' | 'all' | 'one';
 

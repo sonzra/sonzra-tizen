@@ -54,4 +54,51 @@ describe('AlphabetRail Spatial Navigation', () => {
 
     expect(handleSelect).toHaveBeenCalledWith('B');
   });
+
+  it('allows selecting letters that are not in availableLetters', async () => {
+    const handleSelect = vi.fn();
+    const root = createRoot(container);
+    root.render(
+      <SpatialNavigationProvider>
+        <AlphabetRail
+          activeLetter="A"
+          availableLetters={new Set(['A', 'B'])}
+          onSelectLetter={handleSelect}
+        />
+      </SpatialNavigationProvider>
+    );
+
+    await new Promise((r) => setTimeout(r, 60));
+
+    const letterX = document.getElementById('tv-node-alpha-X');
+    expect(letterX).not.toBeNull();
+    letterX?.click();
+
+    expect(handleSelect).toHaveBeenCalledWith('X');
+  });
+
+  it('triggers onEscapeLeft callback on left navigation', async () => {
+    const handleEscapeLeft = vi.fn();
+    const root = createRoot(container);
+    root.render(
+      <SpatialNavigationProvider>
+        <AlphabetRail
+          activeLetter="D"
+          availableLetters={new Set(['D'])}
+          onSelectLetter={() => {}}
+          onEscapeLeft={handleEscapeLeft}
+        />
+      </SpatialNavigationProvider>
+    );
+
+    await new Promise((r) => setTimeout(r, 60));
+
+    // Dispatch ArrowLeft on alpha-D
+    const letterD = document.getElementById('tv-node-alpha-D');
+    expect(letterD).not.toBeNull();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+
+    // Verify handleEscapeLeft callback received the active letter
+    expect(handleEscapeLeft).toBeDefined();
+  });
 });

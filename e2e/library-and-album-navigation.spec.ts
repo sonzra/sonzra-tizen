@@ -78,6 +78,9 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     await expectFocused(page, 'library-tab-playlists');
 
     await pressRemote(page, 'ArrowRight');
+    await expectFocused(page, 'library-tab-audiobooks');
+
+    await pressRemote(page, 'ArrowRight');
     await expectFocused(page, 'library-tab-podcasts');
 
     await pressRemote(page, 'ArrowRight');
@@ -288,5 +291,20 @@ test.describe('Library & Album Detail TV Remote Spatial Navigation E2E Suite', (
     // 7. Back/Return (Escape in browser) returns to ArtistsView and restores focus
     await pressRemote(page, 'Escape');
     await expectFocused(page, artistCardId);
+  });
+
+  test('Flow 3.11: Navigate into Playlists tab and verify playlist cards', async ({ page }) => {
+    await expectFocused(page, 'library-tab-albums');
+    await pressRemote(page, 'ArrowRight', 3);
+    await expectFocused(page, 'library-tab-playlists');
+
+    await pressRemote(page, 'Enter');
+    await pressRemote(page, 'ArrowDown');
+
+    const focusedCard = page.locator('.tv-focused');
+    await expect(focusedCard).toBeVisible();
+    const cardId = await focusedCard.getAttribute('id');
+    expect(cardId).toMatch(/^tv-node-library-playlist-/);
+  });
   });
 });

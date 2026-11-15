@@ -1,5 +1,12 @@
-import { Album, Artist, LyricsData, ServerConfig, Track } from '../types/music';
+import { Album, Artist, Audiobook, LyricsData, PodcastShow, Playlist, ServerConfig, Track } from '../types/music';
 import { AuthSession, User } from '../types/auth';
+import {
+  MOCK_ALBUMS,
+  MOCK_ARTISTS,
+  MOCK_AUDIOBOOKS,
+  MOCK_PLAYLISTS,
+  MOCK_PODCASTS,
+} from '../__tests__/fixtures/mockData';
 
 export class SonzraApiClient {
   private config: ServerConfig;
@@ -136,13 +143,23 @@ export class SonzraApiClient {
     }
   }
 
-  async fetchAlbums(): Promise<Album[]> {
+  async fetchAlbums(letter?: string): Promise<Album[]> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      if (letter) {
+        return MOCK_ALBUMS.filter((a) => {
+          const first = a.title.trim().charAt(0).toUpperCase();
+          return letter === '#' ? !(first >= 'A' && first <= 'Z') : first === letter;
+        });
+      }
+      return MOCK_ALBUMS;
+    }
     if (!this.config.serverUrl) {
       return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
-      const response = await fetch(`${cleanUrl}/api/v1/library/albums`, {
+      const queryParam = letter ? `?letter=${encodeURIComponent(letter)}` : '';
+      const response = await fetch(`${cleanUrl}/api/v1/library/albums${queryParam}`, {
         headers: {
           Accept: 'application/json',
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
@@ -150,10 +167,13 @@ export class SonzraApiClient {
       });
       if (!response.ok) {
         console.warn(`fetchAlbums returned HTTP ${response.status}`);
-        return [];
+        return this.config.demoMode ? MOCK_ALBUMS : [];
       }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.albums || []);
+      if (!items.length && this.config.demoMode) {
+        return MOCK_ALBUMS;
+      }
 
       return items.map((item: any) => ({
         id: String(item.id),
@@ -167,7 +187,7 @@ export class SonzraApiClient {
       }));
     } catch (err) {
       console.warn('Failed to fetch albums from server:', err);
-      return [];
+      return this.config.demoMode ? MOCK_ALBUMS : [];
     }
   }
 
@@ -312,13 +332,23 @@ export class SonzraApiClient {
     return Number(dur) || 180;
   }
 
-  async fetchArtists(): Promise<Artist[]> {
+  async fetchArtists(letter?: string): Promise<Artist[]> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      if (letter) {
+        return MOCK_ARTISTS.filter((a) => {
+          const first = a.name.trim().charAt(0).toUpperCase();
+          return letter === '#' ? !(first >= 'A' && first <= 'Z') : first === letter;
+        });
+      }
+      return MOCK_ARTISTS;
+    }
     if (!this.config.serverUrl) {
       return [];
     }
     try {
       const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
-      const response = await fetch(`${cleanUrl}/api/v1/library/artists`, {
+      const queryParam = letter ? `?letter=${encodeURIComponent(letter)}` : '';
+      const response = await fetch(`${cleanUrl}/api/v1/library/artists${queryParam}`, {
         headers: {
           Accept: 'application/json',
           ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
@@ -326,10 +356,13 @@ export class SonzraApiClient {
       });
       if (!response.ok) {
         console.warn(`fetchArtists returned HTTP ${response.status}`);
-        return [];
+        return this.config.demoMode ? MOCK_ARTISTS : [];
       }
       const raw = await response.json();
       const items = Array.isArray(raw) ? raw : (raw.artists || []);
+      if (!items.length && this.config.demoMode) {
+        return MOCK_ARTISTS;
+      }
 
       return items.map((item: any) => ({
         id: String(item.id),
@@ -340,7 +373,225 @@ export class SonzraApiClient {
       }));
     } catch (err) {
       console.warn('Failed to fetch artists from server:', err);
-      return [];
+      return this.config.demoMode ? MOCK_ARTISTS : [];
+    }
+  }
+
+  async fetchPlaylists(): Promise<Playlist[]> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      return MOCK_PLAYLISTS;
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const endpoint = this.config.serverConnectionId
+        ? `${cleanUrl}/server_connections/${this.config.serverConnectionId}/playlists`
+        : `${cleanUrl}/api/v1/library/playlists`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        console.warn(`fetchPlaylists returned HTTP ${response.status}`);
+        return MOCK_PLAYLISTS;
+      }
+      const raw = await response.json();
+      const items = Array.isArray(raw) ? raw : (raw.items || raw.playlists || []);
+      if (!items.length) {
+        return MOCK_PLAYLISTS;
+      }
+      return items.map((item: any) => {
+        const isCollab =
+          item.CollaborationStatus === 'collaborative' ||
+          item.is_collaborative === true ||
+          item.isCollaborative === true ||
+          item.IsSharedWithOthers === true;
+        const isSharedWithMe =
+          item.CollaborationStatus === 'shared_with_me' ||
+          item.is_shared_with_me === true ||
+          item.isSharedWithMe === true ||
+          (item.IsOwner === false && isCollab);
+        const isOwner = item.IsOwner !== undefined ? Boolean(item.IsOwner) : !isSharedWithMe;
+        const collaborators = Array.isArray(item.collaborators)
+          ? item.collaborators.map((c: any) => ({
+              id: String(c.id || c.UserId),
+              displayName: c.display_name || c.displayName || c.username || c.Name || 'Curator',
+              username: c.username,
+              email: c.email,
+            }))
+          : [];
+        const collabName =
+          item.collaborator_name ||
+          item.collaboratorName ||
+          (collaborators.length > 0 ? collaborators.map((c: any) => c.displayName).join(', ') : isCollab ? 'Curator' : undefined);
+
+        return {
+          id: String(item.id || item.Id),
+          name: item.name || item.title || item.Name || 'Untitled Playlist',
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl || item.ArtworkUrl) || './sonzra-mark.svg',
+          trackCount: item.track_count || item.trackCount || item.tracks?.length || (item.CumulativeRunTimeTicks ? Math.round(item.CumulativeRunTimeTicks / 10000000 / 180) : 0),
+          duration: item.duration || (item.CumulativeRunTimeTicks ? Math.round(item.CumulativeRunTimeTicks / 10000000) : undefined),
+          isCollaborative: isCollab,
+          isSharedWithMe,
+          isOwner,
+          collaboratorName: collabName,
+          collaborators,
+          tracks: item.tracks?.map((t: any) => this.mapTrack(t)),
+        };
+      });
+    } catch (err) {
+      console.warn('Failed to fetch playlists from server:', err);
+      return MOCK_PLAYLISTS;
+    }
+  }
+
+  async fetchPlaylistDetails(playlistId: string): Promise<Playlist | null> {
+    const fallback = MOCK_PLAYLISTS.find((p) => p.id === playlistId);
+    if (!this.config.serverUrl) {
+      return fallback || null;
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const response = await fetch(`${cleanUrl}/api/v1/library/items/${playlistId}`, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
+      if (response.ok) {
+        const item = await response.json();
+        const tracks = (item.tracks || []).map((t: any) => this.mapTrack(t));
+        return {
+          id: String(item.id),
+          name: item.name || item.title || 'Untitled Playlist',
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl) || './sonzra-mark.svg',
+          trackCount: tracks.length,
+          duration: tracks.reduce((acc: number, t: Track) => acc + (t.duration || 0), 0),
+          isCollaborative: item.is_collaborative || item.isCollaborative || fallback?.isCollaborative,
+          collaboratorName: item.collaborator_name || item.collaboratorName || fallback?.collaboratorName,
+          collaborators: item.collaborators || fallback?.collaborators,
+          tracks,
+        };
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch playlist details ${playlistId}:`, e);
+    }
+    return fallback || null;
+  }
+
+  async fetchAudiobooks(): Promise<Audiobook[]> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      return MOCK_AUDIOBOOKS;
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const endpoint = this.config.serverConnectionId
+        ? `${cleanUrl}/server_connections/${this.config.serverConnectionId}/audiobooks`
+        : `${cleanUrl}/api/v1/library/audiobooks`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        console.warn(`fetchAudiobooks returned HTTP ${response.status}`);
+        return MOCK_AUDIOBOOKS;
+      }
+      const raw = await response.json();
+      const items = Array.isArray(raw) ? raw : (raw.items || raw.audiobooks || []);
+      if (!items.length) {
+        return MOCK_AUDIOBOOKS;
+      }
+      return items.map((item: any) => {
+        const durationSec =
+          item.duration_seconds ||
+          item.duration ||
+          (item.RunTimeTicks ? Math.round(item.RunTimeTicks / 10000000) : 3600);
+        const positionSec =
+          item.playback_position_seconds ||
+          item.playbackPositionSeconds ||
+          (item.UserData?.PlaybackPositionTicks ? Math.round(item.UserData.PlaybackPositionTicks / 10000000) : 0);
+        const progressPercent =
+          item.progressPercent ??
+          (durationSec > 0 ? Math.round((positionSec / durationSec) * 100) : 0);
+        const chapters = (item.chapters || item.Chapters || []).map((ch: any, idx: number) => ({
+          id: String(ch.id || ch.Id || `ch-${idx + 1}`),
+          title: ch.name || ch.title || ch.Name || `Chapter ${idx + 1}`,
+          startPositionSeconds: ch.start_position_seconds ?? (ch.StartPositionTicks ? Math.round(ch.StartPositionTicks / 10000000) : 0),
+          duration: ch.duration_seconds ?? (ch.RunTimeTicks ? Math.round(ch.RunTimeTicks / 10000000) : 1800),
+        }));
+
+        return {
+          id: String(item.id || item.Id),
+          title: item.name || item.title || item.Name || 'Untitled Audiobook',
+          author: item.author || item.AlbumArtist || item.Artists?.[0] || 'Unknown Author',
+          narrator: item.narrator || item.Narrator,
+          duration: durationSec,
+          playbackPositionSeconds: positionSec,
+          progressPercent,
+          year: item.year || item.ProductionYear,
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl || item.ArtworkUrl) || './sonzra-mark.svg',
+          audioUrl: this.resolveUrl(item.stream_url || item.audio_url || item.audioUrl),
+          chapters,
+        };
+      });
+    } catch (err) {
+      console.warn('Failed to fetch audiobooks from server:', err);
+      return MOCK_AUDIOBOOKS;
+    }
+  }
+
+  async fetchPodcasts(): Promise<PodcastShow[]> {
+    if (this.config.demoMode || !this.config.serverUrl) {
+      return MOCK_PODCASTS;
+    }
+    try {
+      const cleanUrl = this.config.serverUrl.replace(/\/$/, '');
+      const endpoint = this.config.serverConnectionId
+        ? `${cleanUrl}/server_connections/${this.config.serverConnectionId}/podcasts`
+        : `${cleanUrl}/api/v1/library/podcasts`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Accept: 'application/json',
+          ...(this.config.authToken ? { Authorization: `Bearer ${this.config.authToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        console.warn(`fetchPodcasts returned HTTP ${response.status}`);
+        return MOCK_PODCASTS;
+      }
+      const raw = await response.json();
+      const items = Array.isArray(raw) ? raw : (raw.items || raw.podcasts || []);
+      if (!items.length) {
+        return MOCK_PODCASTS;
+      }
+      return items.map((item: any) => {
+        const episodes = (item.episodes || item.tracks || item.Items || []).map((ep: any, idx: number) => ({
+          id: String(ep.id || ep.Id || `ep-${idx + 1}`),
+          title: ep.name || ep.title || ep.Name || `Episode ${idx + 1}`,
+          showTitle: item.name || item.title,
+          description: ep.description || ep.Overview,
+          publishDate: ep.publish_date || ep.PremiereDate?.slice(0, 10),
+          duration: ep.duration_seconds || (ep.RunTimeTicks ? Math.round(ep.RunTimeTicks / 10000000) : 1800),
+          audioUrl: this.resolveUrl(ep.stream_url || ep.audio_url || ep.audioUrl),
+          artworkUrl: this.resolveUrl(ep.artwork_url || item.artwork_url) || './sonzra-mark.svg',
+        }));
+
+        return {
+          id: String(item.id || item.Id),
+          title: item.name || item.title || item.Name || 'Untitled Podcast',
+          author: item.author || item.AlbumArtist || item.Artists?.[0] || 'Unknown Creator',
+          artworkUrl: this.resolveUrl(item.artwork_url || item.artworkUrl || item.ArtworkUrl) || './sonzra-mark.svg',
+          description: item.description || item.Overview,
+          episodeCount: item.episode_count || episodes.length,
+          episodes,
+        };
+      });
+    } catch (err) {
+      console.warn('Failed to fetch podcasts from server:', err);
+      return MOCK_PODCASTS;
     }
   }
 
